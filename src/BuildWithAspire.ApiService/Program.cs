@@ -1,6 +1,11 @@
+using OpenAI.Chat;
+using OpenAI;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
+
+builder.AddAzureOpenAIClient("openai");
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -20,22 +25,37 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-var summaries = new[]
+app.MapGet("/weatherforecast", (OpenAIClient client) =>
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
+    var forecast = Enumerable.Range(1, 5).Select(index =>
+    {
+        var temperature = Random.Shared.Next(-20, 55);
+        var summary = GetWeatherSummary(client, temperature);
+        return new WeatherForecast
         (
             DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
+            temperature,
+            summary
+        );
+    })
+       .ToArray();
     return forecast;
+
+    static string GetWeatherSummary(OpenAIClient client, int temp)
+    {
+        var chatClient = client.GetChatClient("chat");
+        ChatCompletion completion = chatClient.CompleteChat(
+            [
+            // System messages represent instructions or other guidance about how the assistant should behave
+            new SystemChatMessage("You are a helpful assistant that provides a description of the weather in one word based on the temperature."),
+            // User messages represent user input, whether historical or the most recen tinput
+            new UserChatMessage($"How would you describe the weather at temp {temp} in celcius?"),
+            // Assistant messages in a request represent conversation history for responses
+            ]
+        );
+
+        return $"{completion.Content[0].Text}";
+    }
 })
 .WithName("GetWeatherForecast")
 .WithOpenApi();
