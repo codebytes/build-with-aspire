@@ -12,6 +12,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildWithAspire.ApiService", "src\BuildWithAspire.ApiService\BuildWithAspire.ApiService.csproj", "{9AC552DC-87FF-4816-8612-07B74B054E43}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -22,11 +24,16 @@ Global
 		{79B23562-F6E3-4808-AD1A-0782FEB1A333}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{79B23562-F6E3-4808-AD1A-0782FEB1A333}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{79B23562-F6E3-4808-AD1A-0782FEB1A333}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9AC552DC-87FF-4816-8612-07B74B054E43}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9AC552DC-87FF-4816-8612-07B74B054E43}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9AC552DC-87FF-4816-8612-07B74B054E43}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9AC552DC-87FF-4816-8612-07B74B054E43}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{79B23562-F6E3-4808-AD1A-0782FEB1A333} = {E4953B32-0786-4334-AE46-AA9D27CBAB69}
+		{9AC552DC-87FF-4816-8612-07B74B054E43} = {E4953B32-0786-4334-AE46-AA9D27CBAB69}
 	EndGlobalSection
 EndGlobal
