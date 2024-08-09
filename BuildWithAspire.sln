@@ -14,7 +14,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BuildWithAspire.ApiService", "src\BuildWithAspire.ApiService\BuildWithAspire.ApiService.csproj", "{9AC552DC-87FF-4816-8612-07B74B054E43}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildWithAspire.AppHost", "src\BuildWithAspire.AppHost\BuildWithAspire.AppHost.csproj", "{8345D96C-CCB6-47DA-89CA-93CB94E2DFA4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BuildWithAspire.AppHost", "src\BuildWithAspire.AppHost\BuildWithAspire.AppHost.csproj", "{8345D96C-CCB6-47DA-89CA-93CB94E2DFA4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BuildWithAspire.ServiceDefaults", "src\BuildWithAspire.ServiceDefaults\BuildWithAspire.ServiceDefaults.csproj", "{3EE7C85F-E099-4C18-9D6C-48F994C41D4B}"
 EndProject
@@ -47,5 +47,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{79B23562-F6E3-4808-AD1A-0782FEB1A333} = {E4953B32-0786-4334-AE46-AA9D27CBAB69}
 		{9AC552DC-87FF-4816-8612-07B74B054E43} = {E4953B32-0786-4334-AE46-AA9D27CBAB69}
+		{8345D96C-CCB6-47DA-89CA-93CB94E2DFA4} = {E4953B32-0786-4334-AE46-AA9D27CBAB69}
+		{3EE7C85F-E099-4C18-9D6C-48F994C41D4B} = {E4953B32-0786-4334-AE46-AA9D27CBAB69}
 	EndGlobalSection
 EndGlobal

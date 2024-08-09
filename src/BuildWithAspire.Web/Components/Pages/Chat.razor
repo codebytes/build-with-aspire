@@ -1,0 +1,59 @@
+﻿@page "/chat"
+@rendermode InteractiveServer
+
+<PageTitle>Chat</PageTitle>
+
+<h1>Chat</h1>
+
+<div id="scrollbox">
+    @foreach (var item in _messages)
+    {
+        <div class="@item.CSS">
+            <div class="user">@item.Role</div>
+            <div class="msg">@item.Body</div>
+        </div>
+    }
+    <hr />
+
+    <input class="input-lg" placeholder="Client Message" @bind="@_newMessage"></input>
+    <button class="btn btn-default btn-primary" @onclick="@(() => SendAsync(_newMessage))">Send</button>
+</div>
+
+@code {
+    // new message input
+    private string _newMessage = "";
+
+    [Inject]
+    public ChatApiClient chatApiClient { get; set; } = default!;
+    // list of messages in chat
+    private List<Message> _messages = new List<Message>();
+
+    private async Task SendAsync(string message)
+    {
+        if (!string.IsNullOrWhiteSpace(message))
+        {
+            _messages.Add(new Message("User", message));
+            var response = await chatApiClient.GetChatAsync(message);
+            _messages.Add(new Message("System", response));
+
+            _newMessage = string.Empty;
+            // Inform blazor the UI needs updating
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private class Message
+    {
+        public Message(string role, string body)
+        {
+            Role = role;
+            Body = body;
+        }
+        
+        public string Role { get; set; }
+        public string Body { get; set; }
+
+        public string CSS => Role == "User" ? "sent" : "received";
+    }
+
+}

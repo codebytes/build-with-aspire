@@ -60,6 +60,23 @@ app.MapGet("/weatherforecast", (OpenAIClient client) =>
 .WithName("GetWeatherForecast")
 .WithOpenApi();
 
+app.MapGet("/chat", (OpenAIClient client, string message) =>
+{
+    var chatClient = client.GetChatClient("chat");
+    ChatCompletion completion = chatClient.CompleteChat(
+        [
+        // System messages represent instructions or other guidance about how the assistant should behave
+        new SystemChatMessage("You are a helpful chatbot."),
+        // User messages represent user input, whether historical or the most recen tinput
+        new UserChatMessage(message),
+        // Assistant messages in a request represent conversation history for responses
+        ]
+    );
+    return completion.Content[0].Text ?? "No Response";
+})
+.WithName("Chat")
+.WithOpenApi();
+
 app.Run();
 
 record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
