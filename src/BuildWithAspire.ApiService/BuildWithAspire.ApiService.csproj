@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -11,10 +11,11 @@
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.8" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.7.3" />
     <PackageReference Include="System.Text.Json" Version="8.0.4" />
+    <PackageReference Include="Microsoft.SemanticKernel" Version="1.18.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\BuildWithAspire.ServiceDefaults\BuildWithAspire.ServiceDefaults.csproj" />
   </ItemGroup>
-
+  
 </Project>

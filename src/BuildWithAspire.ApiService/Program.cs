@@ -1,11 +1,18 @@
 using OpenAI.Chat;
 using OpenAI;
+using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
 builder.AddAzureOpenAIClient("openai");
+
+var chatDeploymentName = builder.Configuration["AI_ChatDeploymentName"] ?? "chat";
+builder.Services.AddKernel()
+    .AddAzureOpenAIChatCompletion(chatDeploymentName);
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -60,24 +67,31 @@ app.MapGet("/weatherforecast", (OpenAIClient client) =>
 .WithName("GetWeatherForecast")
 .WithOpenApi();
 
-app.MapGet("/chat", (OpenAIClient client, string message) =>
+app.MapGet("/chat", async (Kernel kernel, string message) =>
 {
-    var chatClient = client.GetChatClient("chat");
-    ChatCompletion completion = chatClient.CompleteChat(
-        [
-        // System messages represent instructions or other guidance about how the assistant should behave
-        new SystemChatMessage("""
-            You are an AI demonstration application. 
+    var chatCompletionService = kernel.GetRequiredService<IChatCompletionService>();
+
+    ChatHistory history = [];
+    history.AddSystemMessage(@"You are an AI demonstration application. 
             You are a helpful chatbot. 
             Respond to the user' input responsibly.
-            All responses should be safe for work.
-            """),
-        // User messages represent user input, whether historical or the most recen tinput
-        new UserChatMessage(message),
-        // Assistant messages in a request represent conversation history for responses
-        ]
-    );
-    return completion.Content[0].Text ?? "No Response";
+            All responses should be safe for work.");
+    // Get user input
+    history.AddUserMessage(message);
+
+    // Get the response from the AI
+    var response = chatCompletionService.GetStreamingChatMessageContentsAsync(history, kernel: kernel);
+
+    string combinedResponse = string.Empty;
+    await foreach (var messageResponse in response)
+    {
+        //Write the response to the console
+        combinedResponse += messageResponse;
+    }
+
+    // Add the message from the agent to the chat history
+    history.AddAssistantMessage(combinedResponse);
+    return combinedResponse;
 })
 .WithName("Chat")
 .WithOpenApi();
