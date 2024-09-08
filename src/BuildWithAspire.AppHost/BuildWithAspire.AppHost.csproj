@@ -13,10 +13,10 @@
     <PackageReference Include="Aspire.Hosting.AppHost" Version="8.2.0" />
     <PackageReference Include="Aspire.Hosting.Azure.CognitiveServices" Version="8.2.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="8.0.0" />
+    <PackageReference Include="System.Text.Json" Version="8.0.4" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AzureAISample.Web\AzureAISample.Web.csproj" />
     <ProjectReference Include="..\BuildWithAspire.ApiService\BuildWithAspire.ApiService.csproj" />
     <ProjectReference Include="..\BuildWithAspire.Web\BuildWithAspire.Web.csproj" />
   </ItemGroup>
