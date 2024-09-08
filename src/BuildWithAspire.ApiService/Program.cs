@@ -49,7 +49,7 @@ app.MapGet("/weatherforecast", (OpenAIClient client) =>
             // System messages represent instructions or other guidance about how the assistant should behave
             new SystemChatMessage("You are a helpful assistant that provides a description of the weather in one word based on the temperature."),
             // User messages represent user input, whether historical or the most recen tinput
-            new UserChatMessage($"How would you describe the weather at temp {temp} in celcius?"),
+            new UserChatMessage($"How would you describe the weather at temp {temp} in celcius? Provide the response in 1 word with no punctuation."),
             // Assistant messages in a request represent conversation history for responses
             ]
         );
@@ -66,7 +66,12 @@ app.MapGet("/chat", (OpenAIClient client, string message) =>
     ChatCompletion completion = chatClient.CompleteChat(
         [
         // System messages represent instructions or other guidance about how the assistant should behave
-        new SystemChatMessage("You are a helpful chatbot."),
+        new SystemChatMessage("""
+            You are an AI demonstration application. 
+            You are a helpful chatbot. 
+            Respond to the user' input responsibly.
+            All responses should be safe for work.
+            """),
         // User messages represent user input, whether historical or the most recen tinput
         new UserChatMessage(message),
         // Assistant messages in a request represent conversation history for responses
