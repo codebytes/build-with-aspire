@@ -1,12 +1,13 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-var openAI = builder.AddAzureOpenAI("openai")
-    .AddDeployment(new AzureOpenAIDeployment("chat", "gpt-4o", "2024-05-13", "Standard", 10));
-    //.AddDeployment(new AzureOpenAIDeployment("chat", "gpt-4", "turbo-2024-04-09", "Standard", 10));
-    //.AddDeployment(new AzureOpenAIDeployment("chat", "gpt-35-turbo", "0125", "Standard", 10));
+var deploymentName = "chat";
+var openai = builder.AddAzureOpenAI("openai")
+    .AddDeployment(new AzureOpenAIDeployment(deploymentName, "gpt-4o", "2024-05-13", "GlobalStandard", 10));
+
 
 var apiService = builder.AddProject<Projects.BuildWithAspire_ApiService>("apiservice")
-    .WithReference(openAI);
+    .WithReference(openai)
+    .WithEnvironment("AI_DeploymentName", deploymentName);
 
 builder.AddProject<Projects.BuildWithAspire_Web>("webfrontend")
     .WithExternalHttpEndpoints()
