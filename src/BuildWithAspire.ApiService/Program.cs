@@ -2,7 +2,6 @@ using OpenAI.Chat;
 using OpenAI;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
-using Microsoft.SemanticKernel.Connectors.OpenAI;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +17,8 @@ builder.Services.AddKernel()
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddTransient<ChatService>();
 
 var app = builder.Build();
 
@@ -67,32 +68,7 @@ app.MapGet("/weatherforecast", (OpenAIClient client) =>
 .WithName("GetWeatherForecast")
 .WithOpenApi();
 
-app.MapGet("/chat", async (Kernel kernel, string message) =>
-{
-    var chatCompletionService = kernel.GetRequiredService<IChatCompletionService>();
-
-    ChatHistory history = [];
-    history.AddSystemMessage(@"You are an AI demonstration application. 
-            You are a helpful chatbot. 
-            Respond to the user' input responsibly.
-            All responses should be safe for work.");
-    // Get user input
-    history.AddUserMessage(message);
-
-    // Get the response from the AI
-    var response = chatCompletionService.GetStreamingChatMessageContentsAsync(history, kernel: kernel);
-
-    string combinedResponse = string.Empty;
-    await foreach (var messageResponse in response)
-    {
-        //Write the response to the console
-        combinedResponse += messageResponse;
-    }
-
-    // Add the message from the agent to the chat history
-    history.AddAssistantMessage(combinedResponse);
-    return combinedResponse;
-})
+app.MapGet("/chat", async (ChatService chatService, string message) => await chatService.ProcessMessage(message))
 .WithName("Chat")
 .WithOpenApi();
 
