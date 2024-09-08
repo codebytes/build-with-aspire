@@ -1,7 +1,4 @@
-using System.Text.Json;
-using OpenAI.Chat;
-
-namespace BuildWithAspire.Web;
+namespace BuildWithAspire.Web.Clients;
 
 public class ChatApiClient(HttpClient httpClient)
 {

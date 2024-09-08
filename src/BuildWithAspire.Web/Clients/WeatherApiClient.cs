@@ -1,4 +1,4 @@
-﻿namespace BuildWithAspire.Web;
+﻿namespace BuildWithAspire.Web.Clients;
 
 public class WeatherApiClient(HttpClient httpClient)
 {
