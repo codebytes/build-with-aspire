@@ -1,4 +1,5 @@
 ﻿@page "/chat"
+@using Markdig
 @rendermode InteractiveServer
 
 <PageTitle>Chat</PageTitle>
@@ -10,7 +11,7 @@
     {
         <div class="@item.CSS">
             <div class="user">@item.Role</div>
-            <div class="msg">@item.Body</div>
+            <div class="msg"> @((MarkupString) @item.Body)</div>
         </div>
     }
     <hr />
@@ -34,7 +35,7 @@
         {
             _messages.Add(new Message("User", message));
             var response = await chatApiClient.GetChatAsync(message);
-            _messages.Add(new Message("System", response));
+            _messages.Add(new Message("System", Markdown.ToHtml(response)));
 
             _newMessage = string.Empty;
             // Inform blazor the UI needs updating
