@@ -32,95 +32,251 @@ footer: '@Chris_L_Ayers - https://chris-ayers.com'
 
 # Agenda
 
-- Introduction to .NET Aspire
-- Why Aspire for AI development?
-- The advantages of Aspire with OpenAI
-- Setting up and developing with Aspire
-- Deploying Aspire-based applications
+- Why .NET Aspire?
+- .NET Aspire Integrations
+- Consuming Resources
+- Local Azure Development
+- Deploying to Azure
+- Demos
 - Q&A
 
 ---
 
-## Aspiring .NET with Azure OpenAI
-
-- Explore the future of .NET development.
-- Understand why .NET Aspire is the right choice for AI-driven applications.
-- Discover the power of Azure OpenAI when integrated with Aspire.
+# <!-- fit --> .NET Aspire is designed to improve the<br> experience of building .NET cloud-native apps.
 
 ---
 
-## What is .NET Aspire?
+# Why .NET Aspire
 
-- **Aspire** is a framework specifically designed for modern .NET development.
-- Seamlessly integrates with **Azure services**, including Azure OpenAI.
-- Ideal for AI-driven applications due to its **modularity**, **scalability**, and **performance**.
+<div class="columns3">
+<div>
 
----
+## Orchestration
 
-## Why Aspire for AI Development?
+</div>
+<div>
 
-- **Streamlined AI integration**: Aspire simplifies the integration of AI features, making it easier for developers to add intelligence to applications.
-- **Cloud-native design**: Aspire is designed to take full advantage of cloud-based services, particularly in the Azure ecosystem.
-- **Rapid development**: Aspire accelerates the development process by offering pre-built templates and features, allowing developers to focus on innovation.
+## Integrations
 
----
+</div>
+<div>
 
-## The Advantages of Aspire with OpenAI
+## Tooling
 
-- **Seamless Azure Integration**
-  - Aspire makes it simple to connect to **Azure OpenAI** services.
-  - Azure provides a **scalable and secure infrastructure** for AI workloads.
-- **Efficiency in AI-Driven Features**
-  - Integrate AI features like **natural language processing**, **chatbots**, and **content generation** with minimal effort.
-  - Aspire provides **out-of-the-box support** for handling AI models and interacting with Azure OpenAI APIs.
-- **Modular and Scalable Architecture**
-  - Build **modular applications** that can grow as your AI needs evolve.
-  - Aspire’s architecture allows for easy scaling of both AI and non-AI components.
-- **Improved Performance with Local Azure Deployments**
-  - Azure deployments ensure **low latency** and **high availability** for AI applications.
-  - Aspire is optimized for **local Azure deployments**, enhancing application performance and user experience.
+</div>
+</div>
 
 ---
 
-## Leveraging Aspire to Build Smarter Applications
+# Orchestration
 
-- With **Aspire**, AI capabilities become a natural extension of your development workflow.
-- Features like **predictive analytics**, **smart content moderation**, and **automation** are easily integrated using Aspire’s framework.
-- Simplifies complex AI model management, reducing the burden on development teams.
+<div class="columns">
+<div>
 
----
+- Automated Service Management
+  - Orchestrate the start and stop of multiple services, ensuring smooth coordination across microservices  and background jobs.
+- Centralized Configuration
+  - Automatically manage keys, connection strings, and credentials, injecting them into services without manual handling.
 
-## Key Benefits of Using Aspire for OpenAI Projects
+</div>
+<div>
 
-1. **Reduced Development Time**: Pre-configured settings and integration points mean faster project setup.
-2. **Cost Efficiency**: Optimize resources by leveraging Azure’s cloud-based scaling and AI service management.
-3. **Enhanced Security**: Built-in **Azure Key Vault** integration for securely managing API keys and sensitive data.
-4. **Flexibility**: OpenAI services, such as GPT models, can be easily adapted to different use cases.
+- Integrated Logging and Monitoring
+  - Built-in support for logging, monitoring, and debugging across all services, making troubleshooting and performance tuning easier.
+- Multi-Container Orchestration
+  - Run and coordinate multiple containers in parallel or sequence, streamlining complex setups like databases, APIs, and AI services.
 
----
-
-## Best Practices for Building with Aspire and OpenAI
-
-- **Optimize Resource Usage**: Scale AI components efficiently to avoid unnecessary costs.
-- **Secure Integrations**: Use best practices for securing API keys and sensitive data with Azure Key Vault.
-- **Monitor Performance**: Leverage Azure Monitor to track performance and fine-tune as needed.
+</div>
+</div>
 
 ---
 
-## Aspire in Action
+# Integrations
 
-- **Real-world examples** of how companies are leveraging Aspire with Azure OpenAI to build powerful, AI-driven applications.
-- Use cases in industries such as **healthcare**, **financial services**, and **customer service** to improve decision-making and user interactions.
+- Seamless Azure Service Integration
+- Local Emulators and Container Support
+- Built-in Authentication and Authorization
+- Simple Integration
 
 ---
 
-## Wrapping Up
+# Tooling
 
-### Key Takeaways:
+- Visual Studio and Visual Studio
+- Code Integration
+- Project Templates
+- .NET Aspire Dashboard
+- .NET Aspire App Host
+- .NET Aspire Service Defaults
 
-- Aspire simplifies AI development in .NET with a focus on **modularity**, **performance**, and **Azure integration**.
-- Azure OpenAI provides the scalability and power needed for modern AI applications.
-- By using Aspire, developers can quickly build AI-powered applications with **reduced complexity** and **optimized performance**.
+---
+
+# .NET Aspire Integrations
+
+---
+
+# The Two sides to .NET Aspire Integrations
+
+<div class="columns">
+<div>
+
+## Hosting Integrations
+- Provision and manage resources
+- Automate infrastructure setup
+- Cloud-native functionality
+- Integrated logging and monitoring
+- Authentication and authorization
+- Configuration management
+
+</div>
+
+<div>
+
+## Client Integrations
+- Configure service connections
+- Consume hosted services
+- Service discovery
+- Service defaults
+- Integrated logging and monitoring
+
+</div>
+<div>
+
+---
+
+# Project Level Integrations
+
+- Node
+- Python
+- Docker
+- .NET Projects
+
+---
+
+# Integrations
+
+<div class="columns">
+<div>
+
+- AI:
+  - Azure OpenAI
+  - Azure AI Search
+  - Ollama
+- Databases:
+  - PostgreSQL
+  - SQL Server
+  - MySQL
+  - MongoDB
+  - Cosmos DB
+  - Redis
+
+</div>
+<div>
+
+- Messaging:
+  - Azure Service Bus
+  - RabbitMQ
+  - Kafka
+  - Azure Event Hubs
+- Storage:
+  - Azure Blob Storage
+- Monitoring and Logging:
+  - Azure Monitor
+  - Application Insights
+  - OpenTelemetry
+
+</div>
+</div>
+
+---
+
+# Consuming Resources
+
+---
+
+# Fundamentals
+
+- Service Discovery
+- Service Defaults
+- .NET Aspire and Launch Profiles
+- Health Checks
+- Telemetry
+
+---
+
+# Service Discovery and Configuration
+
+![Service Discovery ](./img/service-discovery.png)
+
+---
+
+# Service Discovery and Configuration
+
+- Service Discovery Configuration: .NET Aspire configures service discovery during development and testing by passing necessary configuration from the AppHost project to individual service projects.
+- Implicit Discovery by Reference: Only services referenced in a project (e.g., frontend referencing catalog and basket) are included in service discovery.
+- Named Endpoints: Services can expose multiple, named endpoints, resolved using specific URI formats like `scheme://_endpointName.serviceName`.
+- Environment Variables:
+  ```
+  services__apiservice__http__0
+  services__apiservice__myendpoint__0
+  ConnectionStrings__cache
+  ```
+
+---
+
+# Service Defaults
+
+
+---
+
+# Local Azure Development
+
+---
+
+# Azure provisioning credential store
+
+- AzureCli
+- AzurePowerShell
+- VisualStudio
+- VisualStudioCode
+- AzureDeveloperCli
+- InteractiveBrowser
+
+---
+
+# Deploy and Configure Resources
+
+In Visual Studio
+![alt text](./img/visual-studio-azure-config.png)
+
+---
+
+# Deploying to Azure
+
+---
+
+# Deployment Manifest
+
+- Deployment Manifest
+- Cloud-Agnostic Deployments
+- Azure Developer CLI (azd) 
+- Azure Container Apps
+- Telemetry with Application Insights
+
+---
+
+# Azure Developer CLI
+
+Native support for deploying .NET Aspire projects.
+`azd init` initializes a project by inspecting the directory structure to determine the app type.
+`azd` runs the AppHost to generate the Aspire manifest file.
+The generated manifest is used by azd’s provision command to create Bicep files in-memory.
+
+![bg right fit](./img/azd.png)
+
+---
+
+# <!-- fit --> English is the new programming language
 
 ---
 
