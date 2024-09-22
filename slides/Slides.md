@@ -10,7 +10,7 @@ footer: '@Chris_L_Ayers - https://chris-ayers.com'
 
 ## Chris Ayers
 
-![bg right w:90%](./img/bg.png)
+![bg right w:90%](./img/dotnet-logo.png)
 
 ---
 
@@ -28,7 +28,7 @@ footer: '@Chris_L_Ayers - https://chris-ayers.com'
 
 ---
 
-![bg left fit](./img/bg.png)
+![bg left fit](./img/dotnet-logo.png)
 
 # Agenda
 
@@ -280,7 +280,7 @@ The generated manifest is used by azd’s provision command to create Bicep file
 
 ---
 
-![bg right fit](./img/bg.png)
+![bg right fit](./img/dotnet-logo.png)
 
 # DEMOS
 
