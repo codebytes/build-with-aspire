@@ -10,7 +10,7 @@ footer: '@Chris_L_Ayers - https://chris-ayers.com'
 
 ## Chris Ayers
 
-![bg right w:90%](./img/dotnet-logo.png)
+![bg right](./img/dotnet-logo.png)
 
 ---
 
@@ -28,7 +28,7 @@ footer: '@Chris_L_Ayers - https://chris-ayers.com'
 
 ---
 
-![bg left fit](./img/dotnet-logo.png)
+![bg left ](./img/dotnet-logo.png)
 
 # Agenda
 
@@ -226,6 +226,14 @@ footer: '@Chris_L_Ayers - https://chris-ayers.com'
 
 # Service Defaults
 
+- Security Defaults
+  - Authentication & Authorization: Pre-configured with Azure AD, ensuring secure access.
+  - Secrets Management: Integrated with Azure Key Vault for secure storage of secrets and credentials.
+- Resilience & Scalability
+  - Retry Policies: Automatically applied to prevent transient failures.
+  - Circuit Breakers: Protects services from cascading failures.
+- Monitoring & Observability
+  - Pre-configured for logging, tracing, and metrics collection.
 
 ---
 
@@ -276,11 +284,7 @@ The generated manifest is used by azd’s provision command to create Bicep file
 
 ---
 
-# <!-- fit --> English is the new programming language
-
----
-
-![bg right fit](./img/dotnet-logo.png)
+![bg right](./img/dotnet-logo.png)
 
 # DEMOS
 
@@ -301,6 +305,8 @@ The generated manifest is used by azd’s provision command to create Bicep file
 ## Links
 
 - [.NET Aspire](https://learn.microsoft.com/en-us/dotnet/aspire/get-started/aspire-overview)
+- [Aspirify](https://aspireify.net/)
+- [Aspire Samples](https://github.com/dotnet/aspire-samples)
 
 </div>
 <div>
