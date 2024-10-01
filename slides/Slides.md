@@ -113,6 +113,8 @@ footer: '@Chris_L_Ayers - https://chris-ayers.com'
 
 # .NET Aspire Integrations
 
+![Integrations](img/integrations.png)
+
 ---
 
 # The Two sides to .NET Aspire Integrations
@@ -121,6 +123,7 @@ footer: '@Chris_L_Ayers - https://chris-ayers.com'
 <div>
 
 ## Hosting Integrations
+
 - Provision and manage resources
 - Automate infrastructure setup
 - Cloud-native functionality
@@ -133,6 +136,7 @@ footer: '@Chris_L_Ayers - https://chris-ayers.com'
 <div>
 
 ## Client Integrations
+
 - Configure service connections
 - Consume hosted services
 - Service discovery
