@@ -45,7 +45,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGet("/weatherforecast", async (IChatClient client) =>
+app.MapGet("/weatherforecast", (IChatClient client) =>
 {
     async IAsyncEnumerable<WeatherForecast> GetForecasts()
     {
