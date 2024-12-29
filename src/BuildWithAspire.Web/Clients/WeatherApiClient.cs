@@ -4,22 +4,21 @@ public class WeatherApiClient(HttpClient httpClient)
 {
     public async Task<WeatherForecast[]> GetWeatherAsync(int maxItems = 10, CancellationToken cancellationToken = default)
     {
-        List<WeatherForecast>? forecasts = null;
+        var forecasts = new List<WeatherForecast>();
 
-        await foreach (var forecast in httpClient.GetFromJsonAsAsyncEnumerable<WeatherForecast>("/weatherforecast", cancellationToken))
+        await foreach (var forecast in httpClient.GetFromJsonAsAsyncEnumerable<WeatherForecast>("", cancellationToken))
         {
-            if (forecasts?.Count >= maxItems)
+            if (forecasts.Count >= maxItems)
             {
                 break;
             }
             if (forecast is not null)
             {
-                forecasts ??= [];
                 forecasts.Add(forecast);
             }
         }
 
-        return forecasts?.ToArray() ?? [];
+        return forecasts.ToArray();
     }
 }
 

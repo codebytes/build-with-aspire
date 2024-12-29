@@ -1,5 +1,6 @@
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel;
+using Microsoft.Extensions.AI;
 
 public class ChatService
 {
@@ -12,7 +13,10 @@ public class ChatService
 
     public async Task<string> ProcessMessage(string message)
     {
-        var chatCompletionService = _kernel.GetRequiredService<IChatCompletionService>();
+#pragma warning disable SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+        var chatCompletionService = _kernel.GetRequiredService<IChatClient>()
+               .AsChatCompletionService();
+#pragma warning restore SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
         ChatHistory history = [];
         history.AddSystemMessage(@"You are an AI demonstration application. 

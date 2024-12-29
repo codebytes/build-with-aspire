@@ -1,19 +1,31 @@
-using OpenAI.Chat;
-using OpenAI;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.AI;
 using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.ChatCompletion;
+using OpenAI;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-builder.AddAzureOpenAIClient("openai");
+var aiType = builder.Configuration["AI:Type"] ?? "ollama";
+var chatDeploymentName = builder.Configuration["AI:ChatDeploymentName"] ?? "chat";
 
-var chatDeploymentName = builder.Configuration["AI_ChatDeploymentName"] ?? "chat";
-builder.Services.AddKernel()
-    .AddAzureOpenAIChatCompletion(chatDeploymentName);
+switch (aiType.ToLower())
+{
+    case "ollama":
+        builder.AddOllamaSharpChatClient(chatDeploymentName);
+        break;
+    case "azureopenai":
+        builder.AddAzureOpenAIClient(chatDeploymentName);
+        builder.Services.AddChatClient(services => services.GetRequiredService<OpenAIClient>()
+            .AsChatClient(chatDeploymentName));
+        break;
+    default:
+        throw new InvalidOperationException($"Unsupported AI type: {aiType}");
+}
 
-// Add services to the container.
+builder.Services.AddKernel();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -33,36 +45,37 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGet("/weatherforecast", (OpenAIClient client) =>
+app.MapGet("/weatherforecast", async (IChatClient client) =>
 {
-    var forecast = Enumerable.Range(1, 5).Select(index =>
+    async IAsyncEnumerable<WeatherForecast> GetForecasts()
     {
-        var temperature = Random.Shared.Next(-20, 55);
-        var summary = GetWeatherSummary(client, temperature);
-        return new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            temperature,
-            summary
-        );
-    })
-       .ToArray();
-    return forecast;
+        for (int index = 1; index <= 5; index++)
+        {
+            var temperature = Random.Shared.Next(-20, 55);
+            var summary = await GetWeatherSummary(client, temperature);
+            yield return new WeatherForecast
+            (
+                DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
+                temperature,
+                summary
+            );
+        }
+    }
 
-    static string GetWeatherSummary(OpenAIClient client, int temp)
+    return GetForecasts();
+
+    static async Task<string> GetWeatherSummary(IChatClient client, int temp)
     {
-        var chatClient = client.GetChatClient("chat");
-        ChatCompletion completion = chatClient.CompleteChat(
-            [
-            // System messages represent instructions or other guidance about how the assistant should behave
-            new SystemChatMessage("You are a helpful assistant that provides a description of the weather in one word based on the temperature."),
-            // User messages represent user input, whether historical or the most recen tinput
-            new UserChatMessage($"How would you describe the weather at temp {temp} in celcius? Provide the response in 1 word with no punctuation."),
-            // Assistant messages in a request represent conversation history for responses
-            ]
-        );
+        List<ChatMessage> conversation = new()
+        {
+             // System messages represent instructions or other guidance about how the assistant should behave
+            new(ChatRole.System, "You are a helpful assistant that provides a description of the weather in one word based on the temperature."),
+            // User messages represent user input, whether historical or the most recent input
+            new(ChatRole.User, $"How would you describe the weather at temp {temp} in celcius? Provide the response in 1 word with no punctuation.")
+        };
+        var completion = await client.CompleteAsync(conversation);
 
-        return $"{completion.Content[0].Text}";
+        return $"{completion.Message.Text}";
     }
 })
 .WithName("GetWeatherForecast")
