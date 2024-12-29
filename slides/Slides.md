@@ -18,13 +18,14 @@ footer: '@Chris_L_Ayers - https://chris-ayers.com'
 
 ## Chris Ayers
 
-### Senior Customer Engineer<br>Microsoft
+### Senior Risk SRE<br>Azure CXP AzRel<br>Microsoft
 
-<i class="fa-brands fa-twitter"></i> Twitter: @Chris_L_Ayers
-<i class="fa-brands fa-mastodon"></i> Mastodon: @Chrisayers@hachyderm.io
+<i class="fa-brands fa-bluesky"></i> BlueSky: [@chris-ayers.com](https://bsky.app/profile/chris-ayers.com)
 <i class="fa-brands fa-linkedin"></i> LinkedIn: - [chris\-l\-ayers](https://linkedin.com/in/chris-l-ayers/)
 <i class="fa fa-window-maximize"></i> Blog: [https://chris-ayers\.com/](https://chris-ayers.com/)
 <i class="fa-brands fa-github"></i> GitHub: [Codebytes](https://github.com/codebytes)
+<i class="fa-brands fa-mastodon"></i> Mastodon: @Chrisayers@hachyderm.io
+<i class="fa-brands fa-twitter"></i> Twitter: @Chris_L_Ayers
 
 ---
 
@@ -73,18 +74,14 @@ footer: '@Chris_L_Ayers - https://chris-ayers.com'
 <div class="columns">
 <div>
 
-- Automated Service Management
-  - Orchestrate the start and stop of multiple services, ensuring smooth coordination across microservices  and background jobs.
-- Centralized Configuration
-  - Automatically manage keys, connection strings, and credentials, injecting them into services without manual handling.
+- **Automated Service Management**: Orchestrate multiple services, ensuring smooth coordination.
+- **Centralized Configuration**: Manage keys, connection strings, and credentials automatically.
 
 </div>
 <div>
 
-- Integrated Logging and Monitoring
-  - Built-in support for logging, monitoring, and debugging across all services, making troubleshooting and performance tuning easier.
-- Multi-Container Orchestration
-  - Run and coordinate multiple containers in parallel or sequence, streamlining complex setups like databases, APIs, and AI services.
+- **Integrated Logging and Monitoring**: Built-in support for logging, monitoring, and debugging.
+- **Multi-Container Orchestration**: Run and coordinate multiple containers efficiently.
 
 </div>
 </div>
@@ -96,6 +93,7 @@ footer: '@Chris_L_Ayers - https://chris-ayers.com'
 - Seamless Azure Service Integration
 - Local Emulators and Container Support
 - Built-in Authentication and Authorization
+- Community Toolkit
 - Simple Integration
 
 ---
@@ -317,11 +315,12 @@ The generated manifest is used by azd’s provision command to create Bicep file
 
 ## Follow Chris Ayers
 
-<i class="fa-brands fa-twitter"></i> Twitter: @Chris_L_Ayers
-<i class="fa-brands fa-mastodon"></i> Mastodon: @Chrisayers@hachyderm.io
+<i class="fa-brands fa-bluesky"></i> BlueSky: [@chris-ayers.com](https://bsky.app/profile/chris-ayers.com)
 <i class="fa-brands fa-linkedin"></i> LinkedIn: - [chris\-l\-ayers](https://linkedin.com/in/chris-l-ayers/)
 <i class="fa fa-window-maximize"></i> Blog: [https://chris-ayers\.com/](https://chris-ayers.com/)
 <i class="fa-brands fa-github"></i> GitHub: [Codebytes](https://github.com/codebytes)
+<i class="fa-brands fa-mastodon"></i> Mastodon: @Chrisayers@hachyderm.io
+<i class="fa-brands fa-twitter"></i> Twitter: @Chris_L_Ayers
 
 </div>
 
