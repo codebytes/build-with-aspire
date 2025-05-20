@@ -220,17 +220,17 @@ Enhance the developer experience with powerful monitoring and debugging tools
 <div>
 
 - **Health Checks**
-  - Monitor service readiness and liveness
-  - Dashboard integration for visualization
-  - Custom health endpoints for APIs
-  - Azure monitoring integration
+  - Monitor service health
+  - Dashboard visualization
+  - Custom health endpoints
+  - Azure monitoring
 
 </div>
 <div>
 
 - **Telemetry**
-  - Automatic logs, traces, metrics collection
-  - Distributed tracing across services
+  - Auto logs, traces, metrics
+  - Distributed tracing
   - GitHub Copilot AI debugging (9.3)
 
 </div>
@@ -402,18 +402,18 @@ Enhance the developer experience with powerful monitoring and debugging tools
 <div class="columns">
 <div>
 
-- **Zero-Friction Transitions**: Move from local to cloud effortlessly
-- **Emulator Support**: Use local containers for development speed
-- **Connection Management**: Automatic handling of connection strings
-- **Hybrid Development**: Mix local and cloud resources as needed
+- **Zero-Friction**: Local to cloud transitions
+- **Emulator Support**: Local containers for speed
+- **Auto Connections**: Managed connection strings
+- **Hybrid Development**: Mix local/cloud resources
 
 </div>
 <div>
 
-- **Resource Flexibility**: Connect to existing or create new services
-- **Example**: Azurite locally → Azure Blob in production automatically
-- **No Code Changes**: Same application works across all environments
-- **Environment Control**: Choose which components run where
+- **Resource Flexibility**: Use existing/new services
+- **Example**: Azurite locally → Azure Blob in production
+- **Consistent Code**: Works across environments
+- **Environment Control**: Component-level targeting
 
 </div>
 </div>
@@ -425,18 +425,18 @@ Enhance the developer experience with powerful monitoring and debugging tools
 <div class="columns">
 <div>
 
-- **Model Abstractions**: Unified API for different AI providers
-- **Pipeline Architecture**: Chain components for complex AI operations
-- **Dependency Injection**: Seamless integration with .NET services
-- **Provider-Agnostic**: Single interface for multiple AI capabilities
+- **Unified API**: Common interface for AI providers
+- **Pipeline Architecture**: Chain components efficiently
+- **DI Integration**: Works with .NET service container
+- **Provider-Agnostic**: Single interface, multiple backends
 
 </div>
 <div>
 
-- **Local Development**: Connect to local models like Ollama or LM Studio
-- **Cloud Deployment**: Transition to Azure OpenAI without code changes
-- **Transport Abstraction**: Consistent API across HTTP, gRPC, and direct calls
-- **Performance Optimizations**: Request batching and throttling built in
+- **Local Development**: Connect to Ollama, LM Studio
+- **Cloud Ready**: Same code for Azure OpenAI
+- **Transport Options**: HTTP, gRPC, direct calls
+- **Performance**: Auto-batching and throttling
 
 </div>
 </div>
@@ -524,10 +524,10 @@ builder.Services.AddClientForAzureOpenAI();
 <div>
 
 - **Key Vault Integrations (9.3)**
-  - References secrets from existing Key Vaults
-  - Injects secrets via environment variables
-  - Separate clients for keys and certificates
-  - Secure multi-app access patterns
+  - Use existing Key Vault secrets
+  - Inject as environment variables
+  - Separate key/cert clients
+  - Secure multi-app access
 
 </div>
 </div>
@@ -540,19 +540,19 @@ builder.Services.AddClientForAzureOpenAI();
 <div>
 
 - **In Visual Studio**
-  - Built-in Azure provisioning
-  - Configure resources and resource groups
-  - Deploy projects to compute environments
-  - Monitor deployment health
+  - Azure provisioning built-in
+  - Configure resources/groups
+  - Deploy to compute targets
+  - Monitor deployments
 
 </div>
 <div>
 
 - **New Deployment Model (9.3)**
-  - Per-resource publishing (not global)
-  - Explicit mapping of resources to compute
-  - Secure multi-app access to Azure SQL
-  - Default SQL SKU now Free tier
+  - Per-resource publishing
+  - Resource-to-compute mapping
+  - Secure SQL multi-app access
+  - Free tier SQL SKU default
 
 </div>
 </div>
@@ -592,11 +592,11 @@ builder.Services.AddClientForAzureOpenAI();
 
 # Azure Developer CLI Integration
 
-- Native support for deploying .NET Aspire projects
-- `azd init` inspects directory structure to determine app type
-- **CI/CD Improvements** (9.3)
-  - Smarter parameter handling
-  - Clear parameter naming conventions
+- Native support for .NET Aspire deployments
+- `azd init` auto-detects app structure
+- **CI/CD Improvements (9.3)**
+  - Simplified parameter handling
+  - Clear naming conventions
   - Environment variable mapping
 
 ![bg right:40% fit](./img/azd.png)
@@ -642,9 +642,9 @@ builder.AddContainer("service", "nginx")
 <div>
 
 - **Multiple Environment Support**
-  - Deploy different parts to different targets
-  - Mix containerized and non-containerized
-  - Supports hybrid deployment models
+  - Deploy to different targets
+  - Mix container/non-container
+  - Support hybrid deployments
   - Resource-specific control
 
 </div>
