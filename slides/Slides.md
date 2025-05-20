@@ -240,7 +240,7 @@ Enhance the developer experience with powerful monitoring and debugging tools
 
 # .NET Aspire Dashboard
 
-![width:800px](./img/aspire-dashboard.png)
+![width:800px center](./img/aspire-dashboard.png)
 
 ---
 
@@ -269,21 +269,23 @@ Enhance the developer experience with powerful monitoring and debugging tools
 
 # Service Discovery and Configuration
 
-<div class="columns">
-<div>
-
 - **Automatic Configuration**: AppHost passes settings to services
 - **Implicit Discovery**: Services reference only what they need
 - **Named Endpoints**: Multiple endpoints per service
 - **Environment Variables**: Structured configuration strings
 
-</div>
-<div>
+![bg right fit](./img/service-discovery.png)
 
-![Service Discovery ](./img/service-discovery.png)
+---
 
-</div>
-</div>
+# Testing in .NET Aspire
+
+- **Integration Testing**: Test multiple components together
+- **Container Testing**: Test with containerized services
+- **Emulator Support**: Use local emulators for cloud services
+- **End-to-End Testing**: Test full application workflows
+
+![bg left fit](./img/aspire-testing-diagram.png)
 
 ---
 
@@ -308,7 +310,6 @@ Enhance the developer experience with powerful monitoring and debugging tools
 - Configuration management
 
 </div>
-
 <div>
 
 ## Client Integrations
@@ -321,8 +322,6 @@ Enhance the developer experience with powerful monitoring and debugging tools
 
 </div>
 </div>
-
-> Hosting integrations extend IDistributedApplicationBuilder; Client integrations extend IHostApplicationBuilder
 
 ---
 
@@ -342,8 +341,7 @@ Enhance the developer experience with powerful monitoring and debugging tools
 
 ## Cloud-Specific
 
-- **Azure Services**: OpenAI, Cosmos DB, SQL, Redis, Key Vault
-- **Latest Azure (9.3)**: App Service, ACR, App Config
+- **Azure Services**: OpenAI, Cosmos DB, SQL, Redis, Key Vault, App Service, ACR, App Config
 - **AWS Support**: Via Hosting.AWS package
 
 </div>
@@ -378,100 +376,334 @@ Enhance the developer experience with powerful monitoring and debugging tools
 
 ---
 
-# Consuming Resources
+# Resource Management
 
 <div class="columns">
 <div>
 
 - **Simple Connections**: Easily connect to Azure and third-party services
 - **Automatic Configuration**: Service discovery and configuration management
-- **Secure Credentials**: Managed identities and credential handling
+- **Secret Handling**: Securely manage credentials, keys, and certificates
 
 </div>
 <div>
 
-- **Secret Management**: Inject secrets, keys, and certificates automatically
-- **Centralized Config**: Manage application settings in one place
-- **Minimal Code**: Connect to services with just a few lines of code
+- **Environment Flexibility**: Same code works locally and in the cloud
+- **Resource Abstraction**: Use existing Azure services or create new ones
+- **Minimal Code**: Connect and configure with just a few lines of code
 
 </div>
 </div>
 
 ---
 
-# Local vs Cloud Resources
+# Seamless Development Experience
 
-- Develop locally with emulators or local containers
-- Seamlessly switch to real Azure resources for staging/production
-- Aspire manages configuration and connection strings
-- Example: Use Azurite for local Blob Storage, then switch to Azure Blob in cloud
+<div class="columns">
+<div>
+
+- **Zero-Friction Transitions**: Move from local to cloud effortlessly
+- **Emulator Support**: Use local containers for development speed
+- **Connection Management**: Automatic handling of connection strings
+- **Hybrid Development**: Mix local and cloud resources as needed
+
+</div>
+<div>
+
+- **Resource Flexibility**: Connect to existing or create new services
+- **Example**: Azurite locally → Azure Blob in production automatically
+- **No Code Changes**: Same application works across all environments
+- **Environment Control**: Choose which components run where
+
+</div>
+</div>
 
 ---
 
-# Local Azure Development
+# Microsoft.Extensions.AI
+
+<div class="columns">
+<div>
+
+- **Model Abstractions**: Unified API for different AI providers
+- **Pipeline Architecture**: Chain components for complex AI operations
+- **Dependency Injection**: Seamless integration with .NET services
+- **Provider-Agnostic**: Single interface for multiple AI capabilities
+
+</div>
+<div>
+
+- **Local Development**: Connect to local models like Ollama or LM Studio
+- **Cloud Deployment**: Transition to Azure OpenAI without code changes
+- **Transport Abstraction**: Consistent API across HTTP, gRPC, and direct calls
+- **Performance Optimizations**: Request batching and throttling built in
+
+</div>
+</div>
 
 ---
 
-# Azure provisioning credential store
+# AI Local-to-Cloud Transitions
 
-- AzureCli
-- AzurePowerShell
-- VisualStudio
-- VisualStudioCode
-- AzureDeveloperCli
-- InteractiveBrowser
+<div class="columns">
+<div>
+
+```csharp
+// Local development with Ollama
+builder.AddOllama("ollama")
+    .WithModel("llama3");
+
+// Add client to use the model
+builder.Services.AddClientForOllama();
+```
+
+```csharp
+// Single line change for production
+builder.AddAzureOpenAI("ai")
+    .WithModel("gpt-4o-mini");
+
+// Same client code works unchanged
+builder.Services.AddClientForAzureOpenAI();
+```
+
+</div>
+<div>
+
+- **Same Application Code**: Business logic remains identical
+- **Configuration-Based Switching**: Environment determines provider
+- **Consistent Capabilities**: Text completion, embeddings, image generation
+- **Resource Integration**: Works with .NET Aspire's resource model
+- **Example**: Use Ollama locally → Azure OpenAI in production
+
+</div>
+</div>
+
+---
+
+# Cloud Development
+
+<div class="columns">
+<div>
+
+- **Azure App Service** (Preview, 9.3)
+- **Azure Container Apps**
+- **Kubernetes** (via improved manifest support)
+- **Azure Container Registry**
+  - Use existing ACR (9.3)
+  - Integrate with multiple compute environments
+
+</div>
+<div>
+
+- **Deployment Options**
+  - Manual deployment
+  - CI/CD pipelines
+  - Azure Developer CLI (azd)
+  - GitHub Actions & Azure DevOps
+  - Terraform & Bicep
+
+</div>
+</div>
+
+---
+
+# Azure Authentication Options
+
+<div class="columns">
+<div>
+
+- **Credential Providers**
+  - AzureCli
+  - AzurePowerShell
+  - VisualStudio
+  - VisualStudioCode
+  - AzureDeveloperCli
+  - InteractiveBrowser
+
+</div>
+<div>
+
+- **Key Vault Integrations (9.3)**
+  - References secrets from existing Key Vaults
+  - Injects secrets via environment variables
+  - Separate clients for keys and certificates
+  - Secure multi-app access patterns
+
+</div>
+</div>
 
 ---
 
 # Deploy and Configure Resources
 
-In Visual Studio
-![alt text](./img/visual-studio-azure-config.png)
+<div class="columns">
+<div>
+
+- **In Visual Studio**
+  - Built-in Azure provisioning
+  - Configure resources and resource groups
+  - Deploy projects to compute environments
+  - Monitor deployment health
+
+</div>
+<div>
+
+- **New Deployment Model (9.3)**
+  - Per-resource publishing (not global)
+  - Explicit mapping of resources to compute
+  - Secure multi-app access to Azure SQL
+  - Default SQL SKU now Free tier
+
+</div>
+</div>
 
 ---
 
 # Deploying to Azure
 
-- **New publisher model: per-resource publishing, not global (9.3)**
-- **Explicit mapping of resources to compute environments (9.3)**
-- **Docker Compose & Kubernetes manifest customization via C# APIs (9.3)**
-- **Parameter mapping for CI/CD: parameters exported as env vars/secrets, no more AZD_INITIAL_ENVIRONMENT_CONFIG (9.3)**
-- **Azure App Service (Preview) support (9.3)**
-- **Use existing Azure Container Registry (ACR) (9.3)**
-- **Secure multi-app access to Azure SQL, default SQL SKU is now Free (9.3)**
-
----
-
-# Azure Developer CLI
-
-Native support for deploying .NET Aspire projects.
-`azd init` initializes a project by inspecting the directory structure to determine the app type.
-`azd` runs the AppHost to generate the Aspire manifest file.
-The generated manifest is used by azd's provision command to create Bicep files in-memory.
-
-- **Smarter app host discovery: CLI finds the app host from any directory (9.3)**
-- **Health-aware dashboard launch: waits for dashboard to be ready before showing URL (9.3)**
-- **CI/CD improvements: parameters and secrets mapped directly, interactive secret management (9.3)**
-
-![bg right fit](./img/azd.png)
-
----
-
-# What's New in .NET Aspire
-
 <div class="columns">
 <div>
 
-- **Improved Containers**: Zero-friction configuration and YARP integration
-- **Enhanced Dashboard**: AI debugging and persistent filters
-- **Flexible Deployment**: New publisher model and manifest customization
+- **New publisher model** (9.3)
+  - Per-resource publishing
+  - Resource-specific compute environments
+
+- **Docker Compose & Kubernetes** (9.3)
+  - Programmatic configuration control
+  - Link parameters via environment variables
 
 </div>
 <div>
 
-- **Azure Integration**: App Service support and expanded cloud services
-- **CI/CD Improvements**: Better parameter mapping and secret management
-- **Developer Experience**: Smarter app host discovery and health-aware launch
+- **Parameter mapping for CI/CD** (9.3)
+  - Exported as env vars/secrets
+  - Consistent naming conventions
+  - Interactive secret management
+
+- **Azure integrations** (9.3)
+  - Azure App Service
+  - Use existing Azure Container Registry
+  - Azure App Configuration support
+
+</div>
+</div>
+
+---
+
+# Azure Developer CLI Integration
+
+- Native support for deploying .NET Aspire projects
+- `azd init` inspects directory structure to determine app type
+- **CI/CD Improvements** (9.3)
+  - Smarter parameter handling
+  - Clear parameter naming conventions
+  - Environment variable mapping
+
+![bg right:40% fit](./img/azd.png)
+
+---
+
+# Kubernetes Deployment (9.3)
+
+<div class="columns">
+<div>
+
+- **Kubernetes Environment Support**
+  - `AddKubernetesEnvironment("env")`
+  - Configure global manifest settings
+  - Per-resource customization
+  - Strong typing for deployment definitions
+
+</div>
+<div>
+
+```csharp
+builder.AddKubernetesEnvironment("env")
+       .WithProperties(env =>
+       {
+           env.DefaultImagePullPolicy = "Always";
+       });
+
+builder.AddContainer("service", "nginx")
+       .PublishAsKubernetesService(resource =>
+       {
+           resource.Deployment!.Spec.RevisionHistoryLimit = 5;
+       });
+```
+
+</div>
+</div>
+
+---
+
+# Compute Environments (9.3)
+
+<div class="columns">
+<div>
+
+- **Multiple Environment Support**
+  - Deploy different parts to different targets
+  - Mix containerized and non-containerized
+  - Supports hybrid deployment models
+  - Resource-specific control
+
+</div>
+<div>
+
+```csharp
+// Support for explicit environment mapping
+var k8s = builder.AddKubernetesEnvironment("k8s-env");
+var compose = builder.AddDockerComposeEnvironment("docker-env");
+
+builder.AddProject<Projects.Api>("api")
+       .WithComputeEnvironment(compose);
+
+builder.AddProject<Projects.Frontend>("frontend")
+       .WithComputeEnvironment(k8s);
+```
+
+</div>
+</div>
+
+---
+
+# What's New in .NET Aspire 9.3
+
+<div class="columns3">
+<div>
+
+## App Model
+
+- Easier container config
+- Custom URLs
+- YARP (Preview)
+- New lifecycle events
+- MySQL support
+- Hidden resources
+
+</div>
+<div>
+
+## Dashboard
+
+- Copilot AI debugging
+- Persistent filters
+- Traces view
+- Context menus
+- Friendly names
+- Metrics pause alert
+
+</div>
+<div>
+
+## Deployment
+
+- New publisher model
+- Azure App Service
+- Use existing ACR
+- Improved CI/CD params
+- Docker/K8s customization
+- Better telemetry & security
 
 </div>
 </div>
