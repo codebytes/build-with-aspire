@@ -24,7 +24,7 @@ footer: '@Chris_L_Ayers - https://chris-ayers.com'
 <i class="fa-brands fa-linkedin"></i> LinkedIn: - [chris\-l\-ayers](https://linkedin.com/in/chris-l-ayers/)
 <i class="fa fa-window-maximize"></i> Blog: [https://chris-ayers\.com/](https://chris-ayers.com/)
 <i class="fa-brands fa-github"></i> GitHub: [Codebytes](https://github.com/codebytes)
-<i class="fa-brands fa-mastodon"></i> Mastodon: @Chrisayers@hachyderm.io
+<i class="fa-brands fa-mastodon"></i> Mastodon: [@Chrisayers@hachyderm.io](https://hachyderm.io/@Chrisayers)
 ~~<i class="fa-brands fa-twitter"></i> Twitter: @Chris_L_Ayers~~
 
 ---
@@ -38,12 +38,13 @@ footer: '@Chris_L_Ayers - https://chris-ayers.com'
 - Consuming Resources
 - Local Azure Development
 - Deploying to Azure
+- **What's New in 9.3**
 - Demos
 - Q&A
 
 ---
 
-# <!-- fit --> .NET Aspire is designed to improve the<br> experience of building .NET cloud-native apps.
+# <!-- fit --> .NET Aspire is designed to improve the<br> experience of building .NET cloud-native apps
 
 ---
 
@@ -52,36 +53,44 @@ footer: '@Chris_L_Ayers - https://chris-ayers.com'
 <div class="columns3">
 <div>
 
-## Orchestration
+## Orchestration and Fundamentals
+
+Simplify coordinating multiple services and resources in cloud-native applications
 
 </div>
 <div>
 
 ## Integrations
 
+Connect seamlessly with Azure and third-party services with minimal configuration
+
 </div>
 <div>
 
 ## Tooling
+
+Enhance the developer experience with powerful monitoring and debugging tools
 
 </div>
 </div>
 
 ---
 
-# Orchestration
+# Orchestration and Fundamentals
 
 <div class="columns">
 <div>
 
-- **Automated Service Management**: Orchestrate multiple services, ensuring smooth coordination.
-- **Centralized Configuration**: Manage keys, connection strings, and credentials automatically.
+- **Automated Service Management**: Coordinate multiple services seamlessly
+- **Centralized Configuration**: Auto-manage keys and credentials
+- **Simplified Containers**: Zero-friction configuration for ports and credentials
 
 </div>
 <div>
 
-- **Integrated Logging and Monitoring**: Built-in support for logging, monitoring, and debugging.
-- **Multi-Container Orchestration**: Run and coordinate multiple containers efficiently.
+- **Observability**: Built-in logging, monitoring, and debugging
+- **Multi-Container Support**: Efficient container coordination
+- **Resource Lifecycle**: Predictable lifecycle events for all resources
 
 </div>
 </div>
@@ -90,22 +99,191 @@ footer: '@Chris_L_Ayers - https://chris-ayers.com'
 
 # Integrations
 
-- Seamless Azure Service Integration
-- Local Emulators and Container Support
-- Built-in Authentication and Authorization
-- Community Toolkit
-- Simple Integration
+<div class="columns">
+<div>
+
+- **Azure Services**: Seamless integration with Azure resources
+- **Local Development**: Emulators and container support
+- **Multi-Platform**: Support for various languages and platforms
+
+</div>
+<div>
+
+- **Built-in Security**: Authentication and authorization
+- **Community Ecosystem**: Growing toolkit of extensions
+- **Simple Configuration**: Connect services with minimal code
+
+</div>
+</div>
 
 ---
 
 # Tooling
 
-- Visual Studio and Visual Studio
-- Code Integration
-- Project Templates
-- .NET Aspire Dashboard
-- .NET Aspire App Host
-- .NET Aspire Service Defaults
+<div class="columns">
+<div>
+
+- **IDE Integration**: Visual Studio and VS Code support
+- **Project Templates**: Quickly start new Aspire projects
+- **Dashboard**: Monitor and debug your applications
+
+</div>
+<div>
+
+- **AppHost Project**: Central orchestration control
+- **Service Defaults**: Consistent configuration across services
+- **CLI Support**: Command-line development experience
+
+</div>
+</div>
+
+---
+
+# Orchestration and Fundamentals
+
+---
+
+# Core Fundamentals
+
+<div class="columns">
+<div>
+
+- **Service Discovery**: Automatically connect your services
+- **Configuration**: Standardized settings across your application
+- **Custom Commands**: Extend and automate your development workflow
+
+</div>
+<div>
+
+- **Health Checks**: Monitor service readiness and liveness
+- **Telemetry**: Built-in logging and distributed tracing
+- **Security**: Integrated authentication and authorization
+
+</div>
+</div>
+
+---
+
+# Service Defaults
+
+<div class="columns">
+<div>
+
+- **Security Defaults**
+  - Authentication with Azure AD
+  - Secure secrets management
+- **Resilience & Scalability**
+  - Automatic retry policies
+  - Circuit breakers for failure protection
+
+</div>
+<div>
+
+- **Monitoring & Observability**
+  - Pre-configured logging and tracing
+  - Metrics collection for all services
+  - Application insights integration
+
+</div>
+</div>
+
+---
+
+# Launch Profiles & Commands
+
+<div class="columns">
+<div>
+
+- **Custom Commands**
+  - Define workflow automation
+  - Database migrations, data seeding
+  - Development environment reset
+  - Integrated with dashboard
+
+</div>
+<div>
+
+- **Launch Profiles**
+  - Configure service startup settings
+  - Set environment variables and ports
+  - Multiple profile support (local, cloud, test)
+  - Simplified environment switching
+
+</div>
+</div>
+
+---
+
+# Health Checks & Telemetry
+
+<div class="columns">
+<div>
+
+- **Health Checks**
+  - Monitor service readiness and liveness
+  - Dashboard integration for visualization
+  - Custom health endpoints for APIs
+  - Azure monitoring integration
+
+</div>
+<div>
+
+- **Telemetry**
+  - Automatic logs, traces, metrics collection
+  - Distributed tracing across services
+  - GitHub Copilot AI debugging (9.3)
+
+</div>
+</div>
+
+---
+
+# .NET Aspire Dashboard
+
+![width:800px](./img/aspire-dashboard.png)
+
+---
+
+# .NET Aspire Dashboard
+
+<div class="columns">
+<div>
+
+- **Real-time Monitoring**: View all services and dependencies
+- **Interactive Debugging**: Inspect logs and trace requests
+- **Resource Management**: Control lifecycles of all components
+- **Health Visualization**: Monitor service health at a glance
+
+</div>
+<div>
+
+- **Structured Logs**: Filter and search across all services
+- **Trace Visualization**: Track requests across service boundaries
+- **Secret Management**: Configure secure credentials
+- **Copilot AI Debugging**: Get intelligent troubleshooting (9.3)
+
+</div>
+</div>
+
+---
+
+# Service Discovery and Configuration
+
+<div class="columns">
+<div>
+
+- **Automatic Configuration**: AppHost passes settings to services
+- **Implicit Discovery**: Services reference only what they need
+- **Named Endpoints**: Multiple endpoints per service
+- **Environment Variables**: Structured configuration strings
+
+</div>
+<div>
+
+![Service Discovery ](./img/service-discovery.png)
+
+</div>
+</div>
 
 ---
 
@@ -115,7 +293,7 @@ footer: '@Chris_L_Ayers - https://chris-ayers.com'
 
 ---
 
-# The Two sides to .NET Aspire Integrations
+# The Two Sides to .NET Aspire Integrations
 
 <div class="columns">
 <div>
@@ -142,50 +320,58 @@ footer: '@Chris_L_Ayers - https://chris-ayers.com'
 - Integrated logging and monitoring
 
 </div>
-<div>
+</div>
+
+> Hosting integrations extend IDistributedApplicationBuilder; Client integrations extend IHostApplicationBuilder
 
 ---
 
-# Project Level Integrations
-
-- Node
-- Python
-- Docker
-- .NET Projects
-
----
-
-# Integrations
+# Official Integrations
 
 <div class="columns">
 <div>
 
-- AI:
-  - Azure OpenAI
-  - Azure AI Search
-  - Ollama
-- Databases:
-  - PostgreSQL
-  - SQL Server
-  - MySQL
-  - MongoDB
-  - Cosmos DB
-  - Redis
+## Cloud-Agnostic
+
+- **Databases**: PostgreSQL, MySQL, MongoDB, SQL Server
+- **Messaging**: Kafka, RabbitMQ, NATS
+- **AI & Observability**: Ollama, Semantic Kernel, OpenTelemetry
 
 </div>
 <div>
 
-- Messaging:
-  - Azure Service Bus
-  - RabbitMQ
-  - Kafka
-  - Azure Event Hubs
-- Storage:
-  - Azure Blob Storage
-- Monitoring and Logging:
-  - Azure Monitor
-  - Application Insights
-  - OpenTelemetry
+## Cloud-Specific
+
+- **Azure Services**: OpenAI, Cosmos DB, SQL, Redis, Key Vault
+- **Latest Azure (9.3)**: App Service, ACR, App Config
+- **AWS Support**: Via Hosting.AWS package
+
+</div>
+</div>
+
+---
+
+# Community Toolkit Integrations
+
+<div class="columns">
+<div>
+
+## Multi-Language Support
+
+- **JavaScript**: Bun, Deno
+- **Systems Programming**: Go, Rust
+- **Enterprise**: Java/Spring
+- **Extensions**: Node.js, SQL, MongoDB, Redis
+
+</div>
+<div>
+
+## Additional Services
+
+- **AI & Search**: Ollama, Meilisearch
+- **Data**: SQLite, Data API Builder
+- **Web**: Azure Static Web Apps emulator
+- **Customization**: Advanced configurations
 
 </div>
 </div>
@@ -194,48 +380,31 @@ footer: '@Chris_L_Ayers - https://chris-ayers.com'
 
 # Consuming Resources
 
----
+<div class="columns">
+<div>
 
-# Fundamentals
+- **Simple Connections**: Easily connect to Azure and third-party services
+- **Automatic Configuration**: Service discovery and configuration management
+- **Secure Credentials**: Managed identities and credential handling
 
-- Service Discovery
-- Service Defaults
-- .NET Aspire and Launch Profiles
-- Health Checks
-- Telemetry
+</div>
+<div>
 
----
+- **Secret Management**: Inject secrets, keys, and certificates automatically
+- **Centralized Config**: Manage application settings in one place
+- **Minimal Code**: Connect to services with just a few lines of code
 
-# Service Discovery and Configuration
-
-![Service Discovery ](./img/service-discovery.png)
-
----
-
-# Service Discovery and Configuration
-
-- Service Discovery Configuration: .NET Aspire configures service discovery during development and testing by passing necessary configuration from the AppHost project to individual service projects.
-- Implicit Discovery by Reference: Only services referenced in a project (e.g., frontend referencing catalog and basket) are included in service discovery.
-- Named Endpoints: Services can expose multiple, named endpoints, resolved using specific URI formats like `scheme://_endpointName.serviceName`.
-- Environment Variables:
-  ```
-  services__apiservice__http__0
-  services__apiservice__myendpoint__0
-  ConnectionStrings__cache
-  ```
+</div>
+</div>
 
 ---
 
-# Service Defaults
+# Local vs Cloud Resources
 
-- Security Defaults
-  - Authentication & Authorization: Pre-configured with Azure AD, ensuring secure access.
-  - Secrets Management: Integrated with Azure Key Vault for secure storage of secrets and credentials.
-- Resilience & Scalability
-  - Retry Policies: Automatically applied to prevent transient failures.
-  - Circuit Breakers: Protects services from cascading failures.
-- Monitoring & Observability
-  - Pre-configured for logging, tracing, and metrics collection.
+- Develop locally with emulators or local containers
+- Seamlessly switch to real Azure resources for staging/production
+- Aspire manages configuration and connection strings
+- Example: Use Azurite for local Blob Storage, then switch to Azure Blob in cloud
 
 ---
 
@@ -263,15 +432,13 @@ In Visual Studio
 
 # Deploying to Azure
 
----
-
-# Deployment Manifest
-
-- Deployment Manifest
-- Cloud-Agnostic Deployments
-- Azure Developer CLI (azd) 
-- Azure Container Apps
-- Telemetry with Application Insights
+- **New publisher model: per-resource publishing, not global (9.3)**
+- **Explicit mapping of resources to compute environments (9.3)**
+- **Docker Compose & Kubernetes manifest customization via C# APIs (9.3)**
+- **Parameter mapping for CI/CD: parameters exported as env vars/secrets, no more AZD_INITIAL_ENVIRONMENT_CONFIG (9.3)**
+- **Azure App Service (Preview) support (9.3)**
+- **Use existing Azure Container Registry (ACR) (9.3)**
+- **Secure multi-app access to Azure SQL, default SQL SKU is now Free (9.3)**
 
 ---
 
@@ -280,9 +447,34 @@ In Visual Studio
 Native support for deploying .NET Aspire projects.
 `azd init` initializes a project by inspecting the directory structure to determine the app type.
 `azd` runs the AppHost to generate the Aspire manifest file.
-The generated manifest is used by azd’s provision command to create Bicep files in-memory.
+The generated manifest is used by azd's provision command to create Bicep files in-memory.
+
+- **Smarter app host discovery: CLI finds the app host from any directory (9.3)**
+- **Health-aware dashboard launch: waits for dashboard to be ready before showing URL (9.3)**
+- **CI/CD improvements: parameters and secrets mapped directly, interactive secret management (9.3)**
 
 ![bg right fit](./img/azd.png)
+
+---
+
+# What's New in .NET Aspire
+
+<div class="columns">
+<div>
+
+- **Improved Containers**: Zero-friction configuration and YARP integration
+- **Enhanced Dashboard**: AI debugging and persistent filters
+- **Flexible Deployment**: New publisher model and manifest customization
+
+</div>
+<div>
+
+- **Azure Integration**: App Service support and expanded cloud services
+- **CI/CD Improvements**: Better parameter mapping and secret management
+- **Developer Experience**: Smarter app host discovery and health-aware launch
+
+</div>
+</div>
 
 ---
 
@@ -292,10 +484,9 @@ The generated manifest is used by azd’s provision command to create Bicep file
 
 ---
 
-# Questions
+# Questions ?
 
-![bg auto](./img/background.jpg)
-![bg](./img/owl.png)
+![bg right](./img/owl.png)
 
 ---
 
@@ -307,8 +498,10 @@ The generated manifest is used by azd’s provision command to create Bicep file
 ## Links
 
 - [.NET Aspire](https://learn.microsoft.com/en-us/dotnet/aspire/get-started/aspire-overview)
+- [What's new in .NET Aspire 9.3](https://learn.microsoft.com/en-us/dotnet/aspire/whats-new/aspire-9.3)
 - [Aspirify](https://aspireify.net/)
 - [Aspire Samples](https://github.com/dotnet/aspire-samples)
+- [YARP Documentation](https://microsoft.github.io/reverse-proxy/)
 
 </div>
 <div>
@@ -319,7 +512,7 @@ The generated manifest is used by azd’s provision command to create Bicep file
 <i class="fa-brands fa-linkedin"></i> LinkedIn: - [chris\-l\-ayers](https://linkedin.com/in/chris-l-ayers/)
 <i class="fa fa-window-maximize"></i> Blog: [https://chris-ayers\.com/](https://chris-ayers.com/)
 <i class="fa-brands fa-github"></i> GitHub: [Codebytes](https://github.com/codebytes)
-<i class="fa-brands fa-mastodon"></i> Mastodon: @Chrisayers@hachyderm.io
+<i class="fa-brands fa-mastodon"></i> Mastodon: [@Chrisayers@hachyderm.io](https://hachyderm.io/@Chrisayers)
 ~~<i class="fa-brands fa-twitter"></i> Twitter: @Chris_L_Ayers~~
 
 </div>
