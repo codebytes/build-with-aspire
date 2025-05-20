@@ -11,7 +11,7 @@ var openai = builder.AddAzureOpenAI("openai")
 var ollama = builder.AddOllama("ollama")
                 .WithDataVolume()
                 .WithOpenWebUI()
-                .WithContainerRuntimeArgs("--gpus=all")
+                //.WithContainerRuntimeArgs("--gpus=all")
                 .AddModel("chat", "llama3.2");
 
 IResourceBuilder<IResourceWithConnectionString> chat = useLocalAI ? ollama : openai;

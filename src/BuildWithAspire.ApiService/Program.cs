@@ -13,12 +13,12 @@ var chatDeploymentName = builder.Configuration["AI:ChatDeploymentName"] ?? "chat
 switch (aiType.ToLower())
 {
     case "ollama":
-        builder.AddOllamaSharpChatClient(chatDeploymentName);
+        builder.AddOllamaApiClient(chatDeploymentName)
+            .AddChatClient();
         break;
     case "azureopenai":
-        builder.AddAzureOpenAIClient(chatDeploymentName);
-        builder.Services.AddChatClient(services => services.GetRequiredService<OpenAIClient>()
-            .AsChatClient(chatDeploymentName));
+        builder.AddAzureOpenAIClient(chatDeploymentName)
+            .AddChatClient(chatDeploymentName);
         break;
     default:
         throw new InvalidOperationException($"Unsupported AI type: {aiType}");
@@ -73,9 +73,9 @@ app.MapGet("/weatherforecast", (IChatClient client) =>
             // User messages represent user input, whether historical or the most recent input
             new(ChatRole.User, $"How would you describe the weather at temp {temp} in celcius? Provide the response in 1 word with no punctuation.")
         };
-        var completion = await client.CompleteAsync(conversation);
+        var completion = await client.GetResponseAsync(conversation);
 
-        return $"{completion.Message.Text}";
+        return $"{completion.Text}";
     }
 })
 .WithName("GetWeatherForecast")
