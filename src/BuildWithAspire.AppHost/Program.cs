@@ -14,12 +14,16 @@ var ollama = builder.AddOllama("ollama")
                 //.WithContainerRuntimeArgs("--gpus=all")
                 .AddModel("chat", "llama3.2");
 
+// Add Redis for chat history
+var redis = builder.AddRedis("redis");
+
 IResourceBuilder<IResourceWithConnectionString> chat = useLocalAI ? ollama : openai;
 
 var apiService = builder.AddProject<Projects.BuildWithAspire_ApiService>("apiservice")
     .WithEnvironment("AI:ChatDeploymentName", chatDeploymentName)
     .WithEnvironment("AI:Type", useLocalAI ? "ollama" : "azureOpenAi")
     .WithReference(chat, chatDeploymentName)
+    .WithReference(redis)
     .WaitFor(chat);
 
 builder.AddProject<Projects.BuildWithAspire_Web>("webfrontend")

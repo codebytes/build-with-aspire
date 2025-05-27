@@ -2,10 +2,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.AI;
 using Microsoft.SemanticKernel;
 using OpenAI;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
+builder.AddRedis("redis");
 
 var aiType = builder.Configuration["AI:Type"] ?? "ollama";
 var chatDeploymentName = builder.Configuration["AI:ChatDeploymentName"] ?? "chat";
@@ -81,8 +83,29 @@ app.MapGet("/weatherforecast", (IChatClient client) =>
 .WithName("GetWeatherForecast")
 .WithOpenApi();
 
-app.MapGet("/chat", async (ChatService chatService, string message) => await chatService.ProcessMessage(message))
+// Updated chat endpoint to handle chat history
+app.MapGet("/chat", async (ChatService chatService, string chatId, string? message) => 
+{
+    if (!string.IsNullOrEmpty(message))
+    {
+        return await chatService.ProcessMessage(chatId, message);
+    }
+    else
+    {
+        // Return previous chat messages if no new message
+        return await chatService.GetChatHistoryMessagesAsync(chatId);
+    }
+})
 .WithName("Chat")
+.WithOpenApi();
+
+// Add new chat endpoint to clear chat history
+app.MapDelete("/chat/{chatId}", async (ChatService chatService, string chatId) => 
+{
+    var result = await chatService.DeleteChatHistoryAsync(chatId);
+    return Results.Ok(new { success = result });
+})
+.WithName("DeleteChat")
 .WithOpenApi();
 
 app.Run();
