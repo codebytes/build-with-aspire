@@ -22,17 +22,17 @@ switch (aiType.ToLower())
         break;
     case "github":
         builder.Services.AddGitHubAIClient(options => {
-            options.BaseUrl = builder.Configuration["AI:GitHub:BaseUrl"] ?? "https://api.github.com";
+            options.Endpoint = new Uri(builder.Configuration["AI:GitHub:BaseUrl"] ?? "https://api.github.com");
             options.ModelId = builder.Configuration["AI:GitHub:ModelId"] ?? "codify";
             // Add auth if needed
             if (!string.IsNullOrEmpty(builder.Configuration["AI:GitHub:ApiKey"])) {
-                options.ApiKey = builder.Configuration["AI:GitHub:ApiKey"];
+                options.AuthToken = builder.Configuration["AI:GitHub:ApiKey"];
             }
         }).AddChatClient();
         break;
     case "foundry":
-        builder.Services.AddFoundryClient(options => {
-            options.BaseUrl = builder.Configuration["AI:Foundry:BaseUrl"] ?? "http://localhost:8080";
+        builder.Services.AddFoundryAIClient(options => {
+            options.Endpoint = new Uri(builder.Configuration["AI:Foundry:BaseUrl"] ?? "http://localhost:8080");
             options.ModelId = builder.Configuration["AI:Foundry:ModelId"] ?? "llama3";
             // Add auth if needed
             if (!string.IsNullOrEmpty(builder.Configuration["AI:Foundry:ApiKey"])) {
