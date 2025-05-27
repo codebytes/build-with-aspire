@@ -21,22 +21,18 @@ switch (aiType.ToLower())
             .AddChatClient(chatDeploymentName);
         break;
     case "github":
-        builder.Services.AddGitHubAIClient(options => {
+        builder.AddAzureOpenAIClient("github", options => {
             options.Endpoint = new Uri(builder.Configuration["AI:GitHub:BaseUrl"] ?? "https://api.github.com");
-            options.ModelId = builder.Configuration["AI:GitHub:ModelId"] ?? "codify";
-            // Add auth if needed
             if (!string.IsNullOrEmpty(builder.Configuration["AI:GitHub:ApiKey"])) {
-                options.AuthToken = builder.Configuration["AI:GitHub:ApiKey"];
+                options.Key = builder.Configuration["AI:GitHub:ApiKey"];
             }
         }).AddChatClient();
         break;
     case "foundry":
-        builder.Services.AddFoundryAIClient(options => {
+        builder.AddAzureOpenAIClient("foundry", options => {
             options.Endpoint = new Uri(builder.Configuration["AI:Foundry:BaseUrl"] ?? "http://localhost:8080");
-            options.ModelId = builder.Configuration["AI:Foundry:ModelId"] ?? "llama3";
-            // Add auth if needed
             if (!string.IsNullOrEmpty(builder.Configuration["AI:Foundry:ApiKey"])) {
-                options.ApiKey = builder.Configuration["AI:Foundry:ApiKey"];
+                options.Key = builder.Configuration["AI:Foundry:ApiKey"];
             }
         }).AddChatClient();
         break;

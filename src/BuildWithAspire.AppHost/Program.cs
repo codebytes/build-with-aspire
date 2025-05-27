@@ -28,13 +28,13 @@ switch (aiType.ToLower())
         chat = ollama;
         break;
     case "github":
-        // Create connection string parameters for GitHub
+        // Use connection string for GitHub endpoint
         var githubBaseUrl = builder.Configuration["AI:GitHub:BaseUrl"] ?? "https://api.github.com";
         var githubModelId = builder.Configuration["AI:GitHub:ModelId"] ?? "codify";
         chat = builder.AddConnectionString("github", $"BaseUrl={githubBaseUrl};ModelId={githubModelId}");
         break;
     case "foundry":
-        // Create connection string parameters for Foundry
+        // Use connection string for Foundry endpoint
         var foundryBaseUrl = builder.Configuration["AI:Foundry:BaseUrl"] ?? "http://localhost:8080";
         var foundryModelId = builder.Configuration["AI:Foundry:ModelId"] ?? "llama3";
         chat = builder.AddConnectionString("foundry", $"BaseUrl={foundryBaseUrl};ModelId={foundryModelId}");
