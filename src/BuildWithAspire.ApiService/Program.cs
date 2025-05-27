@@ -20,6 +20,26 @@ switch (aiType.ToLower())
         builder.AddAzureOpenAIClient(chatDeploymentName)
             .AddChatClient(chatDeploymentName);
         break;
+    case "github":
+        builder.Services.AddGitHubAIClient(options => {
+            options.BaseUrl = builder.Configuration["AI:GitHub:BaseUrl"] ?? "https://api.github.com";
+            options.ModelId = builder.Configuration["AI:GitHub:ModelId"] ?? "codify";
+            // Add auth if needed
+            if (!string.IsNullOrEmpty(builder.Configuration["AI:GitHub:ApiKey"])) {
+                options.ApiKey = builder.Configuration["AI:GitHub:ApiKey"];
+            }
+        }).AddChatClient();
+        break;
+    case "foundry":
+        builder.Services.AddFoundryClient(options => {
+            options.BaseUrl = builder.Configuration["AI:Foundry:BaseUrl"] ?? "http://localhost:8080";
+            options.ModelId = builder.Configuration["AI:Foundry:ModelId"] ?? "llama3";
+            // Add auth if needed
+            if (!string.IsNullOrEmpty(builder.Configuration["AI:Foundry:ApiKey"])) {
+                options.ApiKey = builder.Configuration["AI:Foundry:ApiKey"];
+            }
+        }).AddChatClient();
+        break;
     default:
         throw new InvalidOperationException($"Unsupported AI type: {aiType}");
 }
