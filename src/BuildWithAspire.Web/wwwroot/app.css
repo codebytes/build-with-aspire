@@ -104,3 +104,14 @@ h1:focus {
 .msg {
     /*display: inline;*/
 }
+
+/* Chat controls */
+.chat-controls {
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.chat-controls button {
+    margin-left: 10px;
+}

@@ -4,10 +4,15 @@
 @using Microsoft.Extensions.AI
 @using ChatRole = Microsoft.Extensions.AI.ChatRole
 @rendermode InteractiveServer
+@implements IAsyncDisposable
 
 <PageTitle>Chat</PageTitle>
 
 <h1>Chat</h1>
+
+<div class="chat-controls">
+    <button class="btn btn-secondary" @onclick="CreateNewChat">New Chat</button>
+</div>
 
 <div id="scrollbox">
     @foreach (var item in _messages)
@@ -26,18 +31,70 @@
 @code {
     // new message input
     private string _newMessage = "";
+    // Unique identifier for this chat session
+    private string _chatId = Guid.NewGuid().ToString();
+    // list of messages in chat
+    private List<Message> _messages = new List<Message>();
 
     [Inject]
     public ChatApiClient chatApiClient { get; set; } = default!;
-    // list of messages in chat
-    private List<Message> _messages = new List<Message>();
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadChatHistory();
+    }
+    
+    public async ValueTask DisposeAsync()
+    {
+        // Cleanup if needed
+    }
+
+    private async Task LoadChatHistory()
+    {
+        try
+        {
+            var history = await chatApiClient.GetChatHistoryAsync(_chatId);
+            _messages.Clear();
+            
+            foreach (var msg in history)
+            {
+                _messages.Add(new Message(msg.Role, Markdown.ToHtml(msg.Content)));
+            }
+            
+            await InvokeAsync(StateHasChanged);
+        }
+        catch
+        {
+            // If this fails (for first load), we'll just have an empty chat
+        }
+    }
+
+    private async Task CreateNewChat()
+    {
+        // Clear the messages in the UI
+        _messages.Clear();
+        
+        // Generate a new chat ID
+        _chatId = Guid.NewGuid().ToString();
+        
+        // Create a new chat server-side (clears history)
+        await chatApiClient.CreateNewChatAsync(_chatId);
+        
+        _newMessage = string.Empty;
+        await InvokeAsync(StateHasChanged);
+    }
 
     private async Task SendAsync(string message)
     {
         if (!string.IsNullOrWhiteSpace(message))
         {
+            // Show the user message right away
             _messages.Add(new Message(ChatRole.User, message));
-            var response = await chatApiClient.GetChatAsync(message);
+            
+            // Get AI response
+            var response = await chatApiClient.GetChatAsync(_chatId, message);
+            
+            // Add the response to the UI
             _messages.Add(new Message(ChatRole.Assistant, Markdown.ToHtml(response)));
 
             _newMessage = string.Empty;
@@ -59,5 +116,4 @@
 
         public string CSS => Role == ChatRole.User ? "sent" : "received";
     }
-
 }
