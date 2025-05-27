@@ -3,6 +3,9 @@ using Microsoft.SemanticKernel;
 using Microsoft.Extensions.AI;
 using StackExchange.Redis;
 using System.Text.Json;
+using AuthorRole = Microsoft.SemanticKernel.ChatCompletion.AuthorRole;
+
+namespace BuildWithAspire.ApiService.Services;
 
 public class ChatService
 {
@@ -49,7 +52,7 @@ public class ChatService
 
         // Add the message from the agent to the chat history
         history.AddAssistantMessage(combinedResponse);
-        
+
         // Save updated history to Redis
         await SaveChatHistoryAsync(chatId, history);
         
@@ -68,13 +71,13 @@ public class ChatService
         foreach (var msg in history)
         {
             // Skip system messages in the UI display
-            if (msg.Role == ChatRole.System)
+            if (msg.Role == AuthorRole.System)
                 continue;
                 
             messages.Add(new ChatMessageModel
             {
-                Role = msg.Role,
-                Content = msg.Content
+                Role = ConvertToAIRole(msg.Role),
+                Content = msg.Content ?? string.Empty
             });
         }
         
@@ -105,7 +108,7 @@ public class ChatService
             
             foreach (var msg in messages!)
             {
-                history.Add(new ChatMessageContent(msg.Role, msg.Content));
+                history.Add(new ChatMessageContent(ConvertToAuthorRole(msg.Role), msg.Content));
             }
             
             return history;
@@ -123,12 +126,26 @@ public class ChatService
         // Convert to a serializable form
         var messages = history.Select(msg => new SerializableChatMessage
         {
-            Role = msg.Role,
-            Content = msg.Content
+            Role = ConvertToAIRole(msg.Role),
+            Content = msg.Content ?? string.Empty
         }).ToList();
         
         var json = JsonSerializer.Serialize(messages);
         await db.StringSetAsync($"chat:{chatId}", json);
+    }    private static ChatRole ConvertToAIRole(AuthorRole authorRole)
+    {
+        if (authorRole == AuthorRole.System) return ChatRole.System;
+        if (authorRole == AuthorRole.User) return ChatRole.User;
+        if (authorRole == AuthorRole.Assistant) return ChatRole.Assistant;
+        return ChatRole.User;
+    }
+
+    private static AuthorRole ConvertToAuthorRole(ChatRole chatRole)
+    {
+        if (chatRole == ChatRole.System) return AuthorRole.System;
+        if (chatRole == ChatRole.User) return AuthorRole.User;
+        if (chatRole == ChatRole.Assistant) return AuthorRole.Assistant;
+        return AuthorRole.User;
     }
     
     private class SerializableChatMessage

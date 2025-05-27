@@ -3,11 +3,12 @@ using Microsoft.Extensions.AI;
 using Microsoft.SemanticKernel;
 using OpenAI;
 using StackExchange.Redis;
+using BuildWithAspire.ApiService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
-builder.AddRedis("redis");
+builder.AddRedisClient("redis");
 
 var aiType = builder.Configuration["AI:Type"] ?? "ollama";
 var chatDeploymentName = builder.Configuration["AI:ChatDeploymentName"] ?? "chat";
@@ -83,20 +84,37 @@ app.MapGet("/weatherforecast", (IChatClient client) =>
 .WithName("GetWeatherForecast")
 .WithOpenApi();
 
-// Updated chat endpoint to handle chat history
-app.MapGet("/chat", async (ChatService chatService, string chatId, string? message) => 
+// Chat endpoint to send message
+app.MapPost("/chat", async (ChatService chatService, ChatRequest request) => 
 {
-    if (!string.IsNullOrEmpty(message))
+    if (string.IsNullOrEmpty(request.ChatId))
     {
-        return await chatService.ProcessMessage(chatId, message);
+        return Results.BadRequest("chatId is required");
     }
-    else
+    
+    if (string.IsNullOrEmpty(request.Message))
     {
-        // Return previous chat messages if no new message
-        return await chatService.GetChatHistoryMessagesAsync(chatId);
+        return Results.BadRequest("message is required");
     }
+    
+    var response = await chatService.ProcessMessage(request.ChatId, request.Message);
+    return Results.Ok(response);
 })
-.WithName("Chat")
+.WithName("SendChatMessage")
+.WithOpenApi();
+
+// Chat endpoint to get history
+app.MapGet("/chat/{chatId}", async (ChatService chatService, string chatId) => 
+{
+    if (string.IsNullOrEmpty(chatId))
+    {
+        return Results.BadRequest("chatId is required");
+    }
+    
+    var messages = await chatService.GetChatHistoryMessagesAsync(chatId);
+    return Results.Ok(messages);
+})
+.WithName("GetChatHistory")
 .WithOpenApi();
 
 // Add new chat endpoint to clear chat history
@@ -114,3 +132,5 @@ record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 {
     public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
 }
+
+public record ChatRequest(string ChatId, string Message);
