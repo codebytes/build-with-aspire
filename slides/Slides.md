@@ -4,9 +4,13 @@ theme: custom-default
 footer: '@Chris_L_Ayers - https://chris-ayers.com'
 ---
 
+![bg fit](./img/aspire_title.png)
+
+---
+
 <!-- _footer: 'https://github.com/codebytes/build-with-aspire' -->
 
-# Aspiring .NET with Azure OpenAI
+# Aspiring .NET with Azure OpenAI and Ollama
 
 ## Chris Ayers
 
@@ -733,7 +737,32 @@ builder.AddProject<Projects.Frontend>("frontend")
 - [What's new in .NET Aspire 9.3](https://learn.microsoft.com/en-us/dotnet/aspire/whats-new/aspire-9.3)
 - [Aspirify](https://aspireify.net/)
 - [Aspire Samples](https://github.com/dotnet/aspire-samples)
-- [YARP Documentation](https://microsoft.github.io/reverse-proxy/)
+- [eShopLite](https://github.com/Azure-Samples/eShopLite)
+ 
+</div>
+<div>
+
+## Follow Chris Ayers
+
+<i class="fa-brands fa-bluesky"></i> BlueSky: [@chris-ayers.com](https://bsky.app/profile/chris-ayers.com)
+<i class="fa-brands fa-linkedin"></i> LinkedIn: - [chris\-l\-ayers](https://linkedin.com/in/chris-l-ayers/)
+<i class="fa fa-window-maximize"></i> Blog: [https://chris-ayers\.com/](https://chris-ayers.com/)
+<i class="fa-brands fa-github"></i> GitHub: [Codebytes](https://github.com/codebytes)
+<i class="fa-brands fa-mastodon"></i> Mastodon: [@Chrisayers@hachyderm.io](https://hachyderm.io/@Chrisayers)
+~~<i class="fa-brands fa-twitter"></i> Twitter: @Chris_L_Ayers~~
+
+</div>
+
+</div>
+
+---
+
+# Feedback
+
+<div class="columns">
+<div>
+
+![](./img/aspiring_net_with_azure_open_ai_and_ollama-qr-code.png)
 
 </div>
 <div>
@@ -750,6 +779,7 @@ builder.AddProject<Projects.Frontend>("frontend")
 </div>
 
 </div>
+
 
 <!-- Needed for mermaid, can be anywhere in file except frontmatter -->
 <script type="module">
