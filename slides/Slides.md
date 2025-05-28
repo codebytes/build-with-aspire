@@ -59,122 +59,43 @@ footer: '@Chris_L_Ayers - https://chris-ayers.com'
 
 ## Orchestration and Fundamentals
 
-Simplify coordinating multiple services and resources in cloud-native applications
+- **Service Management**
+- **Configuration**
+- **Service Discovery**
+- **Health & Telemetry**
 
 </div>
 <div>
 
 ## Integrations
 
-Connect seamlessly with Azure and third-party services with minimal configuration
+- **Azure Services**
+- **Local Development**
+- **Multi-Platform**
+- **Community Ecosystem**
 
 </div>
 <div>
 
 ## Tooling
 
-Enhance the developer experience with powerful monitoring and debugging tools
+- **IDE Integration**
+- **Dashboard**
+- **AppHost Project**
+- **CLI Support**
 
 </div>
 </div>
 
 ---
 
-# Orchestration and Fundamentals
-
-<div class="columns">
-<div>
-
-- **Automated Service Management**: Coordinate multiple services seamlessly
-- **Centralized Configuration**: Auto-manage keys and credentials
-- **Simplified Containers**: Zero-friction configuration for ports and credentials
-
-</div>
-<div>
-
-- **Observability**: Built-in logging, monitoring, and debugging
-- **Multi-Container Support**: Efficient container coordination
-- **Resource Lifecycle**: Predictable lifecycle events for all resources
-
-</div>
-</div>
-
----
-
-# Integrations
-
-<div class="columns">
-<div>
-
-- **Azure Services**: Seamless integration with Azure resources
-- **Local Development**: Emulators and container support
-- **Multi-Platform**: Support for various languages and platforms
-
-</div>
-<div>
-
-- **Built-in Security**: Authentication and authorization
-- **Community Ecosystem**: Growing toolkit of extensions
-- **Simple Configuration**: Connect services with minimal code
-
-</div>
-</div>
-
----
-
-# Tooling
-
-<div class="columns">
-<div>
-
-- **IDE Integration**: Visual Studio and VS Code support
-- **Project Templates**: Quickly start new Aspire projects
-- **Dashboard**: Monitor and debug your applications
-
-</div>
-<div>
-
-- **AppHost Project**: Central orchestration control
-- **Service Defaults**: Consistent configuration across services
-- **CLI Support**: Command-line development experience
-
-</div>
-</div>
-
----
-
-# Orchestration and Fundamentals
-
----
-
-# Core Fundamentals
-
-<div class="columns">
-<div>
-
-- **Service Discovery**: Automatically connect your services
-- **Configuration**: Standardized settings across your application
-- **Custom Commands**: Extend and automate your development workflow
-
-</div>
-<div>
-
-- **Health Checks**: Monitor service readiness and liveness
-- **Telemetry**: Built-in logging and distributed tracing
-- **Security**: Integrated authentication and authorization
-
-</div>
-</div>
-
----
-
-# Service Defaults
+# Service Defaults & Features
 
 <div class="columns">
 <div>
 
 - **Security Defaults**
-  - Authentication with Azure AD
+  - Azure AD authentication
   - Secure secrets management
 - **Resilience & Scalability**
   - Automatic retry policies
@@ -183,59 +104,13 @@ Enhance the developer experience with powerful monitoring and debugging tools
 </div>
 <div>
 
-- **Monitoring & Observability**
-  - Pre-configured logging and tracing
-  - Metrics collection for all services
-  - Application insights integration
-
-</div>
-</div>
-
----
-
-# Launch Profiles & Commands
-
-<div class="columns">
-<div>
-
 - **Custom Commands**
-  - Define workflow automation
+  - Workflow automation
   - Database migrations, data seeding
   - Development environment reset
-  - Integrated with dashboard
-
-</div>
-<div>
-
 - **Launch Profiles**
-  - Configure service startup settings
-  - Set environment variables and ports
-  - Multiple profile support (local, cloud, test)
-  - Simplified environment switching
-
-</div>
-</div>
-
----
-
-# Health Checks & Telemetry
-
-<div class="columns">
-<div>
-
-- **Health Checks**
-  - Monitor service health
-  - Dashboard visualization
-  - Custom health endpoints
-  - Azure monitoring
-
-</div>
-<div>
-
-- **Telemetry**
-  - Auto logs, traces, metrics
-  - Distributed tracing
-  - GitHub Copilot AI debugging (9.3)
+  - Multiple environments (local, cloud, test)
+  - Environment variable configuration
 
 </div>
 </div>
@@ -244,27 +119,21 @@ Enhance the developer experience with powerful monitoring and debugging tools
 
 # .NET Aspire Dashboard
 
-![width:800px center](./img/aspire-dashboard.png)
-
----
-
-# .NET Aspire Dashboard
-
 <div class="columns">
 <div>
 
-- **Real-time Monitoring**: View all services and dependencies
-- **Interactive Debugging**: Inspect logs and trace requests
-- **Resource Management**: Control lifecycles of all components
-- **Health Visualization**: Monitor service health at a glance
+![fit](./img/aspire-dashboard.png)
 
 </div>
 <div>
 
-- **Structured Logs**: Filter and search across all services
-- **Trace Visualization**: Track requests across service boundaries
-- **Secret Management**: Configure secure credentials
-- **Copilot AI Debugging**: Get intelligent troubleshooting (9.3)
+## Dashboard Features
+
+- **Real-time Monitoring**
+- **Interactive Debugging**
+- **Resource Management**
+- **Secret Management**
+- **Copilot AI Debugging**
 
 </div>
 </div>
@@ -380,44 +249,37 @@ Enhance the developer experience with powerful monitoring and debugging tools
 
 ---
 
-# Resource Management
+# Local to Cloud Integrations
 
-<div class="columns">
-<div>
-
-- **Simple Connections**: Easily connect to Azure and third-party services
-- **Automatic Configuration**: Service discovery and configuration management
-- **Secret Handling**: Securely manage credentials, keys, and certificates
-
-</div>
-<div>
-
-- **Environment Flexibility**: Same code works locally and in the cloud
-- **Resource Abstraction**: Use existing Azure services or create new ones
-- **Minimal Code**: Connect and configure with just a few lines of code
-
-</div>
-</div>
+| **Provider** | **Local Development** | **Cloud Production** |
+|--------------|----------------------|---------------------|
+| **OpenAI** | Ollama, Foundry local, LM Studio | Azure OpenAI Service, Azure AI Foundry |
+| **Models** | Llama 3, Phi-4, Qwen | GPT-4o, GPT-4o-mini |
+| **Embeddings** | Local embedding models | text-embedding-3-small/large |
+| **Vector DB** | Qdrant, Chroma, pgvector | Azure AI Search, Cosmos DB |
+| **Image Gen** | DALL-E via API | DALL-E 3 via Azure |
 
 ---
 
-# Seamless Development Experience
+# Resource Management & Development
 
 <div class="columns">
 <div>
 
-- **Zero-Friction**: Local to cloud transitions
+## Local to Cloud
+- **Zero-Friction**: Seamless local to cloud transitions
 - **Emulator Support**: Local containers for speed
-- **Auto Connections**: Managed connection strings
 - **Hybrid Development**: Mix local/cloud resources
+- **Environment Control**: Component-level targeting
 
 </div>
 <div>
 
-- **Resource Flexibility**: Use existing/new services
-- **Example**: Azurite locally → Azure Blob in production
-- **Consistent Code**: Works across environments
-- **Environment Control**: Component-level targeting
+## Configuration
+- **Simple Connections**: Easy Azure and third-party integration
+- **Auto Configuration**: Service discovery and management
+- **Secret Handling**: Secure credential management
+- **Minimal Code**: Connect with just a few lines
 
 </div>
 </div>
@@ -458,16 +320,15 @@ builder.AddOllama("ollama")
     .WithModel("llama3");
 
 // Add client to use the model
-builder.Services.AddClientForOllama();
+ builder.AddOllamaApiClient();
 ```
 
 ```csharp
 // Single line change for production
-builder.AddAzureOpenAI("ai")
-    .WithModel("gpt-4o-mini");
+builder.AddAzureOpenAI("ai");
 
 // Same client code works unchanged
-builder.Services.AddClientForAzureOpenAI();
+builder.AddAzureOpenAIClient();
 ```
 
 </div>
@@ -484,126 +345,35 @@ builder.Services.AddClientForAzureOpenAI();
 
 ---
 
-# Cloud Development
+# Azure Deployment & Authentication
 
 <div class="columns">
 <div>
 
-- **Azure App Service** (Preview, 9.3)
+## Deployment Targets
+- **Azure App Service**
 - **Azure Container Apps**
-- **Kubernetes** (via improved manifest support)
-- **Azure Container Registry**
-  - Use existing ACR (9.3)
-  - Integrate with multiple compute environments
+- **Kubernetes**
+  
+## New in 9.3
+- **Per-resource publishing**
+- **Resource-to-compute mapping**
+- **Improved CI/CD parameters**
 
 </div>
 <div>
 
-- **Deployment Options**
-  - Manual deployment
-  - CI/CD pipelines
-  - Azure Developer CLI (azd)
-  - GitHub Actions & Azure DevOps
-  - Terraform & Bicep
-
-</div>
-</div>
-
----
-
-# Azure Authentication Options
-
-<div class="columns">
-<div>
-
+## Authentication
 - **Credential Providers**
-  - AzureCli
-  - AzurePowerShell
-  - VisualStudio
-  - VisualStudioCode
-  - AzureDeveloperCli
-  - InteractiveBrowser
-
-</div>
-<div>
-
-- **Key Vault Integrations (9.3)**
-  - Use existing Key Vault secrets
-  - Inject as environment variables
-  - Separate key/cert clients
-  - Secure multi-app access
+- **Key Vault Integration**
+- **Secure Access**
+## Developer CLI
+- Native .NET Aspire support
+- Auto-detects app structure
+- Environment variable mapping
 
 </div>
 </div>
-
----
-
-# Deploy and Configure Resources
-
-<div class="columns">
-<div>
-
-- **In Visual Studio**
-  - Azure provisioning built-in
-  - Configure resources/groups
-  - Deploy to compute targets
-  - Monitor deployments
-
-</div>
-<div>
-
-- **New Deployment Model (9.3)**
-  - Per-resource publishing
-  - Resource-to-compute mapping
-  - Secure SQL multi-app access
-  - Free tier SQL SKU default
-
-</div>
-</div>
-
----
-
-# Deploying to Azure
-
-<div class="columns">
-<div>
-
-- **New publisher model** (9.3)
-  - Per-resource publishing
-  - Resource-specific compute environments
-
-- **Docker Compose & Kubernetes** (9.3)
-  - Programmatic configuration control
-  - Link parameters via environment variables
-
-</div>
-<div>
-
-- **Parameter mapping for CI/CD** (9.3)
-  - Exported as env vars/secrets
-  - Consistent naming conventions
-  - Interactive secret management
-
-- **Azure integrations** (9.3)
-  - Azure App Service
-  - Use existing Azure Container Registry
-  - Azure App Configuration support
-
-</div>
-</div>
-
----
-
-# Azure Developer CLI Integration
-
-- Native support for .NET Aspire deployments
-- `azd init` auto-detects app structure
-- **CI/CD Improvements (9.3)**
-  - Simplified parameter handling
-  - Clear naming conventions
-  - Environment variable mapping
-
-![bg right:40% fit](./img/azd.png)
 
 ---
 
@@ -752,7 +522,6 @@ builder.AddProject<Projects.Frontend>("frontend")
 ~~<i class="fa-brands fa-twitter"></i> Twitter: @Chris_L_Ayers~~
 
 </div>
-
 </div>
 
 ---
