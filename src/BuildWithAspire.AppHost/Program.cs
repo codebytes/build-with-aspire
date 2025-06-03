@@ -8,7 +8,7 @@ var chatDeploymentName = builder.Configuration["AI:ChatDeploymentName"] ?? "chat
 
 // Azure OpenAI configuration
 var openai = builder.AddAzureOpenAI("openai")
-    .AddDeployment(new AzureOpenAIDeployment(chatDeploymentName, "gpt-4o", "2024-11-20", "GlobalStandard", 10));
+    .AddDeployment(chatDeploymentName, "gpt-4o", "2024-11-20");
 
 // Ollama configuration
 var ollama = builder.AddOllama("ollama")
