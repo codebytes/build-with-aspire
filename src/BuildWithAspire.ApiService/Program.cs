@@ -42,15 +42,26 @@ app.UseHttpsRedirection();
 // Apply migrations on startup
 try
 {
+    app.Logger.LogInformation("Initializing database connection and schema");
     using (var scope = app.Services.CreateScope())
     {
         var dbContext = scope.ServiceProvider.GetRequiredService<ChatDbContext>();
-        await dbContext.Database.EnsureCreatedAsync();
+        var startTime = DateTime.UtcNow;
+        var wasCreated = await dbContext.Database.EnsureCreatedAsync();
+        var duration = DateTime.UtcNow - startTime;
+        
+        if (wasCreated)
+        {
+            app.Logger.LogInformation("Database schema created successfully. Duration: {Duration}ms", duration.TotalMilliseconds);
+        }
+        else
+        {
+            app.Logger.LogInformation("Database schema already exists. Duration: {Duration}ms", duration.TotalMilliseconds);
+        }
     }
 }
 catch (Exception ex)
 {
-    // Log database initialization failure but continue to allow service to start
     app.Logger.LogError(ex, "Database initialization failed. Service will continue without database.");
 }
 

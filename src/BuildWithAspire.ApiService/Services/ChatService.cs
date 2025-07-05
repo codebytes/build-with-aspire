@@ -2,89 +2,150 @@ using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel;
 using Microsoft.Extensions.AI;
 using BuildWithAspire.ApiService.Models;
+using BuildWithAspire.ApiService.Configuration;
 
 namespace BuildWithAspire.ApiService.Services;
 
 public class ChatService
 {
     private readonly Kernel _kernel;
+    private readonly ILogger<ChatService> _logger;
+    private readonly AIConfiguration.AISettings _aiSettings;
 
-    public ChatService(Kernel kernel)
+    public ChatService(Kernel kernel, ILogger<ChatService> logger, AIConfiguration.AISettings aiSettings)
     {
         _kernel = kernel;
+        _logger = logger;
+        _aiSettings = aiSettings;
     }
 
     public async Task<string> ProcessMessage(string message)
     {
-#pragma warning disable SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-        var chatCompletionService = _kernel.GetRequiredService<IChatClient>()
-               .AsChatCompletionService();
-#pragma warning restore SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-
-        ChatHistory history = [];
-        history.AddSystemMessage(@"You are an AI demonstration application. 
-            You are a helpful chatbot. 
-            Respond to the user' input responsibly.
-            All responses should be safe for work.");
-        // Get user input
-        history.AddUserMessage(message);
-
-        // Get the response from the AI
-        var response = chatCompletionService.GetStreamingChatMessageContentsAsync(history, kernel: _kernel);
-
-        string combinedResponse = string.Empty;
-        await foreach (var messageResponse in response)
-        {
-            combinedResponse += messageResponse;
-        }
-
-        // Add the message from the agent to the chat history
-        history.AddAssistantMessage(combinedResponse);
-        return combinedResponse;
-    }
-
-    public async Task<string> ProcessMessagesWithHistory(List<ChatMessageRequest> messages)
-    {
+        _logger.LogInformation("Processing single message. MessageLength: {MessageLength}", message?.Length ?? 0);
+        
         try
         {
-#pragma warning disable SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-            var chatCompletionService = _kernel.GetRequiredService<IChatClient>()
-                   .AsChatCompletionService();
-#pragma warning restore SKEXP0001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+            // Use Microsoft.Extensions.AI directly for better token usage tracking
+            var chatClient = _kernel.GetRequiredService<IChatClient>();
 
-            ChatHistory history = [];
-            history.AddSystemMessage(@"You are an AI demonstration application. 
-                You are a helpful chatbot. 
-                Respond to the user' input responsibly.
-                All responses should be safe for work.");
-            
-            // Add all messages from history
-            foreach (var msg in messages)
+            var chatMessages = new List<ChatMessage>
             {
-                if (msg.Role.Equals("user", StringComparison.OrdinalIgnoreCase))
-                {
-                    history.AddUserMessage(msg.Content);
-                }
-                else if (msg.Role.Equals("assistant", StringComparison.OrdinalIgnoreCase))
-                {
-                    history.AddAssistantMessage(msg.Content);
-                }
+                new(ChatRole.System, @"You are an AI demonstration application. 
+                    You are a helpful chatbot. 
+                    Respond to the user' input responsibly.
+                    All responses should be safe for work."),
+                new(ChatRole.User, message ?? string.Empty)
+            };
+            
+            _logger.LogDebug("Added user message to chat history");
+
+            var startTime = DateTime.UtcNow;
+            var response = await chatClient.GetResponseAsync(chatMessages);
+            var duration = DateTime.UtcNow - startTime;
+            
+            var combinedResponse = response.Text ?? string.Empty;
+            
+            // Log token usage if available
+            if (response.Usage != null)
+            {
+                _logger.LogInformation("AI response generated successfully. ResponseLength: {ResponseLength}, Duration: {Duration}ms, InputTokens: {InputTokens}, OutputTokens: {OutputTokens}, TotalTokens: {TotalTokens}", 
+                    combinedResponse.Length, duration.TotalMilliseconds, 
+                    response.Usage.InputTokenCount, response.Usage.OutputTokenCount, response.Usage.TotalTokenCount);
+                
+                // Log cost-focused metrics for monitoring
+                _logger.LogInformation("Token usage metrics - Provider: {Provider}, Model: {Model}, InputTokens: {InputTokens}, OutputTokens: {OutputTokens}, ConversationLength: 1", 
+                    _aiSettings.Provider, _aiSettings.Model, response.Usage.InputTokenCount, response.Usage.OutputTokenCount);
             }
-            
-            // Get the response from the AI with timeout handling
-            using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
-            var response = chatCompletionService.GetStreamingChatMessageContentsAsync(history, kernel: _kernel, cancellationToken: cts.Token);
-
-            string combinedResponse = string.Empty;
-            await foreach (var messageResponse in response.WithCancellation(cts.Token))
+            else
             {
-                combinedResponse += messageResponse;
+                _logger.LogInformation("AI response generated successfully. ResponseLength: {ResponseLength}, Duration: {Duration}ms", 
+                    combinedResponse.Length, duration.TotalMilliseconds);
             }
 
             return combinedResponse;
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to process single message. MessageLength: {MessageLength}", message?.Length ?? 0);
+            throw new InvalidOperationException($"Failed to process message: {ex.Message}", ex);
+        }
+    }
+
+    public async Task<string> ProcessMessagesWithHistory(List<ChatMessageRequest> messages)
+    {
+        var messageCount = messages?.Count ?? 0;
+        _logger.LogInformation("Processing messages with history. MessageCount: {MessageCount}", messageCount);
+        
+        try
+        {
+            // Use Microsoft.Extensions.AI directly for better token usage tracking
+            var chatClient = _kernel.GetRequiredService<IChatClient>();
+
+            var chatMessages = new List<ChatMessage>
+            {
+                new(ChatRole.System, @"You are an AI demonstration application. 
+                    You are a helpful chatbot. 
+                    Respond to the user' input responsibly.
+                    All responses should be safe for work.")
+            };
+            
+            var userMessages = 0;
+            var assistantMessages = 0;
+            
+            // Add all messages from history
+            foreach (var msg in messages ?? [])
+            {
+                if (msg.Role.Equals("user", StringComparison.OrdinalIgnoreCase))
+                {
+                    chatMessages.Add(new ChatMessage(ChatRole.User, msg.Content));
+                    userMessages++;
+                }
+                else if (msg.Role.Equals("assistant", StringComparison.OrdinalIgnoreCase))
+                {
+                    chatMessages.Add(new ChatMessage(ChatRole.Assistant, msg.Content));
+                    assistantMessages++;
+                }
+            }
+            
+            _logger.LogDebug("Chat history prepared. UserMessages: {UserMessages}, AssistantMessages: {AssistantMessages}", 
+                userMessages, assistantMessages);
+            
+            var startTime = DateTime.UtcNow;
+            using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+            
+            // Use non-streaming response to get usage information
+            var response = await chatClient.GetResponseAsync(chatMessages, cancellationToken: cts.Token);
+            var duration = DateTime.UtcNow - startTime;
+            
+            var combinedResponse = response.Text ?? string.Empty;
+            
+            // Log token usage if available
+            if (response.Usage != null)
+            {
+                _logger.LogInformation("AI conversation response generated successfully. InputMessages: {InputMessages}, ResponseLength: {ResponseLength}, Duration: {Duration}ms, InputTokens: {InputTokens}, OutputTokens: {OutputTokens}, TotalTokens: {TotalTokens}", 
+                    messageCount, combinedResponse.Length, duration.TotalMilliseconds, 
+                    response.Usage.InputTokenCount, response.Usage.OutputTokenCount, response.Usage.TotalTokenCount);
+                
+                // Log cost-focused metrics for monitoring
+                _logger.LogInformation("Token usage metrics - Provider: {Provider}, Model: {Model}, InputTokens: {InputTokens}, OutputTokens: {OutputTokens}, ConversationLength: {ConversationLength}", 
+                    _aiSettings.Provider, _aiSettings.Model, response.Usage.InputTokenCount, response.Usage.OutputTokenCount, messageCount);
+            }
+            else
+            {
+                _logger.LogInformation("AI conversation response generated successfully. InputMessages: {InputMessages}, ResponseLength: {ResponseLength}, Duration: {Duration}ms", 
+                    messageCount, combinedResponse.Length, duration.TotalMilliseconds);
+            }
+
+            return combinedResponse;
+        }
+        catch (OperationCanceledException ex)
+        {
+            _logger.LogWarning(ex, "AI conversation request timed out. MessageCount: {MessageCount}", messageCount);
+            throw new InvalidOperationException("The AI request timed out. Please try again with a shorter conversation.", ex);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to process conversation messages. MessageCount: {MessageCount}", messageCount);
             throw new InvalidOperationException($"Failed to process messages: {ex.Message}", ex);
         }
     }
