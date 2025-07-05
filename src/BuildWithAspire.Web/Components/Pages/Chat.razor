@@ -9,6 +9,7 @@
 @using Microsoft.AspNetCore.Components.Web
 @rendermode InteractiveServer
 @inject IJSRuntime JS
+@inject ILogger<Chat> Logger
 
 <PageTitle>Chat with History</PageTitle>
 
@@ -205,7 +206,7 @@
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading conversation details: {ex.Message}");
+            Logger.LogError(ex, "Error loading conversation details. ConversationId: {ConversationId}", ConversationId);
             _messages = new List<BuildWithAspire.Web.Models.Message>();
             _currentConversationName = "Error Loading Conversation";
             StateHasChanged();
@@ -221,7 +222,7 @@
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading conversations: {ex.Message}");
+            Logger.LogError(ex, "Error loading conversations list");
             _conversations = new List<ConversationSummary>();
         }
     }
@@ -297,7 +298,8 @@
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error sending message: {ex.Message}");
+                Logger.LogError(ex, "Error sending message. ConversationId: {ConversationId}, MessageLength: {MessageLength}", 
+                    ConversationId, messageText?.Length ?? 0);
                 // Remove the user message if there was an error
                 _messages.Remove(userMessage);
             }
