@@ -1,26 +1,22 @@
+using BuildWithAspire.AppHost.Extensions;
 using Microsoft.Extensions.Configuration;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-var useLocalAI = builder.Configuration.GetValue<bool>("UseLocalAI");
-var chatDeploymentName = builder.Configuration["chatDeploymentName"] ?? "chat";
+// Add PostgreSQL database
+var postgres = builder.AddPostgres("postgres")
+    .WithDataVolume();
 
-var openai = builder.AddAzureOpenAI("openai")
-    .AddDeployment(new AzureOpenAIDeployment(chatDeploymentName, "gpt-4o", "2024-11-20", "GlobalStandard", 10));
+var chatDb = postgres.AddDatabase("chatdb");
 
-var ollama = builder.AddOllama("ollama")
-                .WithDataVolume()
-                .WithOpenWebUI()
-                //.WithContainerRuntimeArgs("--gpus=all")
-                .AddModel("chat", "llama3.2");
+// Add AI model service based on configuration
+var aiService = builder.AddAIModel();
 
-IResourceBuilder<IResourceWithConnectionString> chat = useLocalAI ? ollama : openai;
-
+// Add API service with AI model configuration
 var apiService = builder.AddProject<Projects.BuildWithAspire_ApiService>("apiservice")
-    .WithEnvironment("AI:ChatDeploymentName", chatDeploymentName)
-    .WithEnvironment("AI:Type", useLocalAI ? "ollama" : "azureOpenAi")
-    .WithReference(chat, chatDeploymentName)
-    .WaitFor(chat);
+    .WithReference(chatDb)
+    .WaitFor(postgres)
+    .WithAIModel(aiService);
 
 builder.AddProject<Projects.BuildWithAspire_Web>("webfrontend")
     .WithExternalHttpEndpoints()

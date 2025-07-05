@@ -16,6 +16,14 @@
     </main>
 </div>
 
+<script>
+  window.scrollToBottom = (element) => {
+    if (element) {
+      element.scrollTop = element.scrollHeight;
+    }
+  };
+</script>
+
 <div id="blazor-error-ui">
     An unhandled error has occurred.
     <a href="" class="reload">Reload</a>

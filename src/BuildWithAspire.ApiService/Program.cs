@@ -1,28 +1,22 @@
+using BuildWithAspire.ApiService.Data;
+using BuildWithAspire.ApiService.Extensions;
+using BuildWithAspire.ApiService.Models;
+using BuildWithAspire.ApiService.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using Microsoft.SemanticKernel;
-using OpenAI;
+using ChatRole = Microsoft.Extensions.AI.ChatRole;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-var aiType = builder.Configuration["AI:Type"] ?? "ollama";
-var chatDeploymentName = builder.Configuration["AI:ChatDeploymentName"] ?? "chat";
+// Add PostgreSQL DbContext
+builder.AddNpgsqlDbContext<ChatDbContext>("chatdb");
 
-switch (aiType.ToLower())
-{
-    case "ollama":
-        builder.AddOllamaApiClient(chatDeploymentName)
-            .AddChatClient();
-        break;
-    case "azureopenai":
-        builder.AddAzureOpenAIClient(chatDeploymentName)
-            .AddChatClient(chatDeploymentName);
-        break;
-    default:
-        throw new InvalidOperationException($"Unsupported AI type: {aiType}");
-}
+// Add AI services
+builder.AddAIServices();
 
 builder.Services.AddKernel();
 
@@ -44,6 +38,22 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Apply migrations on startup
+try
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<ChatDbContext>();
+        await dbContext.Database.EnsureCreatedAsync();
+    }
+}
+catch (Exception ex)
+{
+    // Log database initialization failure but continue to allow service to start
+    app.Logger.LogError(ex, "Database initialization failed. Service will continue without database.");
+}
+
 
 app.MapGet("/weatherforecast", (IChatClient client) =>
 {
@@ -81,9 +91,185 @@ app.MapGet("/weatherforecast", (IChatClient client) =>
 .WithName("GetWeatherForecast")
 .WithOpenApi();
 
-app.MapGet("/chat", async (ChatService chatService, string message) => await chatService.ProcessMessage(message))
-.WithName("Chat")
+// Conversation endpoints
+app.MapGet("/conversations", async (ChatDbContext db) =>
+{
+    try
+    {
+        var conversations = await db.Conversations
+            .OrderByDescending(c => c.UpdatedAt)
+            .Select(c => new
+            {
+                c.Id,
+                c.Name,
+                c.CreatedAt,
+                c.UpdatedAt,
+                MessageCount = c.Messages.Count()
+            })
+            .ToListAsync();
+        
+        return Results.Ok(conversations);
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "Error retrieving conversations");
+        return Results.Problem("Failed to retrieve conversations", statusCode: 500);
+    }
+})
+.WithName("GetConversations")
 .WithOpenApi();
+
+app.MapGet("/conversations/{id}", async (Guid id, ChatDbContext db) =>
+{
+    try
+    {
+        var conversation = await db.Conversations
+            .Include(c => c.Messages.OrderBy(m => m.CreatedAt))
+            .FirstOrDefaultAsync(c => c.Id == id);
+
+        if (conversation == null)
+        {
+            return Results.NotFound();
+        }
+
+        return Results.Ok(conversation);
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "Error retrieving conversation with ID: {ConversationId}", id);
+        return Results.Problem("Failed to retrieve conversation", statusCode: 500);
+    }
+})
+.WithName("GetConversation")
+.WithOpenApi();
+
+app.MapPost("/conversations", async ([FromBody] CreateConversationRequest request, ChatDbContext db) =>
+{
+    try
+    {
+        if (string.IsNullOrWhiteSpace(request.Name))
+            return Results.BadRequest("Conversation name cannot be empty");
+
+        var conversation = new Conversation
+        {
+            Id = Guid.NewGuid(),
+            Name = request.Name,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        db.Conversations.Add(conversation);
+        await db.SaveChangesAsync();
+
+        return Results.Created($"/conversations/{conversation.Id}", conversation);
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "Error creating conversation: {ConversationName}", request.Name);
+        return Results.Problem("Failed to create conversation", statusCode: 500);
+    }
+})
+.WithName("CreateConversation")
+.WithOpenApi();
+
+app.MapPost("/conversations/{id}/messages", async (Guid id, [FromBody] SendMessageRequest request, ChatService chatService, ChatDbContext db) =>
+{
+    try
+    {
+        // Validate input
+        if (string.IsNullOrWhiteSpace(request.Message))
+            return Results.BadRequest("Message cannot be empty");
+
+        var conversation = await db.Conversations
+            .Include(c => c.Messages)
+            .FirstOrDefaultAsync(c => c.Id == id);
+
+        if (conversation == null)
+            return Results.NotFound("Conversation not found");
+
+        // Add user message
+        var userMessage = new Message
+        {
+            Id = Guid.NewGuid(),
+            ConversationId = id,
+            Role = "user",
+            Content = request.Message,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        // Add to DbContext directly instead of through navigation property
+        db.Messages.Add(userMessage);
+        conversation.UpdatedAt = DateTime.UtcNow;
+
+        // Save user message first
+        await db.SaveChangesAsync();
+
+        // Prepare history for AI - get all messages for this conversation including the new one
+        var messages = await db.Messages
+            .Where(m => m.ConversationId == id)
+            .OrderBy(m => m.CreatedAt)
+            .Select(m => new ChatMessageRequest
+            {
+                Role = m.Role,
+                Content = m.Content
+            })
+            .ToListAsync();
+
+        // Get AI response with timeout handling
+        string aiResponse;
+        try
+        {
+            aiResponse = await chatService.ProcessMessagesWithHistory(messages);
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogError(ex, "AI service error for conversation {ConversationId}", id);
+            return Results.Problem("Failed to get AI response", statusCode: 500);
+        }
+
+        // Add assistant message
+        var assistantMessage = new Message
+        {
+            Id = Guid.NewGuid(),
+            ConversationId = id,
+            Role = "assistant",
+            Content = aiResponse,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        // Add to DbContext directly instead of through navigation property
+        db.Messages.Add(assistantMessage);
+        await db.SaveChangesAsync();
+
+        return Results.Ok(new { response = aiResponse });
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "Error in SendMessage endpoint for conversation {ConversationId}", id);
+        return Results.Problem("Internal server error", statusCode: 500);
+    }
+})
+.WithName("SendMessage")
+.WithOpenApi();
+
+app.MapDelete("/conversations/{id}", async (Guid id, ChatDbContext db) =>
+{
+    var conversation = await db.Conversations.FindAsync(id);
+    if (conversation == null)
+        return Results.NotFound();
+
+    db.Conversations.Remove(conversation);
+    await db.SaveChangesAsync();
+
+    return Results.NoContent();
+})
+.WithName("DeleteConversation")
+.WithOpenApi();
+
+// Keep the original chat endpoint for backward compatibility
+app.MapGet("/chat", async (ChatService chatService, string message) => await chatService.ProcessMessage(message))
+    .WithName("GetChat")
+    .WithOpenApi();
 
 app.Run();
 
@@ -91,3 +277,7 @@ record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 {
     public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
 }
+
+// Request DTOs
+public record CreateConversationRequest(string Name);
+public record SendMessageRequest(string Message);
