@@ -3,13 +3,9 @@
     "configurations": [
         {
 			"name": "C#: AspireDebug",
-			"type": "coreclr",
+			"type": "dotnet",
 			"request": "launch",
-			"program": "${workspaceFolder}/src/BuildWithAspire.AppHost/bin/Debug/net9.0/BuildWithAspire.AppHost.dll",
-			"args": [],
-			"cwd": "${workspaceFolder}/src/BuildWithAspire.AppHost",
-			"stopAtEntry": false,
-			"console": "integratedTerminal"
+			"projectPath": "${workspaceFolder}/src/BuildWithAspire.AppHost/BuildWithAspire.AppHost.csproj"
 		},
         {
 			"name": "C#: Aspire (Ollama)",
