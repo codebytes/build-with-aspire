@@ -36,7 +36,8 @@ public static class AIConfiguration
 
     public static string GetDeploymentName(IConfiguration configuration)
     {
-        return configuration["AI:DeploymentName"] ?? "chat";
+        var deploymentName = configuration["AI:DeploymentName"];
+        return string.IsNullOrEmpty(deploymentName) ? "chat" : deploymentName;
     }
 
     public static string GetModel(IConfiguration configuration, AIProvider? provider = null)

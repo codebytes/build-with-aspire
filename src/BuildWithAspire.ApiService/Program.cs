@@ -5,7 +5,6 @@ using BuildWithAspire.ApiService.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
-using Microsoft.SemanticKernel;
 using ChatRole = Microsoft.Extensions.AI.ChatRole;
 
 var builder = WebApplication.CreateBuilder(args);

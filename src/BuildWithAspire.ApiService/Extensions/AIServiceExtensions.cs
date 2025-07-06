@@ -52,7 +52,11 @@ public static class AIServiceExtensions
 
     private static void AddAzureOpenAIServices(this IHostApplicationBuilder builder, AIConfiguration.AISettings aiSettings)
     {
-        builder.AddAzureOpenAIClient(aiSettings.DeploymentName)
+        var connectionString = builder.Configuration.GetConnectionString("ai-service");
+        var logger = builder.Services.BuildServiceProvider().GetRequiredService<ILoggerFactory>().CreateLogger("AIServiceExtensions");
+        logger.LogDebug("Azure OpenAI connection string: {ConnectionString}", connectionString);
+
+        builder.AddAzureOpenAIClient("ai-service")
             .AddChatClient(aiSettings.DeploymentName);
     }
 

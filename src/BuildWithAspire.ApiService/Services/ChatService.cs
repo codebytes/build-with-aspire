@@ -1,5 +1,3 @@
-using Microsoft.SemanticKernel.ChatCompletion;
-using Microsoft.SemanticKernel;
 using Microsoft.Extensions.AI;
 using BuildWithAspire.ApiService.Models;
 using BuildWithAspire.ApiService.Configuration;
@@ -8,13 +6,13 @@ namespace BuildWithAspire.ApiService.Services;
 
 public class ChatService
 {
-    private readonly Kernel _kernel;
+    private readonly IChatClient _chatClient;
     private readonly ILogger<ChatService> _logger;
     private readonly AIConfiguration.AISettings _aiSettings;
 
-    public ChatService(Kernel kernel, ILogger<ChatService> logger, AIConfiguration.AISettings aiSettings)
+    public ChatService(IChatClient chatClient, ILogger<ChatService> logger, AIConfiguration.AISettings aiSettings)
     {
-        _kernel = kernel;
+        _chatClient = chatClient;
         _logger = logger;
         _aiSettings = aiSettings;
     }
@@ -25,9 +23,7 @@ public class ChatService
         
         try
         {
-            // Use Microsoft.Extensions.AI directly for better token usage tracking
-            var chatClient = _kernel.GetRequiredService<IChatClient>();
-
+            // Use injected IChatClient directly for better token usage tracking
             var chatMessages = new List<ChatMessage>
             {
                 new(ChatRole.System, @"You are an AI demonstration application. 
@@ -40,7 +36,7 @@ public class ChatService
             _logger.LogDebug("Added user message to chat history");
 
             var startTime = DateTime.UtcNow;
-            var response = await chatClient.GetResponseAsync(chatMessages);
+            var response = await _chatClient.GetResponseAsync(chatMessages);
             var duration = DateTime.UtcNow - startTime;
             
             var combinedResponse = response.Text ?? string.Empty;
@@ -78,9 +74,7 @@ public class ChatService
         
         try
         {
-            // Use Microsoft.Extensions.AI directly for better token usage tracking
-            var chatClient = _kernel.GetRequiredService<IChatClient>();
-
+            // Use injected IChatClient directly for better token usage tracking
             var chatMessages = new List<ChatMessage>
             {
                 new(ChatRole.System, @"You are an AI demonstration application. 
@@ -114,7 +108,7 @@ public class ChatService
             using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
             
             // Use non-streaming response to get usage information
-            var response = await chatClient.GetResponseAsync(chatMessages, cancellationToken: cts.Token);
+            var response = await _chatClient.GetResponseAsync(chatMessages, cancellationToken: cts.Token);
             var duration = DateTime.UtcNow - startTime;
             
             var combinedResponse = response.Text ?? string.Empty;

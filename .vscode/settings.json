@@ -1,3 +1,35 @@
 {
-    "sarif-viewer.connectToGithubCodeScanning": "off"
+    "sarif-viewer.connectToGithubCodeScanning": "off",
+    "dotnet.defaultSolution": "BuildWithAspire.slnx",
+    "dotnet.enableXunitCodeLens": true,
+    "dotnet.unitTests.runSettingsPath": ".runsettings",
+    "dotnet.completion.showCompletionItemsFromUnimportedNamespaces": true,
+    "dotnet.inlayHints.enableInlayHintsForParameters": true,
+    "dotnet.inlayHints.enableInlayHintsForLiteralParameters": true,
+    "dotnet.inlayHints.enableInlayHintsForIndexerParameters": true,
+    "dotnet.inlayHints.enableInlayHintsForObjectCreationParameters": true,
+    "dotnet.inlayHints.enableInlayHintsForOtherParameters": true,
+    "dotnet.inlayHints.suppressInlayHintsForParametersThatDifferOnlyBySuffix": true,
+    "dotnet.inlayHints.suppressInlayHintsForParametersThatMatchMethodIntent": true,
+    "dotnet.inlayHints.suppressInlayHintsForParametersThatMatchArgumentName": true,
+    "files.exclude": {
+        "**/bin": true,
+        "**/obj": true
+    },
+    "files.watcherExclude": {
+        "**/bin/**": true,
+        "**/obj/**": true
+    },
+    "omnisharp.enableEditorConfigSupport": true,
+    "omnisharp.enableRoslynAnalyzers": true,
+    "omnisharp.analyzeOpenDocumentsOnly": false,
+    "dotnet.testWindow.useTestingPlatformProtocol": true,
+    "dotnet.backgroundAnalysis.analyzerDiagnosticsScope": "openFiles",
+    "dotnet.backgroundAnalysis.compilerDiagnosticsScope": "openFiles",
+    "testing.automaticallyOpenPeekView": "never",
+    "testing.automaticallyOpenPeekViewDuringAutoRun": false,
+    "testing.defaultGutterClickAction": "debug",
+    "testing.followRunningTest": false,
+    "testing.showAllMessages": false,
+    "dotnet.formatting.organizeImportsOnFormat": true
 }
