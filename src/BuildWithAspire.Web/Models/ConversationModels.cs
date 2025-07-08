@@ -30,4 +30,4 @@ public class Message
 public class MessageResponse
 {
     public string Response { get; set; } = string.Empty;
-} 
+}

@@ -1,5 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace BuildWithAspire.AppHost.Extensions;
 
@@ -81,4 +82,21 @@ public static class GitHubModelsExtensions
 
         return builder.WithEnvironment("GITHUB_TOKEN", apiKey);
     }
+}
+
+/// <summary>
+/// Health check for GitHub Models that always returns healthy.
+/// </summary>
+public class GitHubModelsHealthCheck : IHealthCheck
+{
+    private readonly GitHubModelsResource _resource;
+
+    public GitHubModelsHealthCheck(GitHubModelsResource resource)
+    {
+        _resource = resource;
+    }
+
+    public Task<HealthCheckResult> CheckHealthAsync(
+        HealthCheckContext context,
+        CancellationToken cancellationToken = default) => Task.FromResult(HealthCheckResult.Healthy($"GitHub Models '{_resource.Name}' with model '{_resource.Model}' is ready"));
 }

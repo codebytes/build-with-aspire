@@ -1,5 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace BuildWithAspire.AppHost.Extensions;
 
@@ -8,7 +9,11 @@ namespace BuildWithAspire.AppHost.Extensions;
 /// </summary>
 /// <param name="name">The name of the resource.</param>
 /// <param name="model">The model name.</param>
-public class FoundryLocalResource(string name, string model) : Resource(name), IResourceWithConnectionString, IResourceWithEnvironment, IResourceWithoutLifetime
+public class FoundryLocalResource(string name, string model)
+    : Resource(name),
+    IResourceWithConnectionString,
+    IResourceWithEnvironment,
+    IResourceWithoutLifetime
 {
     internal const string DefaultFoundryLocalEndpoint = "http://localhost:8000";
     internal const string DefaultModelCachePath = "/tmp/foundry-local-models";
@@ -36,7 +41,7 @@ public class FoundryLocalResource(string name, string model) : Resource(name), I
     /// <summary>
     /// Gets the connection string expression for the Foundry Local resource.
     /// </summary>
-    public ReferenceExpression ConnectionStringExpression => 
+    public ReferenceExpression ConnectionStringExpression =>
         ReferenceExpression.Create($"Provider=FoundryLocal;Model={Model};Endpoint={Endpoint};AutoStart={AutoStart.ToString().ToLowerInvariant()};ModelCachePath={ModelCachePath}");
 }
 
@@ -112,4 +117,21 @@ public static class FoundryLocalExtensions
         builder.Resource.AutoStart = autoStart;
         return builder.WithEnvironment("FOUNDRY_LOCAL_AUTO_START", autoStart.ToString().ToLowerInvariant());
     }
+}
+
+/// <summary>
+/// Health check for Foundry Local that always returns healthy.
+/// </summary>
+public class FoundryLocalHealthCheck : IHealthCheck
+{
+    private readonly FoundryLocalResource _resource;
+
+    public FoundryLocalHealthCheck(FoundryLocalResource resource)
+    {
+        _resource = resource;
+    }
+
+    public Task<HealthCheckResult> CheckHealthAsync(
+        HealthCheckContext context,
+        CancellationToken cancellationToken = default) => Task.FromResult(HealthCheckResult.Healthy($"Foundry Local '{_resource.Name}' with model '{_resource.Model}' at endpoint '{_resource.Endpoint}' is ready"));
 }

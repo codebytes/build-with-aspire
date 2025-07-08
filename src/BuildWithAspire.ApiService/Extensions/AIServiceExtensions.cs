@@ -15,10 +15,10 @@ public static class AIServiceExtensions
     public static IHostApplicationBuilder AddAIServices(this IHostApplicationBuilder builder)
     {
         var aiSettings = AIConfiguration.GetSettings(builder.Configuration);
-        
+
         // Register the AI settings for dependency injection
         builder.Services.AddSingleton(aiSettings);
-        
+
         // Configure the appropriate AI provider
         switch (aiSettings.Provider)
         {
@@ -62,7 +62,7 @@ public static class AIServiceExtensions
 
     private static void AddGitHubModelsAIServices(this IHostApplicationBuilder builder, AIConfiguration.AISettings aiSettings)
     {
-        var githubToken = builder.Configuration["GITHUB_TOKEN"] ?? 
+        var githubToken = builder.Configuration["GITHUB_TOKEN"] ??
                          builder.Configuration["ConnectionStrings:GitHubModels"] ??
                          throw new InvalidOperationException("GitHub token not found. Set GITHUB_TOKEN environment variable or ConnectionStrings:GitHubModels");
 
@@ -86,10 +86,10 @@ public static class AIServiceExtensions
                 // Initialize FoundryLocalManager with the model
                 var manager = FoundryLocalManager.StartModelAsync(aliasOrModelId: aiSettings.Model).GetAwaiter().GetResult();
                 var modelInfo = manager.GetModelInfoAsync(aliasOrModelId: aiSettings.Model).GetAwaiter().GetResult();
-                
-                logger.LogInformation("Foundry Local initialized with endpoint: {Endpoint}, Model: {Model}", 
+
+                logger.LogInformation("Foundry Local initialized with endpoint: {Endpoint}, Model: {Model}",
                     manager.Endpoint, modelInfo?.ModelId);
-                
+
                 var openAIClient = new OpenAIClient(new System.ClientModel.ApiKeyCredential(manager.ApiKey), new OpenAIClientOptions
                 {
                     Endpoint = manager.Endpoint
@@ -121,10 +121,11 @@ internal class AIConfigurationLogger : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("AI Configuration: Provider={Provider}, Model={Model}, Deployment={Deployment}", 
+        _logger.LogInformation("AI Configuration: Provider={Provider}, Model={Model}, Deployment={Deployment}",
             _aiSettings.Provider, _aiSettings.Model, _aiSettings.DeploymentName);
-        
+
         // Complete immediately - this is just for logging
         await Task.CompletedTask;
     }
 }
+

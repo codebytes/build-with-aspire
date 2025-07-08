@@ -1,4 +1,3 @@
-using Microsoft.Extensions.AI;
 namespace BuildWithAspire.Web.Clients;
 
 public class ChatApiClient(HttpClient httpClient)

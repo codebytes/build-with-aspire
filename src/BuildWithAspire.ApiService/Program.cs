@@ -46,9 +46,11 @@ try
     {
         var dbContext = scope.ServiceProvider.GetRequiredService<ChatDbContext>();
         var startTime = DateTime.UtcNow;
+
+        // Ensure database schema exists
         var wasCreated = await dbContext.Database.EnsureCreatedAsync();
         var duration = DateTime.UtcNow - startTime;
-        
+
         if (wasCreated)
         {
             app.Logger.LogInformation("Database schema created successfully. Duration: {Duration}ms", duration.TotalMilliseconds);
@@ -117,7 +119,7 @@ app.MapGet("/conversations", async (ChatDbContext db) =>
                 MessageCount = c.Messages.Count()
             })
             .ToListAsync();
-        
+
         return Results.Ok(conversations);
     }
     catch (Exception ex)

@@ -23,7 +23,7 @@ public class ChatDbContext : DbContext
             entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
             entity.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
-            
+
             // Configure one-to-many relationship
             entity.HasMany(e => e.Messages)
                   .WithOne(m => m.Conversation)
@@ -41,4 +41,4 @@ public class ChatDbContext : DbContext
             entity.HasIndex(e => e.ConversationId);
         });
     }
-} 
+}

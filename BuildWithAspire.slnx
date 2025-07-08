@@ -9,7 +9,7 @@
     <Project Path="src/BuildWithAspire.Web/BuildWithAspire.Web.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/BuildWithAspire.Tests/BuildWithAspire.Tests.csproj" />
-    <Project Path="tests/BuildWithAspire.PlaywrightTests/BuildWithAspire.PlaywrightTests.csproj" />
+    <Project Path="tests/BuildWithAspire.ApiService.UnitTests/BuildWithAspire.ApiService.UnitTests.csproj" />
+    <Project Path="tests/BuildWithAspire.Web.UnitTests/BuildWithAspire.Web.UnitTests.csproj" />
   </Folder>
 </Solution>

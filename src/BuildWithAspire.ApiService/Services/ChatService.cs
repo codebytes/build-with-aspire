@@ -20,7 +20,7 @@ public class ChatService
     public async Task<string> ProcessMessage(string message)
     {
         _logger.LogInformation("Processing single message. MessageLength: {MessageLength}", message?.Length ?? 0);
-        
+
         try
         {
             // Use injected IChatClient directly for better token usage tracking
@@ -32,29 +32,29 @@ public class ChatService
                     All responses should be safe for work."),
                 new(ChatRole.User, message ?? string.Empty)
             };
-            
+
             _logger.LogDebug("Added user message to chat history");
 
             var startTime = DateTime.UtcNow;
             var response = await _chatClient.GetResponseAsync(chatMessages);
             var duration = DateTime.UtcNow - startTime;
-            
+
             var combinedResponse = response.Text ?? string.Empty;
-            
+
             // Log token usage if available
             if (response.Usage != null)
             {
-                _logger.LogInformation("AI response generated successfully. ResponseLength: {ResponseLength}, Duration: {Duration}ms, InputTokens: {InputTokens}, OutputTokens: {OutputTokens}, TotalTokens: {TotalTokens}", 
-                    combinedResponse.Length, duration.TotalMilliseconds, 
+                _logger.LogInformation("AI response generated successfully. ResponseLength: {ResponseLength}, Duration: {Duration}ms, InputTokens: {InputTokens}, OutputTokens: {OutputTokens}, TotalTokens: {TotalTokens}",
+                    combinedResponse.Length, duration.TotalMilliseconds,
                     response.Usage.InputTokenCount, response.Usage.OutputTokenCount, response.Usage.TotalTokenCount);
-                
+
                 // Log cost-focused metrics for monitoring
-                _logger.LogInformation("Token usage metrics - Provider: {Provider}, Model: {Model}, InputTokens: {InputTokens}, OutputTokens: {OutputTokens}, ConversationLength: 1", 
+                _logger.LogInformation("Token usage metrics - Provider: {Provider}, Model: {Model}, InputTokens: {InputTokens}, OutputTokens: {OutputTokens}, ConversationLength: 1",
                     _aiSettings.Provider, _aiSettings.Model, response.Usage.InputTokenCount, response.Usage.OutputTokenCount);
             }
             else
             {
-                _logger.LogInformation("AI response generated successfully. ResponseLength: {ResponseLength}, Duration: {Duration}ms", 
+                _logger.LogInformation("AI response generated successfully. ResponseLength: {ResponseLength}, Duration: {Duration}ms",
                     combinedResponse.Length, duration.TotalMilliseconds);
             }
 
@@ -71,7 +71,7 @@ public class ChatService
     {
         var messageCount = messages?.Count ?? 0;
         _logger.LogInformation("Processing messages with history. MessageCount: {MessageCount}", messageCount);
-        
+
         try
         {
             // Use injected IChatClient directly for better token usage tracking
@@ -82,10 +82,10 @@ public class ChatService
                     Respond to the user' input responsibly.
                     All responses should be safe for work.")
             };
-            
+
             var userMessages = 0;
             var assistantMessages = 0;
-            
+
             // Add all messages from history
             foreach (var msg in messages ?? [])
             {
@@ -100,33 +100,33 @@ public class ChatService
                     assistantMessages++;
                 }
             }
-            
-            _logger.LogDebug("Chat history prepared. UserMessages: {UserMessages}, AssistantMessages: {AssistantMessages}", 
+
+            _logger.LogDebug("Chat history prepared. UserMessages: {UserMessages}, AssistantMessages: {AssistantMessages}",
                 userMessages, assistantMessages);
-            
+
             var startTime = DateTime.UtcNow;
             using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
-            
+
             // Use non-streaming response to get usage information
             var response = await _chatClient.GetResponseAsync(chatMessages, cancellationToken: cts.Token);
             var duration = DateTime.UtcNow - startTime;
-            
+
             var combinedResponse = response.Text ?? string.Empty;
-            
+
             // Log token usage if available
             if (response.Usage != null)
             {
-                _logger.LogInformation("AI conversation response generated successfully. InputMessages: {InputMessages}, ResponseLength: {ResponseLength}, Duration: {Duration}ms, InputTokens: {InputTokens}, OutputTokens: {OutputTokens}, TotalTokens: {TotalTokens}", 
-                    messageCount, combinedResponse.Length, duration.TotalMilliseconds, 
+                _logger.LogInformation("AI conversation response generated successfully. InputMessages: {InputMessages}, ResponseLength: {ResponseLength}, Duration: {Duration}ms, InputTokens: {InputTokens}, OutputTokens: {OutputTokens}, TotalTokens: {TotalTokens}",
+                    messageCount, combinedResponse.Length, duration.TotalMilliseconds,
                     response.Usage.InputTokenCount, response.Usage.OutputTokenCount, response.Usage.TotalTokenCount);
-                
+
                 // Log cost-focused metrics for monitoring
-                _logger.LogInformation("Token usage metrics - Provider: {Provider}, Model: {Model}, InputTokens: {InputTokens}, OutputTokens: {OutputTokens}, ConversationLength: {ConversationLength}", 
+                _logger.LogInformation("Token usage metrics - Provider: {Provider}, Model: {Model}, InputTokens: {InputTokens}, OutputTokens: {OutputTokens}, ConversationLength: {ConversationLength}",
                     _aiSettings.Provider, _aiSettings.Model, response.Usage.InputTokenCount, response.Usage.OutputTokenCount, messageCount);
             }
             else
             {
-                _logger.LogInformation("AI conversation response generated successfully. InputMessages: {InputMessages}, ResponseLength: {ResponseLength}, Duration: {Duration}ms", 
+                _logger.LogInformation("AI conversation response generated successfully. InputMessages: {InputMessages}, ResponseLength: {ResponseLength}, Duration: {Duration}ms",
                     messageCount, combinedResponse.Length, duration.TotalMilliseconds);
             }
 

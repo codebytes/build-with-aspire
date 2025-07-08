@@ -1,8 +1,8 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using Azure.Provisioning.Expressions;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace BuildWithAspire.AppHost.Extensions;
 
@@ -40,7 +40,7 @@ public static class AIModelExtensions
             IDistributedApplicationBuilder builder, string name, string deploymentName, string aiModel)
         {
             var configuration = builder.Configuration;
-            
+
             // Get configurable values from configuration with sensible defaults
             var modelVersion = configuration["AI:ModelVersion"] ?? "2024-11-20";
             var skuName = configuration["AI:SkuName"] ?? "GlobalStandard";
@@ -132,7 +132,15 @@ public static class AIModelExtensions
         ArgumentException.ThrowIfNullOrEmpty(model);
 
         var resource = new GitHubModelsResource(name, model);
-        
+
+        // Register the health check for this resource
+        var healthCheckKey = $"{name}_check";
+        builder.Services.AddHealthChecks().AddTypeActivatedCheck<GitHubModelsHealthCheck>(
+            healthCheckKey,
+            failureStatus: default,
+            tags: default,
+            resource);
+
         // Try to get the GitHub token from environment variable, if not available, create a parameter
         var githubToken = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
         if (!string.IsNullOrEmpty(githubToken))
@@ -143,7 +151,8 @@ public static class AIModelExtensions
                 .WithEnvironment("AI_PROVIDER", "GitHub Models")
                 .WithEnvironment("AI_MODEL", model)
                 .WithEnvironment("AI_ENDPOINT", GitHubModelsResource.GitHubModelsEndpoint)
-                .WithEnvironment("GITHUB_TOKEN", githubToken);
+                .WithEnvironment("GITHUB_TOKEN", githubToken)
+                .WithHealthCheck(healthCheckKey);
         }
         else
         {
@@ -154,7 +163,8 @@ public static class AIModelExtensions
                 .WithEnvironment("AI_PROVIDER", "GitHub Models")
                 .WithEnvironment("AI_MODEL", model)
                 .WithEnvironment("AI_ENDPOINT", GitHubModelsResource.GitHubModelsEndpoint)
-                .WithEnvironment("GITHUB_TOKEN", keyParameter);
+                .WithEnvironment("GITHUB_TOKEN", keyParameter)
+                .WithHealthCheck(healthCheckKey);
         }
     }
 
@@ -175,12 +185,22 @@ public static class AIModelExtensions
         ArgumentException.ThrowIfNullOrEmpty(model);
 
         var resource = new FoundryLocalResource(name, model);
+
+        // Register the health check for this resource
+        var healthCheckKey = $"{name}_check";
+        builder.Services.AddHealthChecks().AddTypeActivatedCheck<FoundryLocalHealthCheck>(
+            healthCheckKey,
+            failureStatus: default,
+            tags: default,
+            resource);
+
         return builder.AddResource(resource)
             .WithEnvironment("AI_PROVIDER", "Foundry Local")
             .WithEnvironment("AI_MODEL", model)
             .WithEnvironment("AI_ENDPOINT", resource.Endpoint)
             .WithEnvironment("FOUNDRY_LOCAL_AUTO_START", resource.AutoStart.ToString().ToLowerInvariant())
-            .WithEnvironment("FOUNDRY_LOCAL_MODEL_CACHE_PATH", resource.ModelCachePath);
+            .WithEnvironment("FOUNDRY_LOCAL_MODEL_CACHE_PATH", resource.ModelCachePath)
+            .WithHealthCheck(healthCheckKey);
     }
 
     private static AIProvider GetAIProvider(IConfiguration configuration)

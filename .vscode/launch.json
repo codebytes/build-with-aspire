@@ -11,6 +11,7 @@
 			"name": "C#: Aspire (Ollama)",
 			"type": "coreclr",
 			"request": "launch",
+			"preLaunchTask": "build", // Name of your build task in tasks.json
 			"program": "${workspaceFolder}/src/BuildWithAspire.AppHost/bin/Debug/net9.0/BuildWithAspire.AppHost.dll",
 			"args": ["--environment", "Ollama"],
 			"cwd": "${workspaceFolder}/src/BuildWithAspire.AppHost",
@@ -21,6 +22,7 @@
 			"name": "C#: Aspire (GitHub Models)",
 			"type": "coreclr",
 			"request": "launch",
+			"preLaunchTask": "build", // Name of your build task in tasks.json
 			"program": "${workspaceFolder}/src/BuildWithAspire.AppHost/bin/Debug/net9.0/BuildWithAspire.AppHost.dll",
 			"args": ["--environment", "GitHubModels"],
 			"cwd": "${workspaceFolder}/src/BuildWithAspire.AppHost",
@@ -31,6 +33,7 @@
 			"name": "C#: Aspire (Foundry Local)",
 			"type": "coreclr",
 			"request": "launch",
+			"preLaunchTask": "build", // Name of your build task in tasks.json
 			"program": "${workspaceFolder}/src/BuildWithAspire.AppHost/bin/Debug/net9.0/BuildWithAspire.AppHost.dll",
 			"args": ["--environment", "FoundryLocal"],
 			"cwd": "${workspaceFolder}/src/BuildWithAspire.AppHost",
@@ -41,6 +44,7 @@
 			"name": "C#: Aspire (Azure OpenAI)",
 			"type": "coreclr",
 			"request": "launch",
+			"preLaunchTask": "build", // Name of your build task in tasks.json
 			"program": "${workspaceFolder}/src/BuildWithAspire.AppHost/bin/Debug/net9.0/BuildWithAspire.AppHost.dll",
 			"args": ["--environment", "AzureOpenAI"],
 			"cwd": "${workspaceFolder}/src/BuildWithAspire.AppHost",

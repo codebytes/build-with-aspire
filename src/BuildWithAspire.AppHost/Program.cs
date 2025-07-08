@@ -1,14 +1,15 @@
 using BuildWithAspire.AppHost.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
 // Explicitly document or enforce environment-specific configuration loading
 builder.Configuration
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true);
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
+    .AddUserSecrets<Program>(optional: true, reloadOnChange: true)
+    .AddEnvironmentVariables();
 
 // Configure Azure provisioning with subscription and resource group from user secrets  
 // Explicitly bind Azure configuration from user secrets to the Azure provisioning options
@@ -18,29 +19,26 @@ builder.Services.Configure<Aspire.Hosting.Azure.AzureProvisioningOptions>(
 builder.AddAzureProvisioning();
 
 // Add PostgreSQL database - use Azure PostgreSQL when publishing, local when developing
-IResourceBuilder<IResourceWithConnectionString> chatDb;
-if (builder.ExecutionContext.IsPublishMode)
-{
-    var azurePostgres = builder.AddAzurePostgresFlexibleServer("postgres");
-    chatDb = azurePostgres.AddDatabase("chatdb");
-}
-else
-{
-    var localPostgres = builder.AddPostgres("postgres", password: builder.AddParameter("postgres-password", "aspire123!", secret: true))
-        .WithDataVolume();
-    chatDb = localPostgres.AddDatabase("chatdb");
-}
+IResourceBuilder<IResourceWithConnectionString>? chatDb = builder.ExecutionContext.IsPublishMode
+    ? builder
+        .AddAzurePostgresFlexibleServer("postgres")
+        .AddDatabase("chatdb")
+    : builder
+        .AddPostgres("postgres",
+            password: builder.AddParameter("postgres-password", "aspire123!", secret: true))
+        .WithDataVolume()
+        .AddDatabase("chatdb");
 
-// Add AI model service based on configuration
+// Add API service with AI model configuration  
 var aiService = builder.AddAIModel();
 
-// Add API service with AI model configuration
 var apiService = builder.AddProject<Projects.BuildWithAspire_ApiService>("apiservice")
+    .WithAIModel(aiService)
     .WithReference(chatDb)
-    .WaitFor(chatDb)
-    .WithAIModel(aiService);
+    .WaitFor(chatDb);
 
-builder.AddProject<Projects.BuildWithAspire_Web>("webfrontend")
+// Add Web service
+var webService = builder.AddProject<Projects.BuildWithAspire_Web>("webfrontend")
     .WithExternalHttpEndpoints()
     .WithReference(apiService)
     .WaitFor(apiService);

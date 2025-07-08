@@ -43,7 +43,7 @@ public static class AIConfiguration
     public static string GetModel(IConfiguration configuration, AIProvider? provider = null)
     {
         provider ??= GetProvider(configuration);
-        
+
         var configuredModel = configuration["AI:Model"];
         if (!string.IsNullOrEmpty(configuredModel))
         {
