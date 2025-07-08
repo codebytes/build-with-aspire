@@ -1,4 +1,4 @@
-﻿namespace BuildWithAspire.Web.Clients;
+namespace BuildWithAspire.Web.Clients;
 
 public class WeatherApiClient(HttpClient httpClient)
 {
@@ -6,7 +6,7 @@ public class WeatherApiClient(HttpClient httpClient)
     {
         var forecasts = new List<WeatherForecast>();
 
-        await foreach (var forecast in httpClient.GetFromJsonAsAsyncEnumerable<WeatherForecast>("", cancellationToken))
+        await foreach (var forecast in httpClient.GetFromJsonAsAsyncEnumerable<WeatherForecast>("", cancellationToken).ConfigureAwait(false))
         {
             if (forecasts.Count >= maxItems)
             {

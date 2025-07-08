@@ -5,6 +5,7 @@ using BuildWithAspire.ApiService.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
+using Scalar.AspNetCore;
 using ChatRole = Microsoft.Extensions.AI.ChatRole;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,9 +20,18 @@ builder.AddAIServices();
 
 builder.Services.AddKernel();
 
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+// Learn more about configuring OpenAPI at https://aka.ms/aspnetcore/openapi
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer((document, context, cancellationToken) =>
+    {
+        document.Info.Title = "BuildWithAspire API";
+        document.Info.Description = "API for BuildWithAspire application with AI chat capabilities";
+        document.Info.Version = "v1";
+        return Task.CompletedTask;
+    });
+});
 
 builder.Services.AddTransient<ChatService>();
 
@@ -32,8 +42,12 @@ app.MapDefaultEndpoints();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.MapOpenApi();
+    app.MapScalarApiReference(options =>
+    {
+        options.WithTitle("BuildWithAspire API");
+        options.WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
+    });
 }
 
 app.UseHttpsRedirection();
@@ -48,7 +62,7 @@ try
         var startTime = DateTime.UtcNow;
 
         // Ensure database schema exists
-        var wasCreated = await dbContext.Database.EnsureCreatedAsync();
+        var wasCreated = await dbContext.Database.EnsureCreatedAsync().ConfigureAwait(false);
         var duration = DateTime.UtcNow - startTime;
 
         if (wasCreated)
@@ -66,7 +80,6 @@ catch (Exception ex)
     app.Logger.LogError(ex, "Database initialization failed. Service will continue without database.");
 }
 
-
 app.MapGet("/weatherforecast", (IChatClient client) =>
 {
     async IAsyncEnumerable<WeatherForecast> GetForecasts()
@@ -74,7 +87,7 @@ app.MapGet("/weatherforecast", (IChatClient client) =>
         for (int index = 1; index <= 5; index++)
         {
             var temperature = Random.Shared.Next(-20, 55);
-            var summary = await GetWeatherSummary(client, temperature);
+            var summary = await GetWeatherSummary(client, temperature).ConfigureAwait(false);
             yield return new WeatherForecast
             (
                 DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
@@ -95,7 +108,7 @@ app.MapGet("/weatherforecast", (IChatClient client) =>
             // User messages represent user input, whether historical or the most recent input
             new(ChatRole.User, $"How would you describe the weather at temp {temp} in celcius? Provide the response in 1 word with no punctuation.")
         };
-        var completion = await client.GetResponseAsync(conversation);
+        var completion = await client.GetResponseAsync(conversation).ConfigureAwait(false);
 
         return $"{completion.Text}";
     }
@@ -118,7 +131,7 @@ app.MapGet("/conversations", async (ChatDbContext db) =>
                 c.UpdatedAt,
                 MessageCount = c.Messages.Count()
             })
-            .ToListAsync();
+            .ToListAsync().ConfigureAwait(false);
 
         return Results.Ok(conversations);
     }
@@ -137,7 +150,7 @@ app.MapGet("/conversations/{id}", async (Guid id, ChatDbContext db) =>
     {
         var conversation = await db.Conversations
             .Include(c => c.Messages.OrderBy(m => m.CreatedAt))
-            .FirstOrDefaultAsync(c => c.Id == id);
+            .FirstOrDefaultAsync(c => c.Id == id).ConfigureAwait(false);
 
         if (conversation == null)
         {
@@ -160,7 +173,9 @@ app.MapPost("/conversations", async ([FromBody] CreateConversationRequest reques
     try
     {
         if (string.IsNullOrWhiteSpace(request.Name))
+        {
             return Results.BadRequest("Conversation name cannot be empty");
+        }
 
         var conversation = new Conversation
         {
@@ -171,7 +186,7 @@ app.MapPost("/conversations", async ([FromBody] CreateConversationRequest reques
         };
 
         db.Conversations.Add(conversation);
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync().ConfigureAwait(false);
 
         return Results.Created($"/conversations/{conversation.Id}", conversation);
     }
@@ -190,14 +205,18 @@ app.MapPost("/conversations/{id}/messages", async (Guid id, [FromBody] SendMessa
     {
         // Validate input
         if (string.IsNullOrWhiteSpace(request.Message))
+        {
             return Results.BadRequest("Message cannot be empty");
+        }
 
         var conversation = await db.Conversations
             .Include(c => c.Messages)
-            .FirstOrDefaultAsync(c => c.Id == id);
+            .FirstOrDefaultAsync(c => c.Id == id).ConfigureAwait(false);
 
         if (conversation == null)
+        {
             return Results.NotFound("Conversation not found");
+        }
 
         // Add user message
         var userMessage = new Message
@@ -214,7 +233,7 @@ app.MapPost("/conversations/{id}/messages", async (Guid id, [FromBody] SendMessa
         conversation.UpdatedAt = DateTime.UtcNow;
 
         // Save user message first
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync().ConfigureAwait(false);
 
         // Prepare history for AI - get all messages for this conversation including the new one
         var messages = await db.Messages
@@ -225,13 +244,13 @@ app.MapPost("/conversations/{id}/messages", async (Guid id, [FromBody] SendMessa
                 Role = m.Role,
                 Content = m.Content
             })
-            .ToListAsync();
+            .ToListAsync().ConfigureAwait(false);
 
         // Get AI response with timeout handling
         string aiResponse;
         try
         {
-            aiResponse = await chatService.ProcessMessagesWithHistory(messages);
+            aiResponse = await chatService.ProcessMessagesWithHistory(messages).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -251,7 +270,7 @@ app.MapPost("/conversations/{id}/messages", async (Guid id, [FromBody] SendMessa
 
         // Add to DbContext directly instead of through navigation property
         db.Messages.Add(assistantMessage);
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync().ConfigureAwait(false);
 
         return Results.Ok(new { response = aiResponse });
     }
@@ -266,12 +285,14 @@ app.MapPost("/conversations/{id}/messages", async (Guid id, [FromBody] SendMessa
 
 app.MapDelete("/conversations/{id}", async (Guid id, ChatDbContext db) =>
 {
-    var conversation = await db.Conversations.FindAsync(id);
+    var conversation = await db.Conversations.FindAsync(id).ConfigureAwait(false);
     if (conversation == null)
+    {
         return Results.NotFound();
+    }
 
     db.Conversations.Remove(conversation);
-    await db.SaveChangesAsync();
+    await db.SaveChangesAsync().ConfigureAwait(false);
 
     return Results.NoContent();
 })
@@ -279,13 +300,13 @@ app.MapDelete("/conversations/{id}", async (Guid id, ChatDbContext db) =>
 .WithOpenApi();
 
 // Keep the original chat endpoint for backward compatibility
-app.MapGet("/chat", async (ChatService chatService, string message) => await chatService.ProcessMessage(message))
+app.MapGet("/chat", async (ChatService chatService, string message) => await chatService.ProcessMessage(message).ConfigureAwait(false))
     .WithName("GetChat")
     .WithOpenApi();
 
 app.Run();
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
+public record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 {
     public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
 }
@@ -293,3 +314,6 @@ record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 // Request DTOs
 public record CreateConversationRequest(string Name);
 public record SendMessageRequest(string Message);
+
+// Make Program class accessible for testing
+public partial class Program { }

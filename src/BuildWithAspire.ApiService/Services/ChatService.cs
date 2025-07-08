@@ -1,6 +1,6 @@
-using Microsoft.Extensions.AI;
-using BuildWithAspire.ApiService.Models;
 using BuildWithAspire.ApiService.Configuration;
+using BuildWithAspire.ApiService.Models;
+using Microsoft.Extensions.AI;
 
 namespace BuildWithAspire.ApiService.Services;
 
@@ -26,8 +26,8 @@ public class ChatService
             // Use injected IChatClient directly for better token usage tracking
             var chatMessages = new List<ChatMessage>
             {
-                new(ChatRole.System, @"You are an AI demonstration application. 
-                    You are a helpful chatbot. 
+                new(ChatRole.System, @"You are an AI demonstration application.
+                    You are a helpful chatbot.
                     Respond to the user' input responsibly.
                     All responses should be safe for work."),
                 new(ChatRole.User, message ?? string.Empty)
@@ -36,7 +36,7 @@ public class ChatService
             _logger.LogDebug("Added user message to chat history");
 
             var startTime = DateTime.UtcNow;
-            var response = await _chatClient.GetResponseAsync(chatMessages);
+            var response = await _chatClient.GetResponseAsync(chatMessages).ConfigureAwait(false);
             var duration = DateTime.UtcNow - startTime;
 
             var combinedResponse = response.Text ?? string.Empty;
@@ -77,8 +77,8 @@ public class ChatService
             // Use injected IChatClient directly for better token usage tracking
             var chatMessages = new List<ChatMessage>
             {
-                new(ChatRole.System, @"You are an AI demonstration application. 
-                    You are a helpful chatbot. 
+                new(ChatRole.System, @"You are an AI demonstration application.
+                    You are a helpful chatbot.
                     Respond to the user' input responsibly.
                     All responses should be safe for work.")
             };
@@ -108,7 +108,7 @@ public class ChatService
             using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
 
             // Use non-streaming response to get usage information
-            var response = await _chatClient.GetResponseAsync(chatMessages, cancellationToken: cts.Token);
+            var response = await _chatClient.GetResponseAsync(chatMessages, cancellationToken: cts.Token).ConfigureAwait(false);
             var duration = DateTime.UtcNow - startTime;
 
             var combinedResponse = response.Text ?? string.Empty;

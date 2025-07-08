@@ -1,8 +1,4 @@
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
-
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace BuildWithAspire.AppHost.Extensions;
 
@@ -133,14 +129,6 @@ public static class AIModelExtensions
 
         var resource = new GitHubModelsResource(name, model);
 
-        // Register the health check for this resource
-        var healthCheckKey = $"{name}_check";
-        builder.Services.AddHealthChecks().AddTypeActivatedCheck<GitHubModelsHealthCheck>(
-            healthCheckKey,
-            failureStatus: default,
-            tags: default,
-            resource);
-
         // Try to get the GitHub token from environment variable, if not available, create a parameter
         var githubToken = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
         if (!string.IsNullOrEmpty(githubToken))
@@ -151,8 +139,7 @@ public static class AIModelExtensions
                 .WithEnvironment("AI_PROVIDER", "GitHub Models")
                 .WithEnvironment("AI_MODEL", model)
                 .WithEnvironment("AI_ENDPOINT", GitHubModelsResource.GitHubModelsEndpoint)
-                .WithEnvironment("GITHUB_TOKEN", githubToken)
-                .WithHealthCheck(healthCheckKey);
+                .WithEnvironment("GITHUB_TOKEN", githubToken);
         }
         else
         {
@@ -163,8 +150,7 @@ public static class AIModelExtensions
                 .WithEnvironment("AI_PROVIDER", "GitHub Models")
                 .WithEnvironment("AI_MODEL", model)
                 .WithEnvironment("AI_ENDPOINT", GitHubModelsResource.GitHubModelsEndpoint)
-                .WithEnvironment("GITHUB_TOKEN", keyParameter)
-                .WithHealthCheck(healthCheckKey);
+                .WithEnvironment("GITHUB_TOKEN", keyParameter);
         }
     }
 
@@ -186,21 +172,12 @@ public static class AIModelExtensions
 
         var resource = new FoundryLocalResource(name, model);
 
-        // Register the health check for this resource
-        var healthCheckKey = $"{name}_check";
-        builder.Services.AddHealthChecks().AddTypeActivatedCheck<FoundryLocalHealthCheck>(
-            healthCheckKey,
-            failureStatus: default,
-            tags: default,
-            resource);
-
         return builder.AddResource(resource)
             .WithEnvironment("AI_PROVIDER", "Foundry Local")
             .WithEnvironment("AI_MODEL", model)
             .WithEnvironment("AI_ENDPOINT", resource.Endpoint)
             .WithEnvironment("FOUNDRY_LOCAL_AUTO_START", resource.AutoStart.ToString().ToLowerInvariant())
-            .WithEnvironment("FOUNDRY_LOCAL_MODEL_CACHE_PATH", resource.ModelCachePath)
-            .WithHealthCheck(healthCheckKey);
+            .WithEnvironment("FOUNDRY_LOCAL_MODEL_CACHE_PATH", resource.ModelCachePath);
     }
 
     private static AIProvider GetAIProvider(IConfiguration configuration)

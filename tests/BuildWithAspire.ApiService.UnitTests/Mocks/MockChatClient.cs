@@ -5,7 +5,7 @@ namespace BuildWithAspire.ApiService.UnitTests.Mocks;
 /// <summary>
 /// Mock chat client for testing purposes.
 /// </summary>
-internal class MockChatClient : IChatClient
+internal sealed class MockChatClient : IChatClient
 {
     public ChatClientMetadata Metadata { get; } = new("Mock", null);
 
@@ -17,7 +17,7 @@ internal class MockChatClient : IChatClient
             new(ChatRole.Assistant, "Mock response for testing")
         });
 
-        return await Task.FromResult(response);
+        return await Task.FromResult(response).ConfigureAwait(false);
     }
 
     public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> chatMessages, ChatOptions? options = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
@@ -26,7 +26,7 @@ internal class MockChatClient : IChatClient
         update.Contents.Add(new TextContent("Mock streaming response"));
         yield return update;
 
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 
     public object? GetService(Type serviceType, object? serviceKey = null)
@@ -39,7 +39,7 @@ internal class MockChatClient : IChatClient
         // Nothing to dispose
     }
 
-    public TService? GetService<TService>(object? serviceKey = null)
+    public static TService? GetService<TService>(object? serviceKey = null)
     {
         return default(TService);
     }

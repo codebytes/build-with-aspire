@@ -1,6 +1,6 @@
 using BuildWithAspire.ApiService.Configuration;
-using Microsoft.Extensions.AI;
 using Microsoft.AI.Foundry.Local;
+using Microsoft.Extensions.AI;
 using OpenAI;
 
 namespace BuildWithAspire.ApiService.Extensions;
@@ -108,7 +108,7 @@ public static class AIServiceExtensions
 /// <summary>
 /// Background service that logs AI configuration on startup.
 /// </summary>
-internal class AIConfigurationLogger : BackgroundService
+internal sealed class AIConfigurationLogger : BackgroundService
 {
     private readonly ILogger<AIConfigurationLogger> _logger;
     private readonly AIConfiguration.AISettings _aiSettings;
@@ -125,7 +125,7 @@ internal class AIConfigurationLogger : BackgroundService
             _aiSettings.Provider, _aiSettings.Model, _aiSettings.DeploymentName);
 
         // Complete immediately - this is just for logging
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 }
 

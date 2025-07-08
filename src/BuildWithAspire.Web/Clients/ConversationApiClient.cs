@@ -1,3 +1,6 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
 using System.Net;
 using BuildWithAspire.Web.Models;
 
@@ -12,7 +15,7 @@ public class ConversationApiClient(HttpClient httpClient, ILogger<ConversationAp
         try
         {
             var startTime = DateTime.UtcNow;
-            var response = await httpClient.GetFromJsonAsync<List<ConversationSummary>>("conversations", cancellationToken);
+            var response = await httpClient.GetFromJsonAsync<List<ConversationSummary>>("conversations", cancellationToken).ConfigureAwait(false);
             var duration = DateTime.UtcNow - startTime;
 
             var conversations = response ?? new List<ConversationSummary>();
@@ -35,7 +38,7 @@ public class ConversationApiClient(HttpClient httpClient, ILogger<ConversationAp
         try
         {
             var startTime = DateTime.UtcNow;
-            var response = await httpClient.GetAsync($"conversations/{id}", cancellationToken);
+            var response = await httpClient.GetAsync($"conversations/{id}", cancellationToken).ConfigureAwait(false);
             var duration = DateTime.UtcNow - startTime;
 
             if (response.StatusCode == HttpStatusCode.NotFound)
@@ -46,7 +49,7 @@ public class ConversationApiClient(HttpClient httpClient, ILogger<ConversationAp
             }
 
             response.EnsureSuccessStatusCode();
-            var result = await response.Content.ReadFromJsonAsync<ConversationDetail>(cancellationToken);
+            var result = await response.Content.ReadFromJsonAsync<ConversationDetail>(cancellationToken).ConfigureAwait(false);
 
             logger.LogInformation("Successfully fetched conversation details. ConversationId: {ConversationId}, MessageCount: {MessageCount}, Duration: {Duration}ms",
                 id, result?.Messages?.Count ?? 0, duration.TotalMilliseconds);
@@ -67,9 +70,9 @@ public class ConversationApiClient(HttpClient httpClient, ILogger<ConversationAp
         try
         {
             var startTime = DateTime.UtcNow;
-            var response = await httpClient.PostAsJsonAsync("conversations", new { name }, cancellationToken);
+            var response = await httpClient.PostAsJsonAsync("conversations", new { name }, cancellationToken).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
-            var conversation = await response.Content.ReadFromJsonAsync<ConversationDetail>(cancellationToken);
+            var conversation = await response.Content.ReadFromJsonAsync<ConversationDetail>(cancellationToken).ConfigureAwait(false);
             var duration = DateTime.UtcNow - startTime;
 
             logger.LogInformation("Successfully created conversation. ConversationId: {ConversationId}, Name: {ConversationName}, Duration: {Duration}ms",
@@ -92,9 +95,9 @@ public class ConversationApiClient(HttpClient httpClient, ILogger<ConversationAp
         try
         {
             var startTime = DateTime.UtcNow;
-            var response = await httpClient.PostAsJsonAsync($"conversations/{conversationId}/messages", new { message }, cancellationToken);
+            var response = await httpClient.PostAsJsonAsync($"conversations/{conversationId}/messages", new { message }, cancellationToken).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
-            var messageResponse = await response.Content.ReadFromJsonAsync<MessageResponse>(cancellationToken);
+            var messageResponse = await response.Content.ReadFromJsonAsync<MessageResponse>(cancellationToken).ConfigureAwait(false);
             var duration = DateTime.UtcNow - startTime;
 
             logger.LogInformation("Successfully sent message and received response. ConversationId: {ConversationId}, ResponseLength: {ResponseLength}, Duration: {Duration}ms",
@@ -117,7 +120,7 @@ public class ConversationApiClient(HttpClient httpClient, ILogger<ConversationAp
         try
         {
             var startTime = DateTime.UtcNow;
-            var response = await httpClient.DeleteAsync($"conversations/{id}", cancellationToken);
+            var response = await httpClient.DeleteAsync($"conversations/{id}", cancellationToken).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
             var duration = DateTime.UtcNow - startTime;
 

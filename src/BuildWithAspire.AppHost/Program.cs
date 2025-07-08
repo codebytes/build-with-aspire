@@ -11,7 +11,7 @@ builder.Configuration
     .AddUserSecrets<Program>(optional: true, reloadOnChange: true)
     .AddEnvironmentVariables();
 
-// Configure Azure provisioning with subscription and resource group from user secrets  
+// Configure Azure provisioning with subscription and resource group from user secrets
 // Explicitly bind Azure configuration from user secrets to the Azure provisioning options
 builder.Services.Configure<Aspire.Hosting.Azure.AzureProvisioningOptions>(
     builder.Configuration.GetSection("Azure"));
@@ -29,16 +29,17 @@ IResourceBuilder<IResourceWithConnectionString>? chatDb = builder.ExecutionConte
         .WithDataVolume()
         .AddDatabase("chatdb");
 
-// Add API service with AI model configuration  
+// Add API service with AI model configuration
 var aiService = builder.AddAIModel();
 
 var apiService = builder.AddProject<Projects.BuildWithAspire_ApiService>("apiservice")
+    .WithExternalHttpEndpoints()
     .WithAIModel(aiService)
     .WithReference(chatDb)
     .WaitFor(chatDb);
 
 // Add Web service
-var webService = builder.AddProject<Projects.BuildWithAspire_Web>("webfrontend")
+var _ = builder.AddProject<Projects.BuildWithAspire_Web>("webfrontend")
     .WithExternalHttpEndpoints()
     .WithReference(apiService)
     .WaitFor(apiService);

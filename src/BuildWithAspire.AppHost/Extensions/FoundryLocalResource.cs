@@ -1,7 +1,3 @@
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
-using Microsoft.Extensions.Diagnostics.HealthChecks;
-
 namespace BuildWithAspire.AppHost.Extensions;
 
 /// <summary>
@@ -44,7 +40,6 @@ public class FoundryLocalResource(string name, string model)
     public ReferenceExpression ConnectionStringExpression =>
         ReferenceExpression.Create($"Provider=FoundryLocal;Model={Model};Endpoint={Endpoint};AutoStart={AutoStart.ToString().ToLowerInvariant()};ModelCachePath={ModelCachePath}");
 }
-
 
 /// <summary>
 /// Provides extension methods for adding Foundry Local resources to the application model.
@@ -117,21 +112,4 @@ public static class FoundryLocalExtensions
         builder.Resource.AutoStart = autoStart;
         return builder.WithEnvironment("FOUNDRY_LOCAL_AUTO_START", autoStart.ToString().ToLowerInvariant());
     }
-}
-
-/// <summary>
-/// Health check for Foundry Local that always returns healthy.
-/// </summary>
-public class FoundryLocalHealthCheck : IHealthCheck
-{
-    private readonly FoundryLocalResource _resource;
-
-    public FoundryLocalHealthCheck(FoundryLocalResource resource)
-    {
-        _resource = resource;
-    }
-
-    public Task<HealthCheckResult> CheckHealthAsync(
-        HealthCheckContext context,
-        CancellationToken cancellationToken = default) => Task.FromResult(HealthCheckResult.Healthy($"Foundry Local '{_resource.Name}' with model '{_resource.Model}' at endpoint '{_resource.Endpoint}' is ready"));
 }

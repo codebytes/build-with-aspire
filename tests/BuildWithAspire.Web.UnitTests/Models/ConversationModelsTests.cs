@@ -1,5 +1,5 @@
-using BuildWithAspire.Web.Models;
 using System.Text.Json;
+using BuildWithAspire.Web.Models;
 
 namespace BuildWithAspire.Web.UnitTests.Models;
 

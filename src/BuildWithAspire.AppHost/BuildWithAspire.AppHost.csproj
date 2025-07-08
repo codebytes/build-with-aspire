@@ -16,7 +16,7 @@
     <PackageReference Include="Aspire.Hosting.Azure.PostgreSQL" Version="9.3.1" />
     <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="9.3.1" />
     <PackageReference Include="Azure.Provisioning.AppConfiguration" Version="1.1.0" />
-    <PackageReference Include="CommunityToolkit.Aspire.Hosting.Ollama" Version="9.5.1-beta.318" />
+    <PackageReference Include="CommunityToolkit.Aspire.Hosting.Ollama" Version="9.5.1-beta.319" />
     <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.6" />
     <PackageReference Include="System.Text.Json" Version="9.0.6" />
   </ItemGroup>
