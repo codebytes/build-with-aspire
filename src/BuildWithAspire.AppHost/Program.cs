@@ -1,28 +1,45 @@
+using BuildWithAspire.AppHost.Extensions;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-var useLocalAI = builder.Configuration.GetValue<bool>("UseLocalAI");
-var chatDeploymentName = builder.Configuration["chatDeploymentName"] ?? "chat";
+// Explicitly document or enforce environment-specific configuration loading
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
+    .AddUserSecrets<Program>(optional: true, reloadOnChange: true)
+    .AddEnvironmentVariables();
 
-var openai = builder.AddAzureOpenAI("openai")
-    .AddDeployment(new AzureOpenAIDeployment(chatDeploymentName, "gpt-4o", "2024-11-20", "GlobalStandard", 10));
+// Configure Azure provisioning with subscription and resource group from user secrets
+// Explicitly bind Azure configuration from user secrets to the Azure provisioning options
+builder.Services.Configure<Aspire.Hosting.Azure.AzureProvisioningOptions>(
+    builder.Configuration.GetSection("Azure"));
 
-var ollama = builder.AddOllama("ollama")
-                .WithDataVolume()
-                .WithOpenWebUI()
-                //.WithContainerRuntimeArgs("--gpus=all")
-                .AddModel("chat", "llama3.2");
+builder.AddAzureProvisioning();
 
-IResourceBuilder<IResourceWithConnectionString> chat = useLocalAI ? ollama : openai;
+// Add PostgreSQL database - use Azure PostgreSQL when publishing, local when developing
+IResourceBuilder<IResourceWithConnectionString>? chatDb = builder.ExecutionContext.IsPublishMode
+    ? builder
+        .AddAzurePostgresFlexibleServer("postgres")
+        .AddDatabase("chatdb")
+    : builder
+        .AddPostgres("postgres",
+            password: builder.AddParameter("postgres-password", "aspire123!", secret: true))
+        .WithDataVolume()
+        .AddDatabase("chatdb");
+
+// Add API service with AI model configuration
+var aiService = builder.AddAIModel();
 
 var apiService = builder.AddProject<Projects.BuildWithAspire_ApiService>("apiservice")
-    .WithEnvironment("AI:ChatDeploymentName", chatDeploymentName)
-    .WithEnvironment("AI:Type", useLocalAI ? "ollama" : "azureOpenAi")
-    .WithReference(chat, chatDeploymentName)
-    .WaitFor(chat);
+    .WithExternalHttpEndpoints()
+    .WithAIModel(aiService)
+    .WithReference(chatDb)
+    .WaitFor(chatDb);
 
-builder.AddProject<Projects.BuildWithAspire_Web>("webfrontend")
+// Add Web service
+var _ = builder.AddProject<Projects.BuildWithAspire_Web>("webfrontend")
     .WithExternalHttpEndpoints()
     .WithReference(apiService)
     .WaitFor(apiService);

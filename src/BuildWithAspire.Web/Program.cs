@@ -23,6 +23,13 @@ builder.Services.AddHttpClient<ChatApiClient>(client =>
     client.BaseAddress = new("https+http://apiservice/chat");
 });
 
+builder.Services.AddHttpClient<ConversationApiClient>(client =>
+{
+    // This URL uses "https+http://" to indicate HTTPS is preferred over HTTP.
+    // Learn more about service discovery scheme resolution at https://aka.ms/dotnet/sdschemes.
+    client.BaseAddress = new("https+http://apiservice/");
+});
+
 var app = builder.Build();
 
 app.MapDefaultEndpoints();
@@ -44,3 +51,6 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.Run();
+
+// Make Program class accessible for testing
+public partial class Program { }

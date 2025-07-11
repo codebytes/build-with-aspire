@@ -1,0 +1,9 @@
+{
+    "dotnet.enableXunitCodeLens": true,
+    "dotnet.testWindow.useTestingPlatformProtocol": false,
+    "testing.defaultGutterClickAction": "run",
+    "files.exclude": {
+        "**/bin": true,
+        "**/obj": true
+    }
+}
