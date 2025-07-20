@@ -32,15 +32,17 @@ IResourceBuilder<IResourceWithConnectionString>? chatDb = builder.ExecutionConte
 // Add API service with AI model configuration
 var aiService = builder.AddAIModel();
 
+// Add MCP Server service
+var mcpServer = builder.AddProject<Projects.BuildWithAspire_McpServer>("mcpserver")
+    .WithExternalHttpEndpoints();
+
 var apiService = builder.AddProject<Projects.BuildWithAspire_ApiService>("apiservice")
     .WithExternalHttpEndpoints()
     .WithAIModel(aiService)
     .WithReference(chatDb)
-    .WaitFor(chatDb);
-
-// Add MCP Server service
-var mcpServer = builder.AddProject<Projects.BuildWithAspire_McpServer>("mcpserver")
-    .WithExternalHttpEndpoints();
+    .WithReference(mcpServer)
+    .WaitFor(chatDb)
+    .WaitFor(mcpServer);
 
 // Add Web service
 var _ = builder.AddProject<Projects.BuildWithAspire_Web>("webfrontend")

@@ -12,6 +12,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/BuildWithAspire.ApiService.UnitTests/BuildWithAspire.ApiService.UnitTests.csproj" />
     <Project Path="tests/BuildWithAspire.AppHost.UnitTests/BuildWithAspire.AppHost.UnitTests.csproj" />
+    <Project Path="tests/BuildWithAspire.McpServer.UnitTests/BuildWithAspire.McpServer.UnitTests.csproj" />
     <Project Path="tests/BuildWithAspire.Web.UnitTests/BuildWithAspire.Web.UnitTests.csproj" />
   </Folder>
 </Solution>
