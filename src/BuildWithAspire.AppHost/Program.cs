@@ -38,10 +38,16 @@ var apiService = builder.AddProject<Projects.BuildWithAspire_ApiService>("apiser
     .WithReference(chatDb)
     .WaitFor(chatDb);
 
+// Add MCP Server service
+var mcpServer = builder.AddProject<Projects.BuildWithAspire_McpServer>("mcpserver")
+    .WithExternalHttpEndpoints();
+
 // Add Web service
 var _ = builder.AddProject<Projects.BuildWithAspire_Web>("webfrontend")
     .WithExternalHttpEndpoints()
     .WithReference(apiService)
-    .WaitFor(apiService);
+    .WithReference(mcpServer)
+    .WaitFor(apiService)
+    .WaitFor(mcpServer);
 
 builder.Build().Run();

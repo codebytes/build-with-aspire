@@ -24,6 +24,7 @@
   <ItemGroup>
     <ProjectReference Include="..\BuildWithAspire.ApiService\BuildWithAspire.ApiService.csproj" />
     <ProjectReference Include="..\BuildWithAspire.Web\BuildWithAspire.Web.csproj" />
+    <ProjectReference Include="..\BuildWithAspire.McpServer\BuildWithAspire.McpServer.csproj" />
   </ItemGroup>
 
 </Project>
