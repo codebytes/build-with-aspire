@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.AI;
 
 namespace BuildWithAspire.AppHost.Extensions;
 
@@ -26,8 +27,8 @@ public static class AIModelExtensions
                 .WithDataVolume()
                 .WithOpenWebUI()
                 .AddModel(deploymentName, aiModel),
-            AIProvider.GitHubModels => builder.AddGitHubModels(name, aiModel),
-            AIProvider.FoundryLocal => builder.AddFoundryLocal(name, aiModel),
+            AIProvider.GitHubModels => AddGitHubModels(builder, name, aiModel),
+            AIProvider.FoundryLocal => AddFoundryLocal(builder, name, deploymentName, aiModel),
             _ => throw new InvalidOperationException($"Unsupported AI provider: {aiProvider}. Supported providers: azureopenai, githubmodels, ollama, foundrylocal")
         };
 
@@ -63,6 +64,38 @@ public static class AIModelExtensions
 
             return openai;
         }
+
+        // Local function to handle GitHub Models setup using official integration
+        static IResourceBuilder<IResourceWithConnectionString> AddGitHubModels(
+            IDistributedApplicationBuilder builder, string name, string aiModel)
+        {
+            // GitHub Models integration automatically creates a parameter named {resourceName}-gh-apikey
+            // Let Aspire handle the parameter creation automatically
+            var githubModel = builder.AddGitHubModel(name, aiModel);
+            
+            // If GitHub token is available in environment, configure it
+            var githubToken = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
+            if (!string.IsNullOrEmpty(githubToken))
+            {
+                // The parameter is automatically created, we just need to set its value
+                // This will be handled by the Aspire runtime through environment variables
+                return githubModel;
+            }
+            
+            return githubModel;
+        }
+
+        // Local function to handle Foundry Local setup using official integration
+        static IResourceBuilder<IResourceWithConnectionString> AddFoundryLocal(
+            IDistributedApplicationBuilder builder, string name, string deploymentName, string aiModel)
+        {
+            // Create Azure AI Foundry resource configured to run locally
+            var foundry = builder.AddAzureAIFoundry(name).RunAsFoundryLocal();
+            
+            // Add deployment with proper Microsoft publisher
+            // The version "1" and publisher "Microsoft" are required for Foundry Local
+            return foundry.AddDeployment(deploymentName, aiModel, "1", "Microsoft");
+        }
     }
 
     /// <summary>
@@ -96,13 +129,11 @@ public static class AIModelExtensions
                     .WaitFor(aiService);
                 break;
             case AIProvider.GitHubModels:
-            case AIProvider.Ollama:
-                builder = builder
-                    .WithReference(aiService, deploymentName)
-                    .WaitFor(aiService);
-                break;
             case AIProvider.FoundryLocal:
-                builder = AddFoundryLocalConfiguration(builder)
+            case AIProvider.Ollama:
+                // For GitHub Models and Foundry Local, use the deployment name as connection name
+                // This creates a connection string like ConnectionStrings:chat
+                builder = builder
                     .WithReference(aiService, deploymentName)
                     .WaitFor(aiService);
                 break;
@@ -111,74 +142,6 @@ public static class AIModelExtensions
         return builder;
     }
 
-    /// <summary>
-    /// Adds a GitHub Models resource to the application model.
-    /// </summary>
-    /// <param name="builder">The <see cref="IDistributedApplicationBuilder"/>.</param>
-    /// <param name="name">The name of the resource. This name will be used as the connection string name when referenced in a dependency.</param>
-    /// <param name="model">The model name to use with GitHub Models.</param>
-    /// <returns>A reference to the <see cref="IResourceBuilder{GitHubModelsResource}"/>.</returns>
-    public static IResourceBuilder<GitHubModelsResource> AddGitHubModels(
-        this IDistributedApplicationBuilder builder,
-        string name,
-        string model)
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentException.ThrowIfNullOrEmpty(name);
-        ArgumentException.ThrowIfNullOrEmpty(model);
-
-        var resource = new GitHubModelsResource(name, model);
-
-        // Try to get the GitHub token from environment variable, if not available, create a parameter
-        var githubToken = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
-        if (!string.IsNullOrEmpty(githubToken))
-        {
-            // Use the environment variable directly
-            resource.Key = null; // Will fall back to environment variable in connection string
-            return builder.AddResource(resource)
-                .WithEnvironment("AI_PROVIDER", "GitHub Models")
-                .WithEnvironment("AI_MODEL", model)
-                .WithEnvironment("AI_ENDPOINT", GitHubModelsResource.GitHubModelsEndpoint)
-                .WithEnvironment("GITHUB_TOKEN", githubToken);
-        }
-        else
-        {
-            // Create a parameter for the GitHub token
-            var keyParameter = builder.AddParameter("github-token", secret: true);
-            resource.Key = keyParameter.Resource;
-            return builder.AddResource(resource)
-                .WithEnvironment("AI_PROVIDER", "GitHub Models")
-                .WithEnvironment("AI_MODEL", model)
-                .WithEnvironment("AI_ENDPOINT", GitHubModelsResource.GitHubModelsEndpoint)
-                .WithEnvironment("GITHUB_TOKEN", keyParameter);
-        }
-    }
-
-    /// <summary>
-    /// Adds a Foundry Local resource to the application model.
-    /// </summary>
-    /// <param name="builder">The distributed application builder.</param>
-    /// <param name="name">The name of the resource. This name will be used as the connection string name when referenced in a dependency.</param>
-    /// <param name="model">The model name to use with Foundry Local.</param>
-    /// <returns>A reference to the <see cref="IResourceBuilder{FoundryLocalResource}"/>.</returns>
-    public static IResourceBuilder<FoundryLocalResource> AddFoundryLocal(
-        this IDistributedApplicationBuilder builder,
-        string name,
-        string model)
-    {
-        ArgumentNullException.ThrowIfNull(builder);
-        ArgumentException.ThrowIfNullOrEmpty(name);
-        ArgumentException.ThrowIfNullOrEmpty(model);
-
-        var resource = new FoundryLocalResource(name, model);
-
-        return builder.AddResource(resource)
-            .WithEnvironment("AI_PROVIDER", "Foundry Local")
-            .WithEnvironment("AI_MODEL", model)
-            .WithEnvironment("AI_ENDPOINT", resource.Endpoint)
-            .WithEnvironment("FOUNDRY_LOCAL_AUTO_START", resource.AutoStart.ToString().ToLowerInvariant())
-            .WithEnvironment("FOUNDRY_LOCAL_MODEL_CACHE_PATH", resource.ModelCachePath);
-    }
 
     private static AIProvider GetAIProvider(IConfiguration configuration)
     {
@@ -217,13 +180,6 @@ public static class AIModelExtensions
         };
     }
 
-    private static IResourceBuilder<ProjectResource> AddFoundryLocalConfiguration(
-        IResourceBuilder<ProjectResource> builder)
-    {
-        // Additional Foundry Local specific configuration for the API service
-        // Environment variables are already set via the resource
-        return builder;
-    }
 }
 
 public enum AIProvider

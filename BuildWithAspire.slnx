@@ -7,6 +7,7 @@
     <Project Path="src/BuildWithAspire.AppHost/BuildWithAspire.AppHost.csproj" />
     <Project Path="src/BuildWithAspire.ServiceDefaults/BuildWithAspire.ServiceDefaults.csproj" />
     <Project Path="src/BuildWithAspire.Web/BuildWithAspire.Web.csproj" />
+    <Project Path="src/BuildWithAspire.MCPServer/BuildWithAspire.MCPServer.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/BuildWithAspire.ApiService.UnitTests/BuildWithAspire.ApiService.UnitTests.csproj" />

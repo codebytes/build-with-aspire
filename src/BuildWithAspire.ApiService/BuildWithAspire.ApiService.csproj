@@ -8,24 +8,27 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Azure.AI.OpenAI" Version="9.3.1-preview.1.25305.6" />
-    <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.3.1" />
-    <PackageReference Include="CommunityToolkit.Aspire.OllamaSharp" Version="9.5.1-beta.319" />
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.6" />
-    <PackageReference Include="Azure.Identity" Version="1.14.1" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.6">
+    <PackageReference Include="Aspire.Azure.AI.OpenAI" Version="9.4.1-preview.1.25408.4" />
+    <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.4.1" />
+    <PackageReference Include="CommunityToolkit.Aspire.OllamaSharp" Version="9.7.1-beta.348" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.8" />
+    <PackageReference Include="Azure.Identity" Version="1.15.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.8">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.6" />
-    <PackageReference Include="Microsoft.Extensions.AI.Abstractions" Version="9.6.0" />
-    <PackageReference Include="Microsoft.Extensions.AI.Ollama" Version="9.6.0-preview.1.25310.2" />
-    <PackageReference Include="Microsoft.Extensions.AI" Version="9.6.0" />
-    <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="9.6.0-preview.1.25310.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.8" />
+    <PackageReference Include="Microsoft.Extensions.AI.Abstractions" Version="9.8.0" />
+    <PackageReference Include="Microsoft.Extensions.AI.Ollama" Version="9.7.0-preview.1.25356.2" />
+    <PackageReference Include="Microsoft.Extensions.AI" Version="9.8.0" />
+    <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="9.8.0-preview.1.25412.6" />
     <PackageReference Include="Microsoft.AI.Foundry.Local" Version="0.1.0" />
-    <PackageReference Include="Scalar.AspNetCore" Version="2.5.6" />
-    <PackageReference Include="System.Text.Json" Version="9.0.6" />
-    <PackageReference Include="Microsoft.SemanticKernel.Connectors.OpenAI" Version="1.59.0" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.7.0" />
+    <PackageReference Include="System.Text.Json" Version="9.0.8" />
+    <PackageReference Include="Microsoft.SemanticKernel.Connectors.OpenAI" Version="1.63.0" />
+    <PackageReference Include="Aspire.Azure.AI.Inference" Version="9.4.1-preview.1.25408.4" />
+    <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4" />
+  <!-- API service now uses official MCP client to communicate with MCP server -->
   </ItemGroup>
 
   <ItemGroup>

@@ -1,24 +1,19 @@
+using System.Linq;
+
 namespace BuildWithAspire.Web.Clients;
 
 public class WeatherApiClient(HttpClient httpClient)
 {
     public async Task<WeatherForecast[]> GetWeatherAsync(int maxItems = 10, CancellationToken cancellationToken = default)
     {
-        var forecasts = new List<WeatherForecast>();
-
-        await foreach (var forecast in httpClient.GetFromJsonAsAsyncEnumerable<WeatherForecast>("", cancellationToken).ConfigureAwait(false))
+        var allForecasts = await httpClient.GetFromJsonAsync<WeatherForecast[]>("weatherforecast", cancellationToken).ConfigureAwait(false);
+        
+        if (allForecasts == null)
         {
-            if (forecasts.Count >= maxItems)
-            {
-                break;
-            }
-            if (forecast is not null)
-            {
-                forecasts.Add(forecast);
-            }
+            return Array.Empty<WeatherForecast>();
         }
 
-        return forecasts.ToArray();
+        return allForecasts.Take(maxItems).ToArray();
     }
 }
 

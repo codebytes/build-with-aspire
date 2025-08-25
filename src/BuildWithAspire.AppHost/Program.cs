@@ -38,6 +38,16 @@ var apiService = builder.AddProject<Projects.BuildWithAspire_ApiService>("apiser
     .WithReference(chatDb)
     .WaitFor(chatDb);
 
+// MCP Server runs as a standalone HTTP service with weather endpoints
+var mcpServer = builder.AddProject<Projects.BuildWithAspire_MCPServer>("mcpserver")
+    .WithHttpEndpoint(name: "http")
+    .WithExternalHttpEndpoints();
+
+// Ensure API depends on MCP server for service discovery and startup ordering
+apiService = apiService
+    .WithReference(mcpServer)
+    .WaitFor(mcpServer);
+
 // Add Web service
 var _ = builder.AddProject<Projects.BuildWithAspire_Web>("webfrontend")
     .WithExternalHttpEndpoints()

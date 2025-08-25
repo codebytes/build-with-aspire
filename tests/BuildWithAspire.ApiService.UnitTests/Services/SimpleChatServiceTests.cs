@@ -1,4 +1,6 @@
 using NSubstitute;
+using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.ChatCompletion;
 
 namespace BuildWithAspire.ApiService.UnitTests.Services;
 
@@ -11,9 +13,12 @@ public class SimpleChatServiceTests
         var mockChatClient = Substitute.For<IChatClient>();
         var mockLogger = Substitute.For<ILogger<ChatService>>();
         var aiSettings = new AIConfiguration.AISettings(AIConfiguration.AIProvider.Ollama, "test-deployment", "test-model");
+        var mockKernel = Substitute.For<Kernel>();
+        var mockChatCompletion = Substitute.For<IChatCompletionService>();
+        var mockServiceProvider = Substitute.For<IServiceProvider>();
 
         // Act & Assert (should not throw)
-        var chatService = new ChatService(mockChatClient, mockLogger, aiSettings);
+        var chatService = new ChatService(mockChatClient, mockLogger, aiSettings, mockKernel, mockChatCompletion, mockServiceProvider);
         Assert.NotNull(chatService);
     }
 

@@ -60,4 +60,5 @@ public static class AIConfiguration
             _ => throw new InvalidOperationException($"No default model available for provider: {provider}")
         };
     }
+
 }

@@ -1,0 +1,40 @@
+### BuildWithAspire Web Frontend
+### Base URL: https://localhost:7051 or http://localhost:5005
+
+@baseUrl = https://localhost:7051
+@httpBaseUrl = http://localhost:5005
+
+### Home Page
+GET {{baseUrl}}/
+
+### Chat Page
+GET {{baseUrl}}/chat
+
+### Chat with specific conversation (replace with actual ID)
+@conversationId = 12345678-1234-1234-1234-123456789012
+GET {{baseUrl}}/chat/{{conversationId}}
+
+### Weather Page
+GET {{baseUrl}}/weather
+
+### === Static Resources ===
+
+### App CSS
+GET {{baseUrl}}/app.css
+
+### Bootstrap CSS
+GET {{baseUrl}}/bootstrap/bootstrap.min.css
+
+### Blazor Framework
+GET {{baseUrl}}/_framework/blazor.web.js
+
+### === Health Checks ===
+
+### Health Check
+GET {{baseUrl}}/health
+
+### Ready Check
+GET {{baseUrl}}/ready
+
+### Alive Check  
+GET {{baseUrl}}/alive

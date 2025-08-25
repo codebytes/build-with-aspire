@@ -10,20 +10,23 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.AppHost" Version="9.3.1" />
-    <PackageReference Include="Aspire.Hosting.Azure" Version="9.3.2" />
-    <PackageReference Include="Aspire.Hosting.Azure.CognitiveServices" Version="9.3.1" />
-    <PackageReference Include="Aspire.Hosting.Azure.PostgreSQL" Version="9.3.1" />
-    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="9.3.1" />
+    <PackageReference Include="Aspire.Hosting.AppHost" Version="9.4.1" />
+    <PackageReference Include="Aspire.Hosting.Azure" Version="9.4.1" />
+    <PackageReference Include="Aspire.Hosting.Azure.CognitiveServices" Version="9.4.1" />
+    <PackageReference Include="Aspire.Hosting.Azure.PostgreSQL" Version="9.4.1" />
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="9.4.1" />
     <PackageReference Include="Azure.Provisioning.AppConfiguration" Version="1.1.0" />
-    <PackageReference Include="CommunityToolkit.Aspire.Hosting.Ollama" Version="9.5.1-beta.319" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.6" />
-    <PackageReference Include="System.Text.Json" Version="9.0.6" />
+    <PackageReference Include="CommunityToolkit.Aspire.Hosting.Ollama" Version="9.7.1-beta.348" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.8" />
+    <PackageReference Include="System.Text.Json" Version="9.0.8" />
+    <PackageReference Include="Aspire.Hosting.Azure.AIFoundry" Version="9.4.1-preview.1.25408.4" />
+    <PackageReference Include="Aspire.Hosting.GitHub.Models" Version="9.4.1-preview.1.25408.4" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\BuildWithAspire.ApiService\BuildWithAspire.ApiService.csproj" />
     <ProjectReference Include="..\BuildWithAspire.Web\BuildWithAspire.Web.csproj" />
+    <ProjectReference Include="..\BuildWithAspire.MCPServer\BuildWithAspire.MCPServer.csproj" />
   </ItemGroup>
 
 </Project>

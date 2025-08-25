@@ -1,34 +1,35 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the
-// README at: https://github.com/devcontainers/templates/tree/main/src/dotnet
 {
-	"name": "C# (.NET)",
-	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "mcr.microsoft.com/devcontainers/dotnet:1-9.0-bookworm",
-	"features": {
-		"ghcr.io/devcontainers/features/azure-cli:1": {},
-		"ghcr.io/azure/azure-dev/azd:0": {},
-		"ghcr.io/devcontainers/features/dotnet:2": {
-			"version": "8.0"
-		}
-	}
+  "name": ".NET Aspire",
+  // Base .NET 9 image. Alternatively a Dockerfile/compose could be used.
+  "image": "mcr.microsoft.com/devcontainers/dotnet:9.0-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/devcontainers/features/powershell:1": {},
+    "ghcr.io/devcontainers/features/azure-cli:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/node:1": {},
+    "ghcr.io/azure/azure-dev/azd:0": {}
+  },
 
-	// Features to add to the dev container. More info: https://containers.dev/features.
-	// "features": {},
+  // Install Aspire tooling & workloads early in create lifecycle.
+  // (Previous postCreateCommand replaced by onCreateCommand as requested.)
+  // Former: "postCreateCommand": "dotnet workload install aspire && dotnet restore <project>"
+  "onCreateCommand": "curl -sSL https://aspire.dev/install.sh | bash",
+  // Trust HTTPS dev certs on each container start (may be a no-op in headless Linux but harmless).
+  "postStartCommand": "dotnet dev-certs https --trust || true",
 
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [5000, 5001],
-	// "portsAttributes": {
-	//		"5001": {
-	//			"protocol": "https"
-	//		}
-	// }
-
-	// Use 'postCreateCommand' to run commands after the container is created.
-	// "postCreateCommand": "dotnet restore",
-
-	// Configure tool-specific properties.
-	// "customizations": {},
-
-	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-	// "remoteUser": "root"
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-dotnettools.csdevkit",
+        "GitHub.copilot-chat",
+        "GitHub.copilot"
+      ]
+    }
+  },
+  "forwardPorts": [5087],
+  "portsAttributes": {
+    "5087": { "label": "BuildWithAspire.Web", "onAutoForward": "openBrowser" }
+  },
+  "remoteUser": "vscode"
 }

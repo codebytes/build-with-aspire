@@ -1,0 +1,68 @@
+### BuildWithAspire API Service
+### Base URL: https://localhost:7287 or http://localhost:5020
+
+@baseUrl = https://localhost:7287
+@apiBaseUrl = http://localhost:5020
+
+### Health Check
+GET {{baseUrl}}/health
+
+### Weather Forecast (AI-generated)
+GET {{baseUrl}}/weatherforecast
+
+### Get Current Weather (via Tools)
+GET {{baseUrl}}/tools/weather/current
+
+### Get Weather Forecast (via Tools)
+GET {{baseUrl}}/tools/weather/forecast
+
+### Get Weather Forecast with custom days (via Tools)
+GET {{baseUrl}}/tools/weather/forecast?days=7
+
+### Get Current Weather (via MCP Service)
+GET {{baseUrl}}/svc/weather/current
+
+### Get Weather Forecast (via MCP Service)
+GET {{baseUrl}}/svc/weather/forecast
+
+### Get Weather Forecast with custom days (via MCP Service)
+GET {{baseUrl}}/svc/weather/forecast?days=3
+
+### Chat (legacy endpoint)
+GET {{baseUrl}}/chat?message=Hello, how is the weather today?
+
+### === Conversation Management ===
+
+### Get All Conversations
+GET {{baseUrl}}/conversations
+
+### Create New Conversation
+POST {{baseUrl}}/conversations
+Content-Type: application/json
+
+{
+  "name": "Test Conversation"
+}
+
+### Get Specific Conversation (replace with actual ID)
+@conversationId = 12345678-1234-1234-1234-123456789012
+GET {{baseUrl}}/conversations/{{conversationId}}
+
+### Send Message to Conversation
+POST {{baseUrl}}/conversations/{{conversationId}}/messages
+Content-Type: application/json
+
+{
+  "message": "What's the weather like today?"
+}
+
+### Delete Conversation
+DELETE {{baseUrl}}/conversations/{{conversationId}}
+
+### === OpenAPI Documentation ===
+
+### Get OpenAPI Specification
+GET {{baseUrl}}/openapi/v1.json
+
+### Scalar API Documentation (Development only)
+### Visit in browser: {{baseUrl}}/scalar/v1

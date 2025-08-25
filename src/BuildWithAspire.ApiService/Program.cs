@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using Scalar.AspNetCore;
-using ChatRole = Microsoft.Extensions.AI.ChatRole;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +22,14 @@ builder.Services.AddKernel();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnetcore/openapi
 builder.Services.AddEndpointsApiExplorer();
+
+// Configure JSON options to ensure proper serialization
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.PropertyNamingPolicy = null; // Keep original property names
+    options.SerializerOptions.WriteIndented = true;
+});
+
 builder.Services.AddOpenApi(options =>
 {
     options.AddDocumentTransformer((document, context, cancellationToken) =>
@@ -34,6 +42,7 @@ builder.Services.AddOpenApi(options =>
 });
 
 builder.Services.AddTransient<ChatService>();
+builder.Services.AddSingleton<IMcpClient, McpClient>();
 
 var app = builder.Build();
 
@@ -80,40 +89,99 @@ catch (Exception ex)
     app.Logger.LogError(ex, "Database initialization failed. Service will continue without database.");
 }
 
-app.MapGet("/weatherforecast", (IChatClient client) =>
+app.MapGet("/weatherforecast", () =>
 {
-    async IAsyncEnumerable<WeatherForecast> GetForecasts()
+    // Generate mock weather forecast data for now
+    var forecasts = new List<WeatherForecast>();
+    
+    for (int i = 1; i <= 5; i++)
     {
-        for (int index = 1; index <= 5; index++)
+        var temperature = Random.Shared.Next(-20, 55);
+        var summary = temperature switch
         {
-            var temperature = Random.Shared.Next(-20, 55);
-            var summary = await GetWeatherSummary(client, temperature).ConfigureAwait(false);
-            yield return new WeatherForecast
-            (
-                DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                temperature,
-                summary
-            );
-        }
-    }
-
-    return GetForecasts();
-
-    static async Task<string> GetWeatherSummary(IChatClient client, int temp)
-    {
-        List<ChatMessage> conversation = new()
-        {
-             // System messages represent instructions or other guidance about how the assistant should behave
-            new(ChatRole.System, "You are a helpful assistant that provides a description of the weather in one word based on the temperature."),
-            // User messages represent user input, whether historical or the most recent input
-            new(ChatRole.User, $"How would you describe the weather at temp {temp} in celcius? Provide the response in 1 word with no punctuation.")
+            < 0 => "Freezing",
+            < 10 => "Cold", 
+            < 20 => "Cool",
+            < 30 => "Warm",
+            _ => "Hot"
         };
-        var completion = await client.GetResponseAsync(conversation).ConfigureAwait(false);
-
-        return $"{completion.Text}";
+        
+        forecasts.Add(new WeatherForecast(
+            DateOnly.FromDateTime(DateTime.Now.AddDays(i)),
+            temperature,
+            summary
+        ));
     }
+    
+    return Results.Ok(forecasts.ToArray());
 })
 .WithName("GetWeatherForecast")
+.WithOpenApi();
+
+// Weather tools via MCP client (remote HTTP calls)
+app.MapGet("/tools/weather/current", async (IMcpClient mcpClient) =>
+{
+    try
+    {
+    await mcpClient.InitializeAsync().ConfigureAwait(false);
+    var result = await mcpClient.CallToolAsync("GetCurrentWeather").ConfigureAwait(false);
+        return Results.Ok(result);
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem($"MCP tool error: {ex.Message}", statusCode: 500);
+    }
+})
+.WithName("GetCurrentWeatherTools")
+.WithOpenApi();
+
+app.MapGet("/tools/weather/forecast", async (int? days, IMcpClient mcpClient) =>
+{
+    try
+    {
+    await mcpClient.InitializeAsync().ConfigureAwait(false);
+    var result = await mcpClient.CallToolAsync("GetWeatherForecast", new { MaxDays = days ?? 5 }).ConfigureAwait(false);
+        return Results.Ok(result);
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem($"MCP tool error: {ex.Message}", statusCode: 500);
+    }
+})
+.WithName("GetWeatherForecastTools")
+.WithOpenApi();
+
+// Weather service endpoints using MCP client
+app.MapGet("/svc/weather/current", async (IMcpClient mcpClient) =>
+{
+    try
+    {
+        await mcpClient.InitializeAsync().ConfigureAwait(false);
+        var result = await mcpClient.CallToolAsync("GetCurrentWeather").ConfigureAwait(false);
+        return Results.Ok(result);
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem($"Weather service error: {ex.Message}", statusCode: 500);
+    }
+})
+.WithName("GetCurrentWeatherService")
+.WithOpenApi();
+
+app.MapGet("/svc/weather/forecast", async (int? days, IMcpClient mcpClient) =>
+{
+    try
+    {
+        await mcpClient.InitializeAsync().ConfigureAwait(false);
+        var result = await mcpClient.CallToolAsync("GetWeatherForecast", new { MaxDays = days ?? 5 }).ConfigureAwait(false);
+        return Results.Ok(result);
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem($"Weather forecast service error: {ex.Message}", statusCode: 500);
+    }
+})
+.WithName("GetForecastWeatherService")
 .WithOpenApi();
 
 // Conversation endpoints
@@ -303,6 +371,83 @@ app.MapDelete("/conversations/{id}", async (Guid id, ChatDbContext db) =>
 app.MapGet("/chat", async (ChatService chatService, string message) => await chatService.ProcessMessage(message).ConfigureAwait(false))
     .WithName("GetChat")
     .WithOpenApi();
+
+// MCP integration test endpoints
+app.MapGet("/mcp/tools", async (IMcpClient mcpClient) =>
+{
+    try
+    {
+        await mcpClient.InitializeAsync().ConfigureAwait(false);
+        var tools = await mcpClient.ListToolsAsync().ConfigureAwait(false);
+        return Results.Ok(new { tools = tools.Select(t => t.Name).ToArray(), count = tools.Length });
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem($"MCP error: {ex.Message}", statusCode: 500);
+    }
+})
+.WithName("ListMcpTools")
+.WithOpenApi();
+
+app.MapPost("/mcp/call/{toolName}", async (string toolName, object? parameters, IMcpClient mcpClient) =>
+{
+    try
+    {
+    await mcpClient.InitializeAsync().ConfigureAwait(false);
+    var result = await mcpClient.CallToolAsync(toolName, parameters).ConfigureAwait(false);
+        
+        // Manually serialize to debug JSON issues
+        var jsonResult = JsonSerializer.Serialize(result, new JsonSerializerOptions 
+        { 
+            PropertyNamingPolicy = null, 
+            WriteIndented = true 
+        });
+        return Results.Content(jsonResult, "application/json");
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem($"MCP tool call error: {ex.Message}", statusCode: 500);
+    }
+})
+.WithName("CallMcpTool")
+.WithOpenApi();
+
+// MCP tools metadata endpoint
+app.MapGet("/mcp/tools/metadata", async (IMcpClient mcpClient) =>
+{
+    try
+    {
+        await mcpClient.InitializeAsync().ConfigureAwait(false);
+        var tools = await mcpClient.ListToolsAsync().ConfigureAwait(false);
+        return Results.Ok(new { tools = tools, count = tools.Length });
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem($"MCP metadata error: {ex.Message}", statusCode: 500);
+    }
+})
+.WithName("ListMcpToolMetadata")
+.WithOpenApi();
+
+// Debug endpoint to test JSON serialization
+app.MapGet("/debug/json", () =>
+{
+    var testContent = new BuildWithAspire.ApiService.Services.McpTextContent("Test message");
+    var testResult = new BuildWithAspire.ApiService.Services.CallToolResult
+    {
+        Content = new[] { testContent },
+        IsError = false
+    };
+    
+    var jsonResult = JsonSerializer.Serialize(testResult, new JsonSerializerOptions 
+    { 
+        PropertyNamingPolicy = null, 
+        WriteIndented = true 
+    });
+    return Results.Content(jsonResult, "application/json");
+})
+.WithName("DebugJson")
+.WithOpenApi();
 
 app.Run();
 
