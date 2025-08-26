@@ -335,13 +335,7 @@ app.MapPost("/mcp/call/{toolName}", async (string toolName, object? parameters, 
         logger.LogInformation("MCP tool result - IsError: {IsError}, Content count: {ContentCount}", 
             result.IsError, result.Content?.Length ?? 0);
         
-        // Manually serialize to debug JSON issues
-        var jsonResult = JsonSerializer.Serialize(result, new JsonSerializerOptions 
-        { 
-            PropertyNamingPolicy = null, 
-            WriteIndented = true 
-        });
-        return Results.Content(jsonResult, "application/json");
+        return Results.Ok(result);
     }
     catch (Exception ex)
     {
@@ -369,25 +363,6 @@ app.MapGet("/mcp/tools/metadata", async (IMcpClient mcpClient) =>
 .WithName("ListMcpToolMetadata")
 .WithOpenApi();
 
-// Debug endpoint to test JSON serialization
-app.MapGet("/debug/json", () =>
-{
-    var testContent = new BuildWithAspire.ApiService.Services.McpTextContent("Test message");
-    var testResult = new BuildWithAspire.ApiService.Services.CallToolResult
-    {
-        Content = new[] { testContent },
-        IsError = false
-    };
-    
-    var jsonResult = JsonSerializer.Serialize(testResult, new JsonSerializerOptions 
-    { 
-        PropertyNamingPolicy = null, 
-        WriteIndented = true 
-    });
-    return Results.Content(jsonResult, "application/json");
-})
-.WithName("DebugJson")
-.WithOpenApi();
 
 app.Run();
 

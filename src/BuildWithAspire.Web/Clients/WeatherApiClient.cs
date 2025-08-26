@@ -79,7 +79,7 @@ public class WeatherApiClient(HttpClient httpClient, ILogger<WeatherApiClient> l
         }
         catch (Exception ex)
         {
-            // Log error with more details for debugging
+            // Log error details
             logger.LogError(ex, "Exception occurred while calling MCP weather forecast - Type: {ExceptionType}", ex.GetType().Name);
             logger.LogInformation("Falling back to current weather");
             return await GetCurrentWeatherFallback(cancellationToken).ConfigureAwait(false);

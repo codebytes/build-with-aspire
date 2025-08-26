@@ -21,12 +21,12 @@ public class SimpleChatServiceTests
         var mockChatCompletion = Substitute.For<IChatCompletionService>();
         var mockServiceProvider = Substitute.For<IServiceProvider>();
 
-        var mockConfiguration = Substitute.For<IConfiguration>();
-        mockConfiguration.GetValue<int>("AI:TimeoutMinutes", 3).Returns(3);
-        mockConfiguration.GetValue<bool>("MCP:ServerEnabled", Arg.Any<bool>()).Returns(false);
+        var configurationBuilder = new ConfigurationBuilder()
+            .AddJsonFile("appsettings.Testing.json", optional: false)
+            .Build();
         
         // Act & Assert (should not throw)
-        var chatService = new ChatService(mockChatClient, mockLogger, aiSettings, mockKernel, mockChatCompletion, mockServiceProvider, mockConfiguration);
+        var chatService = new ChatService(mockChatClient, mockLogger, aiSettings, mockKernel, mockChatCompletion, mockServiceProvider, configurationBuilder);
         Assert.NotNull(chatService);
     }
 

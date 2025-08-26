@@ -79,7 +79,6 @@ public static class AIServiceExtensions
     {
         var connectionString = builder.Configuration.GetConnectionString("ai-service");
         var logger = builder.Services.BuildServiceProvider().GetRequiredService<ILoggerFactory>().CreateLogger("AIServiceExtensions");
-        logger.LogDebug("Azure OpenAI connection string: {ConnectionString}", connectionString);
 
         builder.AddAzureOpenAIClient("ai-service")
             .AddChatClient(aiSettings.DeploymentName);
@@ -127,7 +126,6 @@ public static class AIServiceExtensions
             }
 
             var logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("AIServiceExtensions");
-            logger.LogDebug("Configuring Azure AI Inference SK service. Provider={Provider}, DeploymentName={Deployment}, Model={Model}, Endpoint={Endpoint}", aiSettings.Provider, aiSettings.DeploymentName, aiSettings.Model, endpoint);
 
             // For FoundryLocal the OpenAIChatCompletionService needs the deployment name (acts like Azure OpenAI deployment)
             // Using the model id here results in HTTP 400 from the local Foundry server.

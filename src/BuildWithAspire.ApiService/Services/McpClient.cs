@@ -66,7 +66,7 @@ public sealed class McpClient : IMcpClient
 {
     private readonly ILogger<McpClient> _logger;
     private readonly IConfiguration _configuration;
-    private IMcpClient? _officialClient;
+    // private IMcpClient? _officialClient; // Reserved for future official client implementation
     private bool _isInitialized;
     private Tool[] _cachedTools = Array.Empty<Tool>();
 
@@ -76,11 +76,11 @@ public sealed class McpClient : IMcpClient
         _configuration = configuration;
     }
 
-    public async Task<bool> InitializeAsync(CancellationToken cancellationToken = default)
+    public Task<bool> InitializeAsync(CancellationToken cancellationToken = default)
     {
-        if (_isInitialized && _officialClient != null)
+        if (_isInitialized)
         {
-            return true;
+            return Task.FromResult(true);
         }
 
         try
@@ -89,12 +89,12 @@ public sealed class McpClient : IMcpClient
             // and we need to maintain compatibility with the existing API
             _isInitialized = true;
             _logger.LogInformation("MCP Client initialized successfully (simplified mode)");
-            return true;
+            return Task.FromResult(true);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to initialize MCP Client");
-            return false;
+            return Task.FromResult(false);
         }
     }
 
@@ -153,19 +153,19 @@ public sealed class McpClient : IMcpClient
             // For now, provide mock implementations of the tools since the MCP server session management is complex
             var result = toolName switch
             {
-                "GetCurrentWeather" => await GetMockCurrentWeather(),
-                "GetWeatherForecast" => await GetMockWeatherForecast(parameters),
-                "ConvertTemperature" => await GetMockTemperatureConversion(parameters),
-                "Calculate" => await GetMockCalculation(parameters),
-                "GetCurrentDateTime" => await GetMockDateTime(),
-                "GenerateRandomNumber" => await GetMockRandomNumber(parameters),
-                "GetSystemInfo" => await GetMockSystemInfo(),
-                "EncodeToBase64" => await GetMockEncodeBase64(parameters),
-                "DecodeFromBase64" => await GetMockDecodeBase64(parameters),
-                "SquareRoot" => await GetMockSquareRoot(parameters),
-                "Power" => await GetMockPower(parameters),
-                "GenerateFibonacci" => await GetMockFibonacci(parameters),
-                "IsPrime" => await GetMockIsPrime(parameters),
+                "GetCurrentWeather" => await GetMockCurrentWeather().ConfigureAwait(false),
+                "GetWeatherForecast" => await GetMockWeatherForecast(parameters).ConfigureAwait(false),
+                "ConvertTemperature" => await GetMockTemperatureConversion(parameters).ConfigureAwait(false),
+                "Calculate" => await GetMockCalculation(parameters).ConfigureAwait(false),
+                "GetCurrentDateTime" => await GetMockDateTime().ConfigureAwait(false),
+                "GenerateRandomNumber" => await GetMockRandomNumber(parameters).ConfigureAwait(false),
+                "GetSystemInfo" => await GetMockSystemInfo().ConfigureAwait(false),
+                "EncodeToBase64" => await GetMockEncodeBase64(parameters).ConfigureAwait(false),
+                "DecodeFromBase64" => await GetMockDecodeBase64(parameters).ConfigureAwait(false),
+                "SquareRoot" => await GetMockSquareRoot(parameters).ConfigureAwait(false),
+                "Power" => await GetMockPower(parameters).ConfigureAwait(false),
+                "GenerateFibonacci" => await GetMockFibonacci(parameters).ConfigureAwait(false),
+                "IsPrime" => await GetMockIsPrime(parameters).ConfigureAwait(false),
                 _ => new CallToolResult 
                 { 
                     Content = new[] { new McpTextContent { Type = "text", Text = $"Tool {toolName} not found" } }, 
@@ -187,9 +187,9 @@ public sealed class McpClient : IMcpClient
         }
     }
 
-    private async Task<CallToolResult> GetMockCurrentWeather()
+    private static async Task<CallToolResult> GetMockCurrentWeather()
     {
-        await Task.Delay(10); // Simulate async operation
+        await Task.Delay(10).ConfigureAwait(false); // Simulate async operation
         var temperature = Random.Shared.Next(-20, 55);
         var summary = temperature switch
         {
@@ -215,9 +215,9 @@ public sealed class McpClient : IMcpClient
         };
     }
 
-    private async Task<CallToolResult> GetMockWeatherForecast(object? parameters)
+    private static async Task<CallToolResult> GetMockWeatherForecast(object? parameters)
     {
-        await Task.Delay(10); // Simulate async operation
+        await Task.Delay(10).ConfigureAwait(false); // Simulate async operation
         var maxDays = 5;
         
         if (parameters != null)
@@ -263,9 +263,9 @@ public sealed class McpClient : IMcpClient
         };
     }
 
-    private async Task<CallToolResult> GetMockTemperatureConversion(object? parameters)
+    private static async Task<CallToolResult> GetMockTemperatureConversion(object? parameters)
     {
-        await Task.Delay(10);
+        await Task.Delay(10).ConfigureAwait(false);
         // Mock temperature conversion
         return new CallToolResult
         {
@@ -274,9 +274,9 @@ public sealed class McpClient : IMcpClient
         };
     }
 
-    private async Task<CallToolResult> GetMockCalculation(object? parameters)
+    private static async Task<CallToolResult> GetMockCalculation(object? parameters)
     {
-        await Task.Delay(10);
+        await Task.Delay(10).ConfigureAwait(false);
         // Mock calculation
         return new CallToolResult
         {
@@ -285,9 +285,9 @@ public sealed class McpClient : IMcpClient
         };
     }
 
-    private async Task<CallToolResult> GetMockDateTime()
+    private static async Task<CallToolResult> GetMockDateTime()
     {
-        await Task.Delay(10);
+        await Task.Delay(10).ConfigureAwait(false);
         var now = DateTime.Now;
         return new CallToolResult
         {
@@ -296,9 +296,9 @@ public sealed class McpClient : IMcpClient
         };
     }
 
-    private async Task<CallToolResult> GetMockRandomNumber(object? parameters)
+    private static async Task<CallToolResult> GetMockRandomNumber(object? parameters)
     {
-        await Task.Delay(10);
+        await Task.Delay(10).ConfigureAwait(false);
         var min = 1;
         var max = 100;
         
@@ -382,9 +382,9 @@ public sealed class McpClient : IMcpClient
         return textContent?.Text ?? "No data available";
     }
 
-    private async Task<CallToolResult> GetMockSystemInfo()
+    private static async Task<CallToolResult> GetMockSystemInfo()
     {
-        await Task.Delay(10);
+        await Task.Delay(10).ConfigureAwait(false);
         var systemInfo = new
         {
             operatingSystem = Environment.OSVersion.ToString(),
@@ -401,9 +401,9 @@ public sealed class McpClient : IMcpClient
         };
     }
 
-    private async Task<CallToolResult> GetMockEncodeBase64(object? parameters)
+    private static async Task<CallToolResult> GetMockEncodeBase64(object? parameters)
     {
-        await Task.Delay(10);
+        await Task.Delay(10).ConfigureAwait(false);
         var text = "Hello World"; // Default
         
         if (parameters != null)
@@ -428,9 +428,9 @@ public sealed class McpClient : IMcpClient
         };
     }
 
-    private async Task<CallToolResult> GetMockDecodeBase64(object? parameters)
+    private static async Task<CallToolResult> GetMockDecodeBase64(object? parameters)
     {
-        await Task.Delay(10);
+        await Task.Delay(10).ConfigureAwait(false);
         var base64Text = "SGVsbG8gV29ybGQ="; // "Hello World" in base64
         
         if (parameters != null)
@@ -466,9 +466,9 @@ public sealed class McpClient : IMcpClient
         }
     }
 
-    private async Task<CallToolResult> GetMockSquareRoot(object? parameters)
+    private static async Task<CallToolResult> GetMockSquareRoot(object? parameters)
     {
-        await Task.Delay(10);
+        await Task.Delay(10).ConfigureAwait(false);
         var number = 16.0; // Default
         
         if (parameters != null)
@@ -502,9 +502,9 @@ public sealed class McpClient : IMcpClient
         };
     }
 
-    private async Task<CallToolResult> GetMockPower(object? parameters)
+    private static async Task<CallToolResult> GetMockPower(object? parameters)
     {
-        await Task.Delay(10);
+        await Task.Delay(10).ConfigureAwait(false);
         var baseNumber = 2.0;
         var exponent = 3.0;
         
@@ -534,9 +534,9 @@ public sealed class McpClient : IMcpClient
         };
     }
 
-    private async Task<CallToolResult> GetMockFibonacci(object? parameters)
+    private static async Task<CallToolResult> GetMockFibonacci(object? parameters)
     {
-        await Task.Delay(10);
+        await Task.Delay(10).ConfigureAwait(false);
         var terms = 10;
         
         if (parameters != null)
@@ -569,9 +569,9 @@ public sealed class McpClient : IMcpClient
         };
     }
 
-    private async Task<CallToolResult> GetMockIsPrime(object? parameters)
+    private static async Task<CallToolResult> GetMockIsPrime(object? parameters)
     {
-        await Task.Delay(10);
+        await Task.Delay(10).ConfigureAwait(false);
         var number = 17L;
         
         if (parameters != null)
@@ -612,9 +612,10 @@ public sealed class McpClient : IMcpClient
 
     public async ValueTask DisposeAsync()
     {
-        if (_officialClient != null)
-        {
-            await _officialClient.DisposeAsync().ConfigureAwait(false);
-        }
+        // Note: _officialClient is commented out, but keeping this pattern for future use
+        // if (_officialClient != null)
+        // {
+        //     await _officialClient.DisposeAsync().ConfigureAwait(false);
+        // }
     }
 }

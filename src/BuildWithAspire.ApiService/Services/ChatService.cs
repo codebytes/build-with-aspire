@@ -235,10 +235,7 @@ public class ChatService
                 }
             }
 
-            _logger.LogDebug("Chat history prepared. UserMessages: {UserMessages}, AssistantMessages: {AssistantMessages}",
-                userMessages, assistantMessages);
-
-            // Log the conversation structure for debugging
+            // Log the conversation structure
             _logger.LogInformation("Processing conversation with {TotalMessages} total messages. Chat structure: {ChatStructure}",
                 chatHistory.Count, string.Join(" -> ", chatHistory.Select(m => m.Role.ToString())));
 
@@ -313,7 +310,6 @@ public class ChatService
         var primarySettings = CreateExecutionSettings();
         try
         {
-            _logger.LogDebug("Sending chat request. Provider={Provider}, ToolBehavior={ToolBehavior}", _aiSettings.Provider, primarySettings.ToolCallBehavior);
             return await _chatCompletion.GetChatMessageContentAsync(chatHistory, primarySettings, _kernel, ct).ConfigureAwait(false);
         }
         catch (Microsoft.SemanticKernel.HttpOperationException ex) when (_aiSettings.Provider == AIConfiguration.AIProvider.FoundryLocal)

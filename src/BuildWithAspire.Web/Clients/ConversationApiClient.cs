@@ -10,7 +10,6 @@ public class ConversationApiClient(HttpClient httpClient, ILogger<ConversationAp
 {
     public async Task<List<ConversationSummary>> GetConversationsAsync(CancellationToken cancellationToken = default)
     {
-        logger.LogDebug("Fetching conversations list");
 
         try
         {
@@ -33,7 +32,6 @@ public class ConversationApiClient(HttpClient httpClient, ILogger<ConversationAp
 
     public async Task<ConversationDetail?> GetConversationAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        logger.LogDebug("Fetching conversation details. ConversationId: {ConversationId}", id);
 
         try
         {

@@ -21,12 +21,12 @@ public class ChatServiceSimpleTests
         var mockChatCompletion = Substitute.For<IChatCompletionService>();
         var mockServiceProvider = Substitute.For<IServiceProvider>();
 
-        var mockConfiguration = Substitute.For<IConfiguration>();
-        mockConfiguration.GetValue<int>("AI:TimeoutMinutes", 3).Returns(3);
-        mockConfiguration.GetValue<bool>("MCP:ServerEnabled", Arg.Any<bool>()).Returns(false);
+        var configurationBuilder = new ConfigurationBuilder()
+            .AddJsonFile("appsettings.Testing.json", optional: false)
+            .Build();
         
         // Act & Assert
-        var service = new ChatService(mockChatClient, mockLogger, aiSettings, mockKernel, mockChatCompletion, mockServiceProvider, mockConfiguration);
+        var service = new ChatService(mockChatClient, mockLogger, aiSettings, mockKernel, mockChatCompletion, mockServiceProvider, configurationBuilder);
         Assert.NotNull(service);
     }
 
@@ -40,10 +40,10 @@ public class ChatServiceSimpleTests
         var mockKernel = new Kernel(); // Use real kernel since it's sealed
         var mockChatCompletion = Substitute.For<IChatCompletionService>();
         var mockServiceProvider = Substitute.For<IServiceProvider>();
-        var mockConfiguration = Substitute.For<IConfiguration>();
-        mockConfiguration.GetValue<int>("AI:TimeoutMinutes", 3).Returns(3);
-        mockConfiguration.GetValue<bool>("MCP:ServerEnabled", Arg.Any<bool>()).Returns(false);
-        var service = new ChatService(mockChatClient, mockLogger, aiSettings, mockKernel, mockChatCompletion, mockServiceProvider, mockConfiguration);
+        var configurationBuilder = new ConfigurationBuilder()
+            .AddJsonFile("appsettings.Testing.json", optional: false)
+            .Build();
+        var service = new ChatService(mockChatClient, mockLogger, aiSettings, mockKernel, mockChatCompletion, mockServiceProvider, configurationBuilder);
 
         // Act & Assert
         await Assert.ThrowsAnyAsync<Exception>(() => service.ProcessMessage(null!));
@@ -59,10 +59,10 @@ public class ChatServiceSimpleTests
         var mockKernel = new Kernel(); // Use real kernel since it's sealed
         var mockChatCompletion = Substitute.For<IChatCompletionService>();
         var mockServiceProvider = Substitute.For<IServiceProvider>();
-        var mockConfiguration = Substitute.For<IConfiguration>();
-        mockConfiguration.GetValue<int>("AI:TimeoutMinutes", 3).Returns(3);
-        mockConfiguration.GetValue<bool>("MCP:ServerEnabled", Arg.Any<bool>()).Returns(false);
-        var service = new ChatService(mockChatClient, mockLogger, aiSettings, mockKernel, mockChatCompletion, mockServiceProvider, mockConfiguration);
+        var configurationBuilder = new ConfigurationBuilder()
+            .AddJsonFile("appsettings.Testing.json", optional: false)
+            .Build();
+        var service = new ChatService(mockChatClient, mockLogger, aiSettings, mockKernel, mockChatCompletion, mockServiceProvider, configurationBuilder);
 
         // Act & Assert
         await Assert.ThrowsAsync<InvalidOperationException>(() => service.ProcessMessagesWithHistory(null!));
