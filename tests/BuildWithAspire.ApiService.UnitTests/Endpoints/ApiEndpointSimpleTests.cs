@@ -102,7 +102,7 @@ public class ApiEndpointSimpleTests : IClassFixture<WebApplicationFactory<Progra
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         var responseContent = await response.Content.ReadAsStringAsync();
         var conversation = JsonSerializer.Deserialize<JsonElement>(responseContent);
-        Assert.Equal("Test Conversation", conversation.GetProperty("name").GetString());
+        Assert.Equal("Test Conversation", conversation.GetProperty("Name").GetString());
     }
 
     [Fact]
@@ -143,7 +143,7 @@ public class ApiEndpointSimpleTests : IClassFixture<WebApplicationFactory<Progra
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadAsStringAsync();
         var result = JsonSerializer.Deserialize<JsonElement>(content);
-        Assert.Equal("Test Conversation", result.GetProperty("name").GetString());
+        Assert.Equal("Test Conversation", result.GetProperty("Name").GetString());
     }
 
     [Fact]
@@ -232,7 +232,7 @@ public class ApiEndpointSimpleTests : IClassFixture<WebApplicationFactory<Progra
         Assert.Equal(2, conversations.Length);
 
         // Should be ordered by UpdatedAt descending
-        Assert.Equal("Second Conversation", conversations[0].GetProperty("name").GetString());
-        Assert.Equal("First Conversation", conversations[1].GetProperty("name").GetString());
+        Assert.Equal("Second Conversation", conversations[0].GetProperty("Name").GetString());
+        Assert.Equal("First Conversation", conversations[1].GetProperty("Name").GetString());
     }
 }

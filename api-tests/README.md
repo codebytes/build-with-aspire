@@ -61,12 +61,26 @@ When running in development mode, visit these URLs in your browser:
 
 ## Common Test Scenarios
 
-### 1. Weather API Testing
+### 1. MCP Tool Testing
 ```http
-GET {{mcpServer}}/weather/current
-GET {{mcpServer}}/weather/forecast?days=5
-GET {{apiService}}/tools/weather/current
-GET {{apiService}}/svc/weather/current
+# List available MCP tools
+GET {{apiService}}/mcp/tools
+
+# Call weather tools via API Service
+POST {{apiService}}/mcp/call/GetCurrentWeather
+POST {{apiService}}/mcp/call/GetWeatherForecast
+
+# Direct MCP protocol calls to server (JSON-RPC)
+POST {{mcpServer}}/mcp
+{
+  "jsonrpc": "2.0",
+  "id": "1",
+  "method": "tools/call",
+  "params": {
+    "name": "GetCurrentWeather",
+    "arguments": {}
+  }
+}
 ```
 
 ### 2. Conversation Flow

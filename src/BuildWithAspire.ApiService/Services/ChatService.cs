@@ -16,9 +16,10 @@ public class ChatService
     private readonly IMcpClient? _mcpClient;
     private readonly Kernel _kernel;
     private readonly IChatCompletionService _chatCompletion;
-    private const int TimeoutMinutes = 3; // Fixed timeout for all AI requests
+    private readonly int _timeoutMinutes;
+    private readonly bool _mcpEnabled;
 
-    public ChatService(IChatClient chatClient, ILogger<ChatService> logger, AIConfiguration.AISettings aiSettings, Kernel kernel, IChatCompletionService chatCompletion, IServiceProvider serviceProvider, IMcpClient? mcpClient = null)
+    public ChatService(IChatClient chatClient, ILogger<ChatService> logger, AIConfiguration.AISettings aiSettings, Kernel kernel, IChatCompletionService chatCompletion, IServiceProvider serviceProvider, IConfiguration configuration, IMcpClient? mcpClient = null)
     {
         _chatClient = chatClient;
         _logger = logger;
@@ -26,13 +27,28 @@ public class ChatService
         _mcpClient = mcpClient;
         _kernel = kernel;
         _chatCompletion = chatCompletion;
+        
+        // Read configuration for timeouts and MCP settings
+        _timeoutMinutes = configuration.GetValue<int>("AI:TimeoutMinutes", 3);
+        _mcpEnabled = configuration.GetValue<bool>("MCP:ServerEnabled", _mcpClient != null);
 
-        // Add MCP tools plugin if MCP client is available
-        if (_mcpClient != null)
+        // Add MCP tools plugin if MCP client is available and enabled
+        if (_mcpClient != null && _mcpEnabled)
         {
-            var pluginLogger = serviceProvider.GetRequiredService<ILogger<McpToolsPlugin>>();
-            _kernel.Plugins.AddFromObject(new McpToolsPlugin(_mcpClient, pluginLogger), "McpTools");
-            _logger.LogInformation("MCP Tools plugin added to Semantic Kernel for AI provider {Provider}", aiSettings.Provider);
+            try
+            {
+                var pluginLogger = serviceProvider.GetRequiredService<ILogger<McpToolsPlugin>>();
+                _kernel.Plugins.AddFromObject(new McpToolsPlugin(_mcpClient, pluginLogger), "McpTools");
+                _logger.LogInformation("MCP Tools plugin added to Semantic Kernel for AI provider {Provider}", aiSettings.Provider);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to initialize MCP Tools plugin. Continuing without MCP integration.");
+            }
+        }
+        else if (!_mcpEnabled)
+        {
+            _logger.LogInformation("MCP integration disabled by configuration");
         }
     }
 
@@ -42,7 +58,7 @@ public class ChatService
 
         try
         {
-            using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(TimeoutMinutes));
+            using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(_timeoutMinutes));
             // Fast path: FoundryLocal currently returns 400 with SK OpenAI connector; use IChatClient directly
             if (_aiSettings.Provider == AIConfiguration.AIProvider.FoundryLocal)
             {
@@ -53,7 +69,7 @@ public class ChatService
                 };
 
                 // Weather enrichment via MCP tools (manual tool invocation since SK tool calling disabled here)
-                if (IsWeatherRelated(message) && _mcpClient != null)
+                if (IsWeatherRelated(message) && _mcpClient != null && _mcpEnabled)
                 {
                     try
                     {
@@ -114,8 +130,8 @@ public class ChatService
         }
         catch (OperationCanceledException ex)
         {
-            _logger.LogWarning(ex, "AI request timed out after {TimeoutMinutes} minutes. MessageLength: {MessageLength}", TimeoutMinutes, message?.Length ?? 0);
-            throw new InvalidOperationException($"The AI request timed out after {TimeoutMinutes} minutes. Please try again.", ex);
+            _logger.LogWarning(ex, "AI request timed out after {TimeoutMinutes} minutes. MessageLength: {MessageLength}", _timeoutMinutes, message?.Length ?? 0);
+            throw new InvalidOperationException($"The AI request timed out after {_timeoutMinutes} minutes. Please try again.", ex);
         }
         catch (Exception ex)
         {
@@ -131,7 +147,7 @@ public class ChatService
 
         try
         {
-            using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(TimeoutMinutes));
+            using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(_timeoutMinutes));
             // Fast path: FoundryLocal direct client usage to avoid 400 with SK OpenAI connector
             if (_aiSettings.Provider == AIConfiguration.AIProvider.FoundryLocal)
             {
@@ -145,7 +161,7 @@ public class ChatService
                 if (lastUser != null)
                 {
                     // Weather enrichment for multi-turn FoundryLocal path
-                    if (IsWeatherRelated(lastUser.Content) && _mcpClient != null)
+                    if (IsWeatherRelated(lastUser.Content) && _mcpClient != null && _mcpEnabled)
                     {
                         try
                         {
@@ -248,8 +264,8 @@ public class ChatService
         }
         catch (OperationCanceledException ex)
         {
-            _logger.LogWarning(ex, "AI conversation request timed out after {TimeoutMinutes} minutes. MessageCount: {MessageCount}", TimeoutMinutes, messageCount);
-            throw new InvalidOperationException($"The AI request timed out after {TimeoutMinutes} minutes. Please try again with a shorter conversation.", ex);
+            _logger.LogWarning(ex, "AI conversation request timed out after {TimeoutMinutes} minutes. MessageCount: {MessageCount}", _timeoutMinutes, messageCount);
+            throw new InvalidOperationException($"The AI request timed out after {_timeoutMinutes} minutes. Please try again with a shorter conversation.", ex);
         }
         catch (Exception ex)
         {

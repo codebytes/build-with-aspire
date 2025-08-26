@@ -1,255 +1,117 @@
-### BuildWithAspire MCP Server (HTTP Transport)
-### Remote MCP Server with HTTP-based tool execution
-### Base URL: Auto-assigned port (check Aspire dashboard)
+### BuildWithAspire MCP Server (MCP Protocol over HTTP)
+### This server implements the Model Context Protocol (MCP) specification
+### Tools are accessed via JSON-RPC protocol, not REST endpoints
+### Base URL: Auto-assigned port (check Aspire dashboard or use http://localhost:5267)
 
-@baseUrl = http://localhost:38717
+@baseUrl = http://localhost:5267
 
 ### === Server Status and Health ===
 
 ### Health Check
 GET {{baseUrl}}/health
 
-### Server Status (shows transport type and available tools)
-GET {{baseUrl}}/
+### === MCP Protocol Endpoints ===
+### Note: The MCP server implements JSON-RPC over HTTP
+### Individual tool endpoints like /tools/ToolName are NOT available
+### Use the API Service's /mcp/call/{toolName} endpoints instead
 
-### === MCP Tool Discovery ===
-
-### List All Available Tools
-GET {{baseUrl}}/tools
-
-### === Weather Tools ===
-
-### Get Current Weather
-POST {{baseUrl}}/tools/GetCurrentWeather
+### MCP Protocol - List Available Tools
+POST {{baseUrl}}/mcp
 Content-Type: application/json
 
-{}
+{
+  "jsonrpc": "2.0",
+  "id": "1",
+  "method": "tools/list",
+  "params": {}
+}
 
-### Get Weather Forecast (5 days default)
-POST {{baseUrl}}/tools/GetWeatherForecast
+### MCP Protocol - Call Weather Tool (Current Weather)
+POST {{baseUrl}}/mcp
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": "2",
+  "method": "tools/call",
+  "params": {
+    "name": "GetCurrentWeather",
+    "arguments": {}
+  }
+}
+
+### MCP Protocol - Call Weather Tool (Forecast)
+POST {{baseUrl}}/mcp
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": "3",
+  "method": "tools/call",
+  "params": {
+    "name": "GetWeatherForecast",
+    "arguments": {
+      "maxDays": 5
+    }
+  }
+}
+
+### MCP Protocol - Call Temperature Conversion Tool
+POST {{baseUrl}}/mcp
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": "4",
+  "method": "tools/call",
+  "params": {
+    "name": "ConvertTemperature",
+    "arguments": {
+      "temperature": 25,
+      "fromUnit": "C"
+    }
+  }
+}
+
+### MCP Protocol - Call System Info Tool
+POST {{baseUrl}}/mcp
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": "5",
+  "method": "tools/call",
+  "params": {
+    "name": "GetSystemInfo",
+    "arguments": {}
+  }
+}
+
+### === Testing via API Service ===
+### For easier testing, use the API Service MCP endpoints:
+
+### Get Available Tools (via API Service)
+GET http://localhost:5020/mcp/tools
+
+### Call Weather Forecast (via API Service)
+POST http://localhost:5020/mcp/call/GetWeatherForecast
 Content-Type: application/json
 
 {
   "MaxDays": 5
 }
 
-### Get Weather Forecast (custom days)
-POST {{baseUrl}}/tools/GetWeatherForecast
-Content-Type: application/json
-
-{
-  "MaxDays": 3
-}
-
-### Get Weather Forecast (maximum 10 days)
-POST {{baseUrl}}/tools/GetWeatherForecast
-Content-Type: application/json
-
-{
-  "MaxDays": 10
-}
-
-### Convert Temperature (Celsius to Fahrenheit)
-POST {{baseUrl}}/tools/ConvertTemperature
-Content-Type: application/json
-
-{
-  "Temperature": 25.0,
-  "FromUnit": "C"
-}
-
-### Convert Temperature (Fahrenheit to Celsius)
-POST {{baseUrl}}/tools/ConvertTemperature
-Content-Type: application/json
-
-{
-  "Temperature": 77.0,
-  "FromUnit": "F"
-}
-
-### === System Tools ===
-
-### Get Current Date and Time
-POST {{baseUrl}}/tools/GetCurrentDateTime
+### Call Current Weather (via API Service)
+POST http://localhost:5020/mcp/call/GetCurrentWeather
 Content-Type: application/json
 
 {}
 
-### Get System Information
-POST {{baseUrl}}/tools/GetSystemInfo
-Content-Type: application/json
-
-{}
-
-### Generate Random Number (default range 1-100)
-POST {{baseUrl}}/tools/GenerateRandomNumber
+### Call Random Number Tool (via API Service)
+POST http://localhost:5020/mcp/call/GenerateRandomNumber
 Content-Type: application/json
 
 {
   "Min": 1,
   "Max": 100
-}
-
-### Generate Random Number (custom range)
-POST {{baseUrl}}/tools/GenerateRandomNumber
-Content-Type: application/json
-
-{
-  "Min": 10,
-  "Max": 50
-}
-
-### === Encoding Tools ===
-
-### Encode Text to Base64
-POST {{baseUrl}}/tools/EncodeToBase64
-Content-Type: application/json
-
-{
-  "text": "Hello, MCP World!"
-}
-
-### Decode Base64 to Text
-POST {{baseUrl}}/tools/DecodeFromBase64
-Content-Type: application/json
-
-{
-  "base64Text": "SGVsbG8sIE1DUCBXb3JsZCE="
-}
-
-### === Math Tools ===
-
-### Basic Addition
-POST {{baseUrl}}/tools/Calculate
-Content-Type: application/json
-
-{
-  "A": 15.5,
-  "B": 7.3,
-  "Operation": "add"
-}
-
-### Basic Multiplication
-POST {{baseUrl}}/tools/Calculate
-Content-Type: application/json
-
-{
-  "A": 12,
-  "B": 8,
-  "Operation": "multiply"
-}
-
-### Division
-POST {{baseUrl}}/tools/Calculate
-Content-Type: application/json
-
-{
-  "A": 100,
-  "B": 4,
-  "Operation": "divide"
-}
-
-### Square Root
-POST {{baseUrl}}/tools/SquareRoot
-Content-Type: application/json
-
-{
-  "number": 64
-}
-
-### Power Calculation
-POST {{baseUrl}}/tools/Power
-Content-Type: application/json
-
-{
-  "baseNumber": 2,
-  "exponent": 8
-}
-
-### Generate Fibonacci Sequence
-POST {{baseUrl}}/tools/GenerateFibonacci
-Content-Type: application/json
-
-{
-  "terms": 10
-}
-
-### Check if Number is Prime
-POST {{baseUrl}}/tools/IsPrime
-Content-Type: application/json
-
-{
-  "number": 97
-}
-
-### Check if Number is Prime (not prime)
-POST {{baseUrl}}/tools/IsPrime
-Content-Type: application/json
-
-{
-  "number": 100
-}
-
-### === Tool Testing Examples ===
-
-### Test Complex Math Chain
-### 1. Calculate: (5 + 3) = 8
-POST {{baseUrl}}/tools/Calculate
-Content-Type: application/json
-
-{
-  "A": 5,
-  "B": 3,
-  "Operation": "add"
-}
-
-### 2. Power: 8^2 = 64
-POST {{baseUrl}}/tools/Power
-Content-Type: application/json
-
-{
-  "baseNumber": 8,
-  "exponent": 2
-}
-
-### 3. Square Root: √64 = 8
-POST {{baseUrl}}/tools/SquareRoot
-Content-Type: application/json
-
-{
-  "number": 64
-}
-
-### 4. Check if 8 is Prime (no)
-POST {{baseUrl}}/tools/IsPrime
-Content-Type: application/json
-
-{
-  "number": 8
-}
-
-### === Error Testing ===
-
-### Test Invalid Tool Name
-POST {{baseUrl}}/tools/NonExistentTool
-Content-Type: application/json
-
-{}
-
-### Test Division by Zero
-POST {{baseUrl}}/tools/Calculate
-Content-Type: application/json
-
-{
-  "A": 10,
-  "B": 0,
-  "Operation": "divide"
-}
-
-### Test Negative Square Root
-POST {{baseUrl}}/tools/SquareRoot
-Content-Type: application/json
-
-{
-  "number": -25
 }

@@ -1,6 +1,10 @@
 using NSubstitute;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.AI;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
+using BuildWithAspire.ApiService.Configuration;
+using BuildWithAspire.ApiService.Services;
 
 namespace BuildWithAspire.ApiService.UnitTests.Services;
 
@@ -13,12 +17,16 @@ public class ChatServiceSimpleTests
         var mockChatClient = Substitute.For<IChatClient>();
         var mockLogger = Substitute.For<ILogger<ChatService>>();
         var aiSettings = new AIConfiguration.AISettings(AIConfiguration.AIProvider.Ollama, "test", "test-model");
-        var mockKernel = Substitute.For<Kernel>();
+        var mockKernel = new Kernel(); // Use real kernel since it's sealed
         var mockChatCompletion = Substitute.For<IChatCompletionService>();
         var mockServiceProvider = Substitute.For<IServiceProvider>();
 
+        var mockConfiguration = Substitute.For<IConfiguration>();
+        mockConfiguration.GetValue<int>("AI:TimeoutMinutes", 3).Returns(3);
+        mockConfiguration.GetValue<bool>("MCP:ServerEnabled", Arg.Any<bool>()).Returns(false);
+        
         // Act & Assert
-        var service = new ChatService(mockChatClient, mockLogger, aiSettings, mockKernel, mockChatCompletion, mockServiceProvider);
+        var service = new ChatService(mockChatClient, mockLogger, aiSettings, mockKernel, mockChatCompletion, mockServiceProvider, mockConfiguration);
         Assert.NotNull(service);
     }
 
@@ -29,10 +37,13 @@ public class ChatServiceSimpleTests
         var mockChatClient = Substitute.For<IChatClient>();
         var mockLogger = Substitute.For<ILogger<ChatService>>();
         var aiSettings = new AIConfiguration.AISettings(AIConfiguration.AIProvider.Ollama, "test", "test-model");
-        var mockKernel = Substitute.For<Kernel>();
+        var mockKernel = new Kernel(); // Use real kernel since it's sealed
         var mockChatCompletion = Substitute.For<IChatCompletionService>();
         var mockServiceProvider = Substitute.For<IServiceProvider>();
-        var service = new ChatService(mockChatClient, mockLogger, aiSettings, mockKernel, mockChatCompletion, mockServiceProvider);
+        var mockConfiguration = Substitute.For<IConfiguration>();
+        mockConfiguration.GetValue<int>("AI:TimeoutMinutes", 3).Returns(3);
+        mockConfiguration.GetValue<bool>("MCP:ServerEnabled", Arg.Any<bool>()).Returns(false);
+        var service = new ChatService(mockChatClient, mockLogger, aiSettings, mockKernel, mockChatCompletion, mockServiceProvider, mockConfiguration);
 
         // Act & Assert
         await Assert.ThrowsAnyAsync<Exception>(() => service.ProcessMessage(null!));
@@ -45,10 +56,13 @@ public class ChatServiceSimpleTests
         var mockChatClient = Substitute.For<IChatClient>();
         var mockLogger = Substitute.For<ILogger<ChatService>>();
         var aiSettings = new AIConfiguration.AISettings(AIConfiguration.AIProvider.Ollama, "test", "test-model");
-        var mockKernel = Substitute.For<Kernel>();
+        var mockKernel = new Kernel(); // Use real kernel since it's sealed
         var mockChatCompletion = Substitute.For<IChatCompletionService>();
         var mockServiceProvider = Substitute.For<IServiceProvider>();
-        var service = new ChatService(mockChatClient, mockLogger, aiSettings, mockKernel, mockChatCompletion, mockServiceProvider);
+        var mockConfiguration = Substitute.For<IConfiguration>();
+        mockConfiguration.GetValue<int>("AI:TimeoutMinutes", 3).Returns(3);
+        mockConfiguration.GetValue<bool>("MCP:ServerEnabled", Arg.Any<bool>()).Returns(false);
+        var service = new ChatService(mockChatClient, mockLogger, aiSettings, mockKernel, mockChatCompletion, mockServiceProvider, mockConfiguration);
 
         // Act & Assert
         await Assert.ThrowsAsync<InvalidOperationException>(() => service.ProcessMessagesWithHistory(null!));

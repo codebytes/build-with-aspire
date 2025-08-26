@@ -7,26 +7,59 @@
 ### Health Check
 GET {{baseUrl}}/health
 
-### Weather Forecast (AI-generated)
-GET {{baseUrl}}/weatherforecast
+### === MCP Tool Integration ===
 
-### Get Current Weather (via Tools)
-GET {{baseUrl}}/tools/weather/current
+### List All Available MCP Tools
+GET {{baseUrl}}/mcp/tools
 
-### Get Weather Forecast (via Tools)
-GET {{baseUrl}}/tools/weather/forecast
+### Get MCP Tools Metadata
+GET {{baseUrl}}/mcp/tools/metadata
 
-### Get Weather Forecast with custom days (via Tools)
-GET {{baseUrl}}/tools/weather/forecast?days=7
+### Call Current Weather Tool
+POST {{baseUrl}}/mcp/call/GetCurrentWeather
+Content-Type: application/json
 
-### Get Current Weather (via MCP Service)
-GET {{baseUrl}}/svc/weather/current
+{}
 
-### Get Weather Forecast (via MCP Service)
-GET {{baseUrl}}/svc/weather/forecast
+### Call Weather Forecast Tool
+POST {{baseUrl}}/mcp/call/GetWeatherForecast
+Content-Type: application/json
 
-### Get Weather Forecast with custom days (via MCP Service)
-GET {{baseUrl}}/svc/weather/forecast?days=3
+{
+  "MaxDays": 5
+}
+
+### Call Weather Forecast Tool (7 days)
+POST {{baseUrl}}/mcp/call/GetWeatherForecast
+Content-Type: application/json
+
+{
+  "MaxDays": 7
+}
+
+### Call Temperature Conversion Tool
+POST {{baseUrl}}/mcp/call/ConvertTemperature
+Content-Type: application/json
+
+{
+  "Temperature": 25,
+  "FromUnit": "C"
+}
+
+### Call System Info Tool
+POST {{baseUrl}}/mcp/call/GetSystemInfo
+Content-Type: application/json
+
+{}
+
+### Call Random Number Tool
+POST {{baseUrl}}/mcp/call/GenerateRandomNumber
+Content-Type: application/json
+
+{
+  "Min": 1,
+  "Max": 100
+}
 
 ### Chat (legacy endpoint)
 GET {{baseUrl}}/chat?message=Hello, how is the weather today?

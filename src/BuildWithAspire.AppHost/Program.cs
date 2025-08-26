@@ -40,12 +40,15 @@ var apiService = builder.AddProject<Projects.BuildWithAspire_ApiService>("apiser
 
 // MCP Server runs as a standalone HTTP service with weather endpoints
 var mcpServer = builder.AddProject<Projects.BuildWithAspire_MCPServer>("mcpserver")
-    .WithHttpEndpoint(name: "http")
-    .WithExternalHttpEndpoints();
+    .WithHttpEndpoint(port: 5267, name: "http")
+    .WithExternalHttpEndpoints()
+    .WithEnvironment("ASPNETCORE_ENVIRONMENT", builder.Environment.EnvironmentName);
 
 // Ensure API depends on MCP server for service discovery and startup ordering
+// Pass MCP server connection to API service for proper service-to-service communication
 apiService = apiService
-    .WithReference(mcpServer)
+    .WithReference(mcpServer) // This creates service discovery for MCP server
+    .WithEnvironment("MCP:ServerEnabled", "true")
     .WaitFor(mcpServer);
 
 // Add Web service
