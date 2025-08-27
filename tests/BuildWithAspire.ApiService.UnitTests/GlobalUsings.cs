@@ -1,4 +1,3 @@
-global using BuildWithAspire.ApiService.Configuration;
 global using BuildWithAspire.ApiService.Models;
 global using BuildWithAspire.ApiService.Services;
 global using Microsoft.Extensions.AI;

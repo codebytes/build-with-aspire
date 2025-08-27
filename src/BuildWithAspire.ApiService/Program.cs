@@ -1,4 +1,3 @@
-using BuildWithAspire.ApiService.Configuration;
 using BuildWithAspire.ApiService.Data;
 using BuildWithAspire.ApiService.Extensions;
 using BuildWithAspire.ApiService.Models;
@@ -6,6 +5,7 @@ using BuildWithAspire.ApiService.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Scalar.AspNetCore;
@@ -18,10 +18,8 @@ builder.AddServiceDefaults();
 // Add PostgreSQL DbContext
 builder.AddNpgsqlDbContext<ChatDbContext>("chatdb");
 
-// Add AI services
+// Add AI services using official Aspire integrations
 builder.AddAIServices();
-
-builder.Services.AddKernel();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnetcore/openapi
 builder.Services.AddEndpointsApiExplorer();
@@ -44,28 +42,20 @@ builder.Services.AddOpenApi(options =>
     });
 });
 
-builder.Services.AddTransient<ChatService>(serviceProvider =>
-{
-    var chatClient = serviceProvider.GetRequiredService<IChatClient>();
-    var logger = serviceProvider.GetRequiredService<ILogger<ChatService>>();
-    var aiSettings = serviceProvider.GetRequiredService<AIConfiguration.AISettings>();
-    var kernel = serviceProvider.GetRequiredService<Kernel>();
-    var chatCompletion = serviceProvider.GetRequiredService<IChatCompletionService>();
-    var configuration = serviceProvider.GetRequiredService<IConfiguration>();
-    var mcpClient = serviceProvider.GetService<IMcpClient>();
-    
-    return new ChatService(chatClient, logger, aiSettings, kernel, chatCompletion, serviceProvider, configuration, mcpClient);
-});
+// Register ChatService with simplified dependencies
+builder.Services.TryAddTransient<ChatService>();
 
-// Register HttpClient for MCP client
+// Register HttpClient for MCP client with service discovery
 builder.Services.AddHttpClient<IMcpClient, McpClient>(client =>
 {
     client.Timeout = TimeSpan.FromSeconds(30);
     client.DefaultRequestHeaders.Add("User-Agent", "BuildWithAspire-MCP-Client/1.0");
-});
+    // Base address will be set via service discovery to mcpserver
+    client.BaseAddress = new Uri("https+http://mcpserver/");
+}).AddServiceDiscovery();
 
 // Register MCP client as scoped to ensure proper HttpClient disposal
-builder.Services.AddScoped<IMcpClient, McpClient>();
+builder.Services.TryAddScoped<IMcpClient, McpClient>();
 
 var app = builder.Build();
 

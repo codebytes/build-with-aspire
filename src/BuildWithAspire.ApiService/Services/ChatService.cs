@@ -1,4 +1,3 @@
-using BuildWithAspire.ApiService.Configuration;
 using BuildWithAspire.ApiService.Models;
 using BuildWithAspire.ApiService.Plugins;
 using Microsoft.Extensions.AI;
@@ -8,29 +7,29 @@ using Microsoft.SemanticKernel.Connectors.OpenAI;
 
 namespace BuildWithAspire.ApiService.Services;
 
-public class ChatService
+public sealed class ChatService
 {
     private readonly IChatClient _chatClient;
     private readonly ILogger<ChatService> _logger;
-    private readonly AIConfiguration.AISettings _aiSettings;
+    private readonly string _aiProvider;
     private readonly IMcpClient? _mcpClient;
     private readonly Kernel _kernel;
     private readonly IChatCompletionService _chatCompletion;
     private readonly int _timeoutMinutes;
     private readonly bool _mcpEnabled;
 
-    public ChatService(IChatClient chatClient, ILogger<ChatService> logger, AIConfiguration.AISettings aiSettings, Kernel kernel, IChatCompletionService chatCompletion, IServiceProvider serviceProvider, IConfiguration configuration, IMcpClient? mcpClient = null)
+    public ChatService(IChatClient chatClient, ILogger<ChatService> logger, Kernel kernel, IChatCompletionService chatCompletion, IServiceProvider serviceProvider, IConfiguration configuration, IMcpClient? mcpClient = null)
     {
         _chatClient = chatClient;
         _logger = logger;
-        _aiSettings = aiSettings;
         _mcpClient = mcpClient;
         _kernel = kernel;
         _chatCompletion = chatCompletion;
         
         // Read configuration for timeouts and MCP settings
-        _timeoutMinutes = configuration.GetValue<int>("AI:TimeoutMinutes", 3);
+        _timeoutMinutes = configuration.GetValue<int>("AI:TimeoutMinutes", 10);
         _mcpEnabled = configuration.GetValue<bool>("MCP:ServerEnabled", _mcpClient != null);
+        _aiProvider = configuration["AI:Provider"] ?? "ollama";
 
         // Add MCP tools plugin if MCP client is available and enabled
         if (_mcpClient != null && _mcpEnabled)
@@ -39,7 +38,7 @@ public class ChatService
             {
                 var pluginLogger = serviceProvider.GetRequiredService<ILogger<McpToolsPlugin>>();
                 _kernel.Plugins.AddFromObject(new McpToolsPlugin(_mcpClient, pluginLogger), "McpTools");
-                _logger.LogInformation("MCP Tools plugin added to Semantic Kernel for AI provider {Provider}", aiSettings.Provider);
+                _logger.LogInformation("MCP Tools plugin added to Semantic Kernel for AI provider {Provider}", _aiProvider);
             }
             catch (Exception ex)
             {
@@ -60,7 +59,7 @@ public class ChatService
         {
             using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(_timeoutMinutes));
             // Fast path: FoundryLocal currently returns 400 with SK OpenAI connector; use IChatClient directly
-            if (_aiSettings.Provider == AIConfiguration.AIProvider.FoundryLocal)
+            if (_aiProvider.Equals("foundrylocal", StringComparison.OrdinalIgnoreCase))
             {
                 var messages = new List<ChatMessage>
                 {
@@ -149,7 +148,7 @@ public class ChatService
         {
             using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(_timeoutMinutes));
             // Fast path: FoundryLocal direct client usage to avoid 400 with SK OpenAI connector
-            if (_aiSettings.Provider == AIConfiguration.AIProvider.FoundryLocal)
+            if (_aiProvider.Equals("foundrylocal", StringComparison.OrdinalIgnoreCase))
             {
                 var directMessages = new List<ChatMessage>
                 {
@@ -297,7 +296,7 @@ public class ChatService
         };
 
         // Only enable tool calling when not disabled and provider supports it
-        if (!disableTools && _aiSettings.Provider != AIConfiguration.AIProvider.FoundryLocal)
+        if (!disableTools && !_aiProvider.Equals("foundrylocal", StringComparison.OrdinalIgnoreCase))
         {
             settings.ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions;
         }
@@ -312,7 +311,7 @@ public class ChatService
         {
             return await _chatCompletion.GetChatMessageContentAsync(chatHistory, primarySettings, _kernel, ct).ConfigureAwait(false);
         }
-        catch (Microsoft.SemanticKernel.HttpOperationException ex) when (_aiSettings.Provider == AIConfiguration.AIProvider.FoundryLocal)
+        catch (Microsoft.SemanticKernel.HttpOperationException ex) when (_aiProvider.Equals("foundrylocal", StringComparison.OrdinalIgnoreCase))
         {
             // Retry once without tool calling if 400 (likely unsupported parameter)
             if (ex.Message.Contains("400") && primarySettings.ToolCallBehavior is not null)

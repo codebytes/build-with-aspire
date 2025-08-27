@@ -62,9 +62,7 @@ public class ApiEndpointSimpleTests : IClassFixture<WebApplicationFactory<Progra
                 // Mock IChatClient - simplified
                 var mockChatClient = Substitute.For<IChatClient>();
 
-                // Mock AIConfiguration.AISettings
-                var aiSettings = new AIConfiguration.AISettings(AIConfiguration.AIProvider.Ollama, "test", "test-model");
-                services.AddSingleton(aiSettings);
+                // No longer need AI settings mock - using connection strings
 
                 services.AddSingleton(mockChatClient);
             });

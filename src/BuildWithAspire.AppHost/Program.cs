@@ -29,9 +29,10 @@ IResourceBuilder<IResourceWithConnectionString>? chatDb = builder.ExecutionConte
         .WithDataVolume()
         .AddDatabase("chatdb");
 
-// Add API service with AI model configuration
+// Add AI service using official integrations based on configuration
 var aiService = builder.AddAIModel();
 
+// Add API service with AI model configuration
 var apiService = builder.AddProject<Projects.BuildWithAspire_ApiService>("apiservice")
     .WithExternalHttpEndpoints()
     .WithAIModel(aiService)
@@ -42,13 +43,11 @@ var apiService = builder.AddProject<Projects.BuildWithAspire_ApiService>("apiser
 var mcpServer = builder.AddProject<Projects.BuildWithAspire_MCPServer>("mcpserver")
     .WithHttpEndpoint(port: 5267, name: "http")
     .WithExternalHttpEndpoints()
-    .WithEnvironment("ASPNETCORE_ENVIRONMENT", builder.Environment.EnvironmentName);
+    .WithEnvironmentConfig(builder.Environment.EnvironmentName);
 
-// Ensure API depends on MCP server for service discovery and startup ordering
-// Pass MCP server connection to API service for proper service-to-service communication
+// Add service discovery reference from API to MCP server
 apiService = apiService
-    .WithReference(mcpServer) // This creates service discovery for MCP server
-    .WithEnvironment("MCP:ServerEnabled", "true")
+    .WithReference(mcpServer)
     .WaitFor(mcpServer);
 
 // Add Web service

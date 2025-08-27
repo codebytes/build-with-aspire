@@ -7,13 +7,13 @@ using System.Text.Json.Serialization;
 namespace BuildWithAspire.ApiService.Services;
 
 // Simple wrapper types to maintain API compatibility
-public class Tool
+public sealed class Tool
 {
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
 }
 
-public class CallToolResult
+public sealed class CallToolResult
 {
     public McpContent[] Content { get; set; } = Array.Empty<McpContent>();
     public bool IsError { get; set; }
@@ -39,7 +39,7 @@ public class McpContent
 }
 
 // Keep backward compatibility
-public class McpTextContent : McpContent
+public sealed class McpTextContent : McpContent
 {
     public McpTextContent() : base()
     {
@@ -66,7 +66,7 @@ public sealed class McpClient : IMcpClient
 {
     private readonly ILogger<McpClient> _logger;
     private readonly IConfiguration _configuration;
-    // private IMcpClient? _officialClient; // Reserved for future official client implementation
+    // Reserved for future official client implementation
     private bool _isInitialized;
     private Tool[] _cachedTools = Array.Empty<Tool>();
 
@@ -610,12 +610,13 @@ public sealed class McpClient : IMcpClient
         return true;
     }
 
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync()
     {
         // Note: _officialClient is commented out, but keeping this pattern for future use
         // if (_officialClient != null)
         // {
-        //     await _officialClient.DisposeAsync().ConfigureAwait(false);
+        //     return _officialClient.DisposeAsync();
         // }
+        return ValueTask.CompletedTask;
     }
 }

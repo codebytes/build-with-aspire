@@ -109,6 +109,64 @@ public class ModelValidationTests
         Assert.Contains(message2, conversation.Messages);
     }
 
+    [Fact]
+    public void SendMessageRequest_WithValidData_ShouldBeValid()
+    {
+        // Arrange
+        var request = new SendMessageRequest("Hello, world!");
+
+        // Act
+        var validationResults = ValidateModel(request);
+
+        // Assert
+        Assert.Empty(validationResults);
+        Assert.Equal("Hello, world!", request.Message);
+    }
+
+    [Fact]
+    public void SendMessageRequest_WithEmptyContent_ShouldWork()
+    {
+        // Arrange
+        var request = new SendMessageRequest("");
+
+        // Act & Assert
+        Assert.Equal("", request.Message);
+    }
+
+    [Fact]
+    public void CreateConversationRequest_WithValidData_ShouldBeValid()
+    {
+        // Arrange
+        var request = new CreateConversationRequest("Test Conversation");
+
+        // Act
+        var validationResults = ValidateModel(request);
+
+        // Assert
+        Assert.Empty(validationResults);
+        Assert.Equal("Test Conversation", request.Name);
+    }
+
+    [Fact]
+    public void CreateConversationRequest_WithEmptyName_ShouldWork()
+    {
+        // Arrange
+        var request = new CreateConversationRequest("");
+
+        // Act & Assert
+        Assert.Equal("", request.Name);
+    }
+
+    [Fact]
+    public void CreateConversationRequest_WithNullName_ShouldWork()
+    {
+        // Arrange
+        var request = new CreateConversationRequest(null!);
+
+        // Act & Assert
+        Assert.Null(request.Name);
+    }
+
     private static List<ValidationResult> ValidateModel(object model)
     {
         var validationResults = new List<ValidationResult>();

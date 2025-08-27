@@ -25,6 +25,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.8" />
     <PackageReference Include="bunit" Version="1.40.0" />
     <PackageReference Include="bunit.web" Version="1.40.0" />
+    <PackageReference Include="FluentAssertions" Version="7.1.0" />
   </ItemGroup>
 
   <ItemGroup>
