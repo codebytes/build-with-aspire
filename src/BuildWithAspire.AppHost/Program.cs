@@ -24,12 +24,13 @@ IResourceBuilder<IResourceWithConnectionString>? chatDb = builder.ExecutionConte
         .AddAzurePostgresFlexibleServer("postgres")
         .AddDatabase("chatdb")
     : builder
+        // Use a non-secret parameter with a default value so Aspire CLI won't prompt
         .AddPostgres("postgres",
-            password: builder.AddParameter("postgres-password", "aspire123!", secret: true))
+            password: builder.AddParameter("postgres-password", "aspire123!", secret: false))
         .WithDataVolume()
         .AddDatabase("chatdb");
 
-// Add API service with AI model configuration
+// Always add AI resource (FoundryLocal returns a simple connection string resource)
 var aiService = builder.AddAIModel();
 
 var apiService = builder.AddProject<Projects.BuildWithAspire_ApiService>("apiservice")

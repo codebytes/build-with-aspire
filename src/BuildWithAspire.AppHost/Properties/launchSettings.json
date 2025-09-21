@@ -24,6 +24,66 @@
         "DOTNET_DASHBOARD_OTLP_ENDPOINT_URL": "http://localhost:19248",
         "DOTNET_RESOURCE_SERVICE_ENDPOINT_URL": "http://localhost:20265"
       }
+    },
+    "Ollama": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "applicationUrl": "https://localhost:17020;http://localhost:15264",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Ollama",
+        "DOTNET_ENVIRONMENT": "Ollama",
+        "DOTNET_DASHBOARD_OTLP_ENDPOINT_URL": "https://localhost:21208",
+        "DOTNET_RESOURCE_SERVICE_ENDPOINT_URL": "https://localhost:22219"
+      }
+    },
+    "AzureOpenAI": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "applicationUrl": "https://localhost:17020;http://localhost:15264",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "AzureOpenAI",
+        "DOTNET_ENVIRONMENT": "AzureOpenAI",
+        "DOTNET_DASHBOARD_OTLP_ENDPOINT_URL": "https://localhost:21208",
+        "DOTNET_RESOURCE_SERVICE_ENDPOINT_URL": "https://localhost:22219"
+      }
+    },
+    "GitHubModels": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "applicationUrl": "https://localhost:17020;http://localhost:15264",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "GitHubModels",
+        "DOTNET_ENVIRONMENT": "GitHubModels",
+        "DOTNET_DASHBOARD_OTLP_ENDPOINT_URL": "https://localhost:21208",
+        "DOTNET_RESOURCE_SERVICE_ENDPOINT_URL": "https://localhost:22219"
+      }
+    },
+    "AzureAIFoundry": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "applicationUrl": "https://localhost:17020;http://localhost:15264",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "AzureAIFoundry",
+        "DOTNET_ENVIRONMENT": "AzureAIFoundry",
+        "DOTNET_DASHBOARD_OTLP_ENDPOINT_URL": "https://localhost:21208",
+        "DOTNET_RESOURCE_SERVICE_ENDPOINT_URL": "https://localhost:22219"
+      }
+    },
+    "FoundryLocal": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "applicationUrl": "https://localhost:17020;http://localhost:15264",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "FoundryLocal",
+        "DOTNET_ENVIRONMENT": "FoundryLocal",
+        "DOTNET_DASHBOARD_OTLP_ENDPOINT_URL": "https://localhost:21208",
+        "DOTNET_RESOURCE_SERVICE_ENDPOINT_URL": "https://localhost:22219"
+      }
     }
   }
 }

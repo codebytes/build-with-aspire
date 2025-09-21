@@ -1,7 +1,5 @@
-using BuildWithAspire.ApiService.Configuration;
-using Microsoft.AI.Foundry.Local;
-using Microsoft.Extensions.AI;
-using OpenAI;
+
+using BuildWithAspire.Abstractions;
 
 namespace BuildWithAspire.ApiService.Extensions;
 
@@ -16,10 +14,10 @@ public static class AIServiceExtensions
     {
         var aiSettings = AIConfiguration.GetSettings(builder.Configuration);
 
-        // Register the AI settings for dependency injection
+        // Register AI settings once
         builder.Services.AddSingleton(aiSettings);
 
-        // Configure the appropriate AI provider
+        // Register provider specific services (pure registration – no provider builds/logging here)
         switch (aiSettings.Provider)
         {
             case AIConfiguration.AIProvider.Ollama:
@@ -31,15 +29,15 @@ public static class AIServiceExtensions
             case AIConfiguration.AIProvider.GitHubModels:
                 builder.AddGitHubModelsAIServices(aiSettings);
                 break;
-            case AIConfiguration.AIProvider.FoundryLocal:
+            case AIConfiguration.AIProvider.AzureAIFoundry:
                 builder.AddFoundryLocalAIServices(aiSettings);
                 break;
             default:
                 throw new InvalidOperationException($"Unsupported AI provider: {aiSettings.Provider}");
         }
 
-        // Add logging for AI configuration
-        builder.Services.AddSingleton<IHostedService, AIConfigurationLogger>();
+        // Add hosted startup logger (single provider – final container)
+        builder.Services.AddHostedService<AIStartupLogger>();
 
         return builder;
     }
@@ -51,81 +49,51 @@ public static class AIServiceExtensions
     }
 
     private static void AddAzureOpenAIServices(this IHostApplicationBuilder builder, AIConfiguration.AISettings aiSettings)
-    {
-        var connectionString = builder.Configuration.GetConnectionString("ai-service");
-        var logger = builder.Services.BuildServiceProvider().GetRequiredService<ILoggerFactory>().CreateLogger("AIServiceExtensions");
-        logger.LogDebug("Azure OpenAI connection string: {ConnectionString}", connectionString);
-
-        builder.AddAzureOpenAIClient("ai-service")
-            .AddChatClient(aiSettings.DeploymentName);
-    }
+        => builder.AddAzureOpenAIClient("ai-service")
+                   .AddChatClient(aiSettings.DeploymentName);
 
     private static void AddGitHubModelsAIServices(this IHostApplicationBuilder builder, AIConfiguration.AISettings aiSettings)
-    {
-        var githubToken = builder.Configuration["GITHUB_TOKEN"] ??
-                         builder.Configuration["ConnectionStrings:GitHubModels"] ??
-                         throw new InvalidOperationException("GitHub token not found. Set GITHUB_TOKEN environment variable or ConnectionStrings:GitHubModels");
-
-        builder.Services.AddSingleton<IChatClient>(serviceProvider =>
-        {
-            var openAIClient = new OpenAIClient(new System.ClientModel.ApiKeyCredential(githubToken), new OpenAIClientOptions
-            {
-                Endpoint = new Uri("https://models.inference.ai.azure.com")
-            });
-            return openAIClient.GetChatClient(aiSettings.Model).AsIChatClient();
-        });
-    }
+        => builder.AddOpenAIClient(aiSettings.DeploymentName)
+                   .AddChatClient();
 
     private static void AddFoundryLocalAIServices(this IHostApplicationBuilder builder, AIConfiguration.AISettings aiSettings)
-    {
-        builder.Services.AddSingleton<IChatClient>(serviceProvider =>
-        {
-            var logger = serviceProvider.GetRequiredService<ILogger<IChatClient>>();
-            try
-            {
-                // Initialize FoundryLocalManager with the model
-                var manager = FoundryLocalManager.StartModelAsync(aliasOrModelId: aiSettings.Model).GetAwaiter().GetResult();
-                var modelInfo = manager.GetModelInfoAsync(aliasOrModelId: aiSettings.Model).GetAwaiter().GetResult();
-
-                logger.LogInformation("Foundry Local initialized with endpoint: {Endpoint}, Model: {Model}",
-                    manager.Endpoint, modelInfo?.ModelId);
-
-                var openAIClient = new OpenAIClient(new System.ClientModel.ApiKeyCredential(manager.ApiKey), new OpenAIClientOptions
-                {
-                    Endpoint = manager.Endpoint
-                });
-                return openAIClient.GetChatClient(modelInfo?.ModelId ?? aiSettings.Model).AsIChatClient();
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Failed to initialize Foundry Local client");
-                throw;
-            }
-        });
-    }
+        => builder.AddAzureChatCompletionsClient(aiSettings.DeploymentName)
+                   .AddChatClient();
 }
 
-/// <summary>
-/// Background service that logs AI configuration on startup.
-/// </summary>
-internal sealed class AIConfigurationLogger : BackgroundService
+// Hosted service that logs final AI configuration once the real container is built.
+internal sealed class AIStartupLogger : IHostedService
 {
-    private readonly ILogger<AIConfigurationLogger> _logger;
-    private readonly AIConfiguration.AISettings _aiSettings;
+    private readonly ILogger<AIStartupLogger> _logger;
+    private readonly AIConfiguration.AISettings _settings;
+    private readonly IConfiguration _configuration;
 
-    public AIConfigurationLogger(ILogger<AIConfigurationLogger> logger, AIConfiguration.AISettings aiSettings)
+    public AIStartupLogger(ILogger<AIStartupLogger> logger,
+                           AIConfiguration.AISettings settings,
+                           IConfiguration configuration)
     {
         _logger = logger;
-        _aiSettings = aiSettings;
+        _settings = settings;
+        _configuration = configuration;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    public Task StartAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("AI Configuration: Provider={Provider}, Model={Model}, Deployment={Deployment}",
-            _aiSettings.Provider, _aiSettings.Model, _aiSettings.DeploymentName);
-
-        // Complete immediately - this is just for logging
-        await Task.CompletedTask.ConfigureAwait(false);
+        if (_settings.Provider == AIConfiguration.AIProvider.AzureOpenAI)
+        {
+            var hasConn = !string.IsNullOrEmpty(_configuration.GetConnectionString("ai-service"));
+            _logger.LogInformation("AI configured: Provider={Provider} Deployment={Deployment} Model={Model} AzureConnPresent={HasConn}",
+                _settings.Provider, _settings.DeploymentName, _settings.Model, hasConn);
+        }
+        else
+        {
+            _logger.LogInformation("AI configured: Provider={Provider} Deployment={Deployment} Model={Model}",
+                _settings.Provider, _settings.DeploymentName, _settings.Model);
+        }
+        return Task.CompletedTask;
     }
+
+    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 }
+
 

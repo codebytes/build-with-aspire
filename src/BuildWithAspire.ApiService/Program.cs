@@ -2,6 +2,7 @@ using BuildWithAspire.ApiService.Data;
 using BuildWithAspire.ApiService.Extensions;
 using BuildWithAspire.ApiService.Models;
 using BuildWithAspire.ApiService.Services;
+using BuildWithAspire.Abstractions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
@@ -80,14 +81,24 @@ catch (Exception ex)
     app.Logger.LogError(ex, "Database initialization failed. Service will continue without database.");
 }
 
-app.MapGet("/weatherforecast", (IChatClient client) =>
+app.MapGet("/weatherforecast", (IChatClient client, ILoggerFactory lf, AIConfiguration.AISettings settings) =>
 {
+    var logger = lf.CreateLogger("WeatherForecastEndpoint");
     async IAsyncEnumerable<WeatherForecast> GetForecasts()
     {
         for (int index = 1; index <= 5; index++)
         {
             var temperature = Random.Shared.Next(-20, 55);
-            var summary = await GetWeatherSummary(client, temperature).ConfigureAwait(false);
+            string summary;
+            try
+            {
+                summary = await GetWeatherSummary(client, temperature, logger, settings).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "AI summary generation failed (temp={Temp}, Provider={Provider}, Deployment={Deployment}, Model={Model})", temperature, settings.Provider, settings.DeploymentName, settings.Model);
+                summary = "error";
+            }
             yield return new WeatherForecast
             (
                 DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
@@ -99,7 +110,7 @@ app.MapGet("/weatherforecast", (IChatClient client) =>
 
     return GetForecasts();
 
-    static async Task<string> GetWeatherSummary(IChatClient client, int temp)
+    static async Task<string> GetWeatherSummary(IChatClient client, int temp, ILogger logger, AIConfiguration.AISettings settings)
     {
         List<ChatMessage> conversation = new()
         {
@@ -108,7 +119,19 @@ app.MapGet("/weatherforecast", (IChatClient client) =>
             // User messages represent user input, whether historical or the most recent input
             new(ChatRole.User, $"How would you describe the weather at temp {temp} in celcius? Provide the response in 1 word with no punctuation.")
         };
+        logger.LogDebug("Requesting AI weather summary (Provider={Provider}, Deployment={Deployment}, Model={Model}, Temp={Temp})", settings.Provider, settings.DeploymentName, settings.Model, temp);
         var completion = await client.GetResponseAsync(conversation).ConfigureAwait(false);
+        if (string.IsNullOrWhiteSpace(completion.Text))
+        {
+            logger.LogWarning("Empty AI completion text (Temp={Temp})", temp);
+            return "unknown";
+        }
+        var trimmed = completion.Text.Trim();
+        if (trimmed.Length > 20)
+        {
+            trimmed = trimmed[..20];
+        }
+        logger.LogDebug("AI completion received: {Excerpt}", trimmed);
 
         return $"{completion.Text}";
     }
@@ -167,6 +190,8 @@ app.MapGet("/conversations/{id}", async (Guid id, ChatDbContext db) =>
 })
 .WithName("GetConversation")
 .WithOpenApi();
+
+// Diagnostics endpoint
 
 app.MapPost("/conversations", async ([FromBody] CreateConversationRequest request, ChatDbContext db) =>
 {

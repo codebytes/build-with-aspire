@@ -6,7 +6,7 @@ public class AIConfigurationTests
     [InlineData("ollama", AIConfiguration.AIProvider.Ollama)]
     [InlineData("azureopenai", AIConfiguration.AIProvider.AzureOpenAI)]
     [InlineData("githubmodels", AIConfiguration.AIProvider.GitHubModels)]
-    [InlineData("foundrylocal", AIConfiguration.AIProvider.FoundryLocal)]
+    [InlineData("foundrylocal", AIConfiguration.AIProvider.AzureAIFoundry)]
     [InlineData("OLLAMA", AIConfiguration.AIProvider.Ollama)]
     [InlineData("AZUREOPENAI", AIConfiguration.AIProvider.AzureOpenAI)]
     public void GetProvider_WithValidProviderStrings_ReturnsCorrectEnum(string providerString, AIConfiguration.AIProvider expectedProvider)
@@ -65,8 +65,8 @@ public class AIConfigurationTests
     [Theory]
     [InlineData(AIConfiguration.AIProvider.Ollama, "llama3.2")]
     [InlineData(AIConfiguration.AIProvider.AzureOpenAI, "gpt-4o")]
-    [InlineData(AIConfiguration.AIProvider.GitHubModels, "gpt-4o-mini")]
-    [InlineData(AIConfiguration.AIProvider.FoundryLocal, "phi-3.5-mini")]
+    [InlineData(AIConfiguration.AIProvider.GitHubModels, "openai/gpt-4o-mini")]
+    [InlineData(AIConfiguration.AIProvider.AzureAIFoundry, "phi-3.5-mini")]
     public void GetModel_WithDefaultConfiguration_ReturnsProviderDefaults(AIConfiguration.AIProvider provider, string expectedModel)
     {
         // Arrange

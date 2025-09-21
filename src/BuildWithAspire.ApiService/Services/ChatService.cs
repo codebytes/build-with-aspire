@@ -1,4 +1,4 @@
-using BuildWithAspire.ApiService.Configuration;
+using BuildWithAspire.Abstractions;
 using BuildWithAspire.ApiService.Models;
 using Microsoft.Extensions.AI;
 
