@@ -4,10 +4,6 @@ theme: custom-default
 footer: '@Chris_L_Ayers - https://chris-ayers.com'
 ---
 
-![bg fit](./img/aspire_title.png)
-
----
-
 <!-- _footer: 'https://github.com/codebytes/build-with-aspire' -->
 
 # Aspiring .NET with Azure OpenAI and Ollama
@@ -42,7 +38,7 @@ footer: '@Chris_L_Ayers - https://chris-ayers.com'
 - Consuming Resources
 - Local Azure Development
 - Deploying to Azure
-- **What's New in 9.3**
+- **What's New in 9.4**
 - Demos
 - Q&A
 
@@ -267,6 +263,7 @@ footer: '@Chris_L_Ayers - https://chris-ayers.com'
 <div>
 
 ## Local to Cloud
+
 - **Zero-Friction**: Seamless local to cloud transitions
 - **Emulator Support**: Local containers for speed
 - **Hybrid Development**: Mix local/cloud resources
@@ -276,6 +273,7 @@ footer: '@Chris_L_Ayers - https://chris-ayers.com'
 <div>
 
 ## Configuration
+
 - **Simple Connections**: Easy Azure and third-party integration
 - **Auto Configuration**: Service discovery and management
 - **Secret Handling**: Secure credential management
@@ -351,33 +349,75 @@ builder.AddAzureOpenAIClient();
 <div>
 
 ## Deployment Targets
+
 - **Azure App Service**
 - **Azure Container Apps**
 - **Kubernetes**
-  
-## New in 9.3
-- **Per-resource publishing**
-- **Resource-to-compute mapping**
-- **Improved CI/CD parameters**
+
+## Authentication
+
+- **Credential Providers**
+- **Key Vault Integration**
+- **Secure Access**
 
 </div>
 <div>
 
-## Authentication
-- **Credential Providers**
-- **Key Vault Integration**
-- **Secure Access**
-## Developer CLI
-- Native .NET Aspire support
-- Auto-detects app structure
-- Environment variable mapping
+## Azure Developer CLI
+
+- **azd up** - Deploy everything
+- **azd deploy** - Deploy app only
+- **azd provision** - Infrastructure only
+- **azd init** - Initialize project
+
+## Benefits
+
+- **Auto-detects** app structure
+- **Environment variable** mapping
+- **Native Aspire support**
 
 </div>
 </div>
 
 ---
 
-# Kubernetes Deployment (9.3)
+# What's New in .NET Aspire 9.4
+
+<div class="columns">
+<div>
+
+## ⚙️ CLI & Developer Experience
+
+- **Aspire CLI Generally Available**
+- Interactive parameter prompting
+- Enhanced publish/deploy formatting
+
+## 🎨 App Model & Deployment
+
+- **Multiple compute environments**
+- **External service modeling**
+- **Interaction service**
+
+</div>
+<div>
+
+## 🤖 AI & Data Services
+
+- **Azure AI Foundry** and **GitHub Models**
+- **Cosmos DB** hierarchical partitions
+- **Enhanced Key Vault** APIs
+
+## 🚀 Improved Workflows
+
+- **Interactive Azure provisioning**
+- **Better deployment** and resource management
+
+</div>
+</div>
+
+---
+
+# Kubernetes Deployment (9.4)
 
 <div class="columns">
 <div>
@@ -410,7 +450,7 @@ builder.AddContainer("service", "nginx")
 
 ---
 
-# Compute Environments (9.3)
+# Compute Environments (9.4)
 
 <div class="columns">
 <div>
@@ -441,43 +481,108 @@ builder.AddProject<Projects.Frontend>("frontend")
 
 ---
 
-# What's New in .NET Aspire 9.3
+# Aspire CLI Generally Available
 
-<div class="columns3">
+<div class="columns">
 <div>
 
-## App Model
+## Installation
 
-- Easier container config
-- Custom URLs
-- YARP (Preview)
-- New lifecycle events
-- MySQL support
-- Hidden resources
+```bash
+# AOT Binary (recommended)
+curl -sSL https://aspire.dev/install.sh | bash
+
+# Global Tool
+dotnet tool install -g Aspire.Cli
+```
 
 </div>
 <div>
 
-## Dashboard
+## Key Commands
 
-- Copilot AI debugging
-- Persistent filters
-- Traces view
-- Context menus
-- Friendly names
-- Metrics pause alert
+- `aspire new` / `aspire run` / `aspire add`
+- `aspire config` / `aspire publish`
+- `aspire exec` - Execute in context (preview)
+- `aspire deploy` - Deploy to targets (preview)
+
+</div>
+</div>
+
+---
+
+# AI Integration Examples
+
+<div class="columns">
+<div>
+
+## GitHub Models
+
+```csharp
+var model = builder.AddGitHubModel("chat", "gpt-4o-mini");
+
+var chatService = builder.AddProject<Projects.Chat>("chat")
+    .WithReference(model);
+```
+
+## Azure AI Foundry
+
+```csharp
+var foundry = builder.AddAzureAIFoundry("foundry");
+var chat = foundry.AddDeployment("chat", "qwen2.5-0.5b");
+
+var webService = builder.AddProject<Projects.Web>("web")
+    .WithReference(chat);
+```
 
 </div>
 <div>
 
-## Deployment
+## Foundry Local (On-Device)
 
-- New publisher model
-- Azure App Service
-- Use existing ACR
-- Improved CI/CD params
-- Docker/K8s customization
-- Better telemetry & security
+```csharp
+var localFoundry = builder.AddAzureAIFoundry("foundry")
+    .RunAsFoundryLocal()
+    .AddDeployment("chat", "phi-3.5-mini");
+
+var webService = builder.AddProject<Projects.Web>("web")
+    .WithReference(localFoundry);
+```
+
+**Benefits**: Privacy, performance, offline operation, cost reduction
+
+</div>
+</div>
+
+---
+
+# Interactive Parameter Prompting
+
+<div class="columns">
+<div>
+
+```csharp
+// Parameters without defaults trigger dashboard prompts
+var apiKey = builder.AddParameter("api-key", secret: true);
+var dbUrl = builder.AddParameter("database-url");
+
+var api = builder.AddProject<Projects.Api>("api")
+    .WithEnvironment("API_KEY", apiKey)
+    .WithEnvironment("DATABASE_URL", dbUrl);
+```
+
+</div>
+<div>
+
+## Features
+
+- **Automatic prompting** for missing parameters
+- **Rich form inputs** in dashboard
+- **Secret masking** for sensitive data
+- **Validation support** with custom rules
+- **Save to user secrets** for persistence
+
+**Input Types**: Text, Password, Choice, Boolean, Number
 
 </div>
 </div>
@@ -504,34 +609,10 @@ builder.AddProject<Projects.Frontend>("frontend")
 ## Links
 
 - [.NET Aspire](https://learn.microsoft.com/en-us/dotnet/aspire/get-started/aspire-overview)
-- [What's new in .NET Aspire 9.3](https://learn.microsoft.com/en-us/dotnet/aspire/whats-new/aspire-9.3)
+- [What's new in .NET Aspire 9.4](https://learn.microsoft.com/en-us/dotnet/aspire/whats-new/dotnet-aspire-9.4)
 - [Aspirify](https://aspireify.net/)
 - [Aspire Samples](https://github.com/dotnet/aspire-samples)
 - [eShopLite](https://github.com/Azure-Samples/eShopLite)
- 
-</div>
-<div>
-
-## Follow Chris Ayers
-
-<i class="fa-brands fa-bluesky"></i> BlueSky: [@chris-ayers.com](https://bsky.app/profile/chris-ayers.com)
-<i class="fa-brands fa-linkedin"></i> LinkedIn: - [chris\-l\-ayers](https://linkedin.com/in/chris-l-ayers/)
-<i class="fa fa-window-maximize"></i> Blog: [https://chris-ayers\.com/](https://chris-ayers.com/)
-<i class="fa-brands fa-github"></i> GitHub: [Codebytes](https://github.com/codebytes)
-<i class="fa-brands fa-mastodon"></i> Mastodon: [@Chrisayers@hachyderm.io](https://hachyderm.io/@Chrisayers)
-~~<i class="fa-brands fa-twitter"></i> Twitter: @Chris_L_Ayers~~
-
-</div>
-</div>
-
----
-
-# Feedback
-
-<div class="columns">
-<div>
-
-![](./img/aspiring_net_with_azure_open_ai_and_ollama-qr-code.png)
 
 </div>
 <div>
@@ -546,9 +627,7 @@ builder.AddProject<Projects.Frontend>("frontend")
 ~~<i class="fa-brands fa-twitter"></i> Twitter: @Chris_L_Ayers~~
 
 </div>
-
 </div>
-
 
 <!-- Needed for mermaid, can be anywhere in file except frontmatter -->
 <script type="module">
