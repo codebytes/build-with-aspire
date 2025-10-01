@@ -75,34 +75,38 @@
                 {
                     @foreach (var item in _messages?.ToList() ?? new List<BuildWithAspire.Web.Models.Message>())
                     {
-                        <div class="@GetMessageCss(item.Role)">
-                            <div class="user">@item.Role</div>
-                            <div class="msg">
-                                @if (item.Role == "assistant")
-                                {
-                                    @((MarkupString)Markdown.ToHtml(item.Content))
-                                }
-                                else
-                                {
-                                    @item.Content
-                                }
+                        <div class="message-container">
+                            <div class="@GetMessageCss(item.Role)">
+                                <div class="user">@item.Role</div>
+                                <div class="msg">
+                                    @if (item.Role == "assistant")
+                                    {
+                                        @((MarkupString)Markdown.ToHtml(item.Content))
+                                    }
+                                    else
+                                    {
+                                        @item.Content
+                                    }
+                                </div>
+                                <div class="timestamp">@item.CreatedAt.ToLocalTime().ToString("HH:mm")</div>
                             </div>
-                            <div class="timestamp">@item.CreatedAt.ToLocalTime().ToString("HH:mm")</div>
                         </div>
                     }
                 }
                 
                 @if (_isLoading)
                 {
-                    <div class="received">
-                        <div class="user">assistant</div>
-                        <div class="msg">Thinking...</div>
+                    <div class="message-container">
+                        <div class="received">
+                            <div class="user">assistant</div>
+                            <div class="msg">Thinking...</div>
+                        </div>
                     </div>
                 }
             </div>
 
             <div class="chat-input">
-                <input @ref="_inputRef" class="input-lg" placeholder="Type your message..." @bind="_newMessage" @onkeydown="OnKeyDown" @onkeydown:preventDefault="false" disabled="@_isLoading" />
+                <input @ref="_inputRef" class="input-lg" placeholder="Type your message..." @bind="_newMessage" @onkeyup="OnKeyUp" disabled="@_isLoading" />
                 <button type="button" class="btn btn-default btn-primary" @onclick="OnSendClick" @onclick:preventDefault="true" disabled="@(_isLoading || string.IsNullOrWhiteSpace(_newMessage))">
                     @if (_isLoading)
                     {
@@ -235,7 +239,7 @@
         }
     }
 
-    private async Task OnKeyDown(KeyboardEventArgs e)
+    private async Task OnKeyUp(KeyboardEventArgs e)
     {
         if (e.Key == "Enter" && !e.ShiftKey && !_isLoading && !string.IsNullOrWhiteSpace(_newMessage))
         {
@@ -476,29 +480,39 @@
         flex: 1;
     }
 
-    .sent, .received {
+    .message-container {
+        width: 100%;
         margin-bottom: 1rem;
+        display: block;
+        clear: both;
+    }
+
+    .sent, .received {
+        display: block;
         padding: 0.75rem;
         border-radius: 8px;
+        margin-bottom: 0;
+        max-width: 70%;
+        word-wrap: break-word;
+        width: fit-content;
         position: relative;
-        clear: both;
     }
 
     .sent {
         background-color: #0d6efd;
         color: white;
-        margin-left: 25%;
-        margin-right: 1rem;
-        float: right;
+        margin-left: auto;
+        margin-right: 0;
+        text-align: left;
     }
 
     .received {
         background-color: white;
         color: black;
-        margin-right: 25%;
-        margin-left: 1rem;
         border: 1px solid #dee2e6;
-        float: left;
+        margin-left: 0;
+        margin-right: auto;
+        text-align: left;
     }
 
     .user {
@@ -554,5 +568,13 @@
         if (element) {
             element.scrollTop = element.scrollHeight;
         }
+    };
+
+    window.handleEnterKey = (event) => {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            return false;
+        }
+        return true;
     };
 </script>
