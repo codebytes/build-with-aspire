@@ -12,15 +12,16 @@ public static class AIConfiguration
         AzureAIFoundry
     }
 
-    public record AISettings(AIProvider Provider, string DeploymentName, string Model);
+    public record AISettings(AIProvider Provider, string DeploymentName, string Model, int TimeoutSeconds);
 
     public static AISettings GetSettings(IConfiguration configuration)
     {
         var provider = GetProvider(configuration);
         var deploymentName = GetDeploymentName(configuration);
         var model = GetModel(configuration, provider);
+        var timeoutSeconds = GetTimeoutSeconds(configuration);
 
-        return new AISettings(provider, deploymentName, model);
+        return new AISettings(provider, deploymentName, model, timeoutSeconds);
     }
 
     public static AIProvider GetProvider(IConfiguration configuration)
@@ -66,5 +67,15 @@ public static class AIConfiguration
             _ => throw new InvalidOperationException($"No default model available for provider: {provider}")
         };
         return model;
+    }
+
+    public static int GetTimeoutSeconds(IConfiguration configuration)
+    {
+        var timeoutString = configuration["AI:TimeoutSeconds"];
+        if (int.TryParse(timeoutString, out var timeout) && timeout > 0)
+        {
+            return timeout;
+        }
+        return 120; // Default 2 minutes
     }
 }

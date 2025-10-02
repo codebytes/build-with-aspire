@@ -10,7 +10,7 @@ public class SimpleChatServiceTests
         // Arrange
         var mockChatClient = Substitute.For<IChatClient>();
         var mockLogger = Substitute.For<ILogger<ChatService>>();
-        var aiSettings = new AIConfiguration.AISettings(AIConfiguration.AIProvider.Ollama, "test-deployment", "test-model");
+        var aiSettings = new AIConfiguration.AISettings(AIConfiguration.AIProvider.Ollama, "test-deployment", "test-model", 120);
 
         // Act & Assert (should not throw)
         var chatService = new ChatService(mockChatClient, mockLogger, aiSettings);

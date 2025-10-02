@@ -1,9 +1,11 @@
+using System.Threading.RateLimiting;
 using BuildWithAspire.ApiService.Data;
 using BuildWithAspire.ApiService.Extensions;
 using BuildWithAspire.ApiService.Models;
 using BuildWithAspire.ApiService.Services;
 using BuildWithAspire.Abstractions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using Scalar.AspNetCore;
@@ -19,7 +21,29 @@ builder.AddNpgsqlDbContext<ChatDbContext>("chatdb");
 // Add AI services
 builder.AddAIServices();
 
-builder.Services.AddKernel();
+// Add rate limiting for AI endpoints
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    // Rate limit for chat endpoints - 10 requests per minute
+    options.AddFixedWindowLimiter("chat", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = 10;
+        limiterOptions.Window = TimeSpan.FromMinutes(1);
+        limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        limiterOptions.QueueLimit = 2;
+    });
+
+    // Rate limit for weather endpoint - 20 requests per minute (less expensive)
+    options.AddFixedWindowLimiter("weather", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = 20;
+        limiterOptions.Window = TimeSpan.FromMinutes(1);
+        limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        limiterOptions.QueueLimit = 5;
+    });
+});
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnetcore/openapi
 builder.Services.AddEndpointsApiExplorer();
@@ -53,37 +77,54 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// Enable rate limiting
+app.UseRateLimiter();
+
 // Apply migrations on startup
 try
 {
-    app.Logger.LogInformation("Initializing database connection and schema");
+    app.Logger.LogInformation("Applying database migrations");
     using (var scope = app.Services.CreateScope())
     {
         var dbContext = scope.ServiceProvider.GetRequiredService<ChatDbContext>();
         var startTime = DateTime.UtcNow;
 
-        // Ensure database schema exists
-        var wasCreated = await dbContext.Database.EnsureCreatedAsync().ConfigureAwait(false);
-        var duration = DateTime.UtcNow - startTime;
+        // Apply pending migrations
+        var pendingMigrations = await dbContext.Database.GetPendingMigrationsAsync().ConfigureAwait(false);
+        var pendingCount = pendingMigrations.Count();
 
-        if (wasCreated)
+        if (pendingCount > 0)
         {
-            app.Logger.LogInformation("Database schema created successfully. Duration: {Duration}ms", duration.TotalMilliseconds);
+            app.Logger.LogInformation("Applying {Count} pending migrations", pendingCount);
+            await dbContext.Database.MigrateAsync().ConfigureAwait(false);
+            var duration = DateTime.UtcNow - startTime;
+            app.Logger.LogInformation("Database migrations applied successfully. Duration: {Duration}ms", duration.TotalMilliseconds);
         }
         else
         {
-            app.Logger.LogInformation("Database schema already exists. Duration: {Duration}ms", duration.TotalMilliseconds);
+            var duration = DateTime.UtcNow - startTime;
+            app.Logger.LogInformation("Database is up to date. Duration: {Duration}ms", duration.TotalMilliseconds);
         }
     }
 }
 catch (Exception ex)
 {
-    app.Logger.LogError(ex, "Database initialization failed. Service will continue without database.");
+    app.Logger.LogError(ex, "Database migration failed. Service will continue without database.");
 }
 
 app.MapGet("/weatherforecast", (IChatClient client, ILoggerFactory lf, AIConfiguration.AISettings settings) =>
 {
     var logger = lf.CreateLogger("WeatherForecastEndpoint");
+
+    // Create a weather agent using the Microsoft Agent Framework
+    var weatherAgent = new Microsoft.Agents.AI.ChatClientAgent(
+        client,
+        new Microsoft.Agents.AI.ChatClientAgentOptions
+        {
+            Name = "WeatherAssistant",
+            Instructions = "You are a helpful assistant that provides a description of the weather in one word based on the temperature."
+        });
+
     async IAsyncEnumerable<WeatherForecast> GetForecasts()
     {
         for (int index = 1; index <= 5; index++)
@@ -92,12 +133,12 @@ app.MapGet("/weatherforecast", (IChatClient client, ILoggerFactory lf, AIConfigu
             string summary;
             try
             {
-                summary = await GetWeatherSummary(client, temperature, logger, settings).ConfigureAwait(false);
+                summary = await GetWeatherSummary(weatherAgent, temperature, logger, settings).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "AI summary generation failed (temp={Temp}, Provider={Provider}, Deployment={Deployment}, Model={Model})", temperature, settings.Provider, settings.DeploymentName, settings.Model);
-                summary = "error";
+                summary = GetFallbackSummary(temperature);
             }
             yield return new WeatherForecast
             (
@@ -110,34 +151,41 @@ app.MapGet("/weatherforecast", (IChatClient client, ILoggerFactory lf, AIConfigu
 
     return GetForecasts();
 
-    static async Task<string> GetWeatherSummary(IChatClient client, int temp, ILogger logger, AIConfiguration.AISettings settings)
+    static async Task<string> GetWeatherSummary(Microsoft.Agents.AI.AIAgent agent, int temp, ILogger logger, AIConfiguration.AISettings settings)
     {
-        List<ChatMessage> conversation = new()
-        {
-             // System messages represent instructions or other guidance about how the assistant should behave
-            new(ChatRole.System, "You are a helpful assistant that provides a description of the weather in one word based on the temperature."),
-            // User messages represent user input, whether historical or the most recent input
-            new(ChatRole.User, $"How would you describe the weather at temp {temp} in celcius? Provide the response in 1 word with no punctuation.")
-        };
         logger.LogDebug("Requesting AI weather summary (Provider={Provider}, Deployment={Deployment}, Model={Model}, Temp={Temp})", settings.Provider, settings.DeploymentName, settings.Model, temp);
-        var completion = await client.GetResponseAsync(conversation).ConfigureAwait(false);
-        if (string.IsNullOrWhiteSpace(completion.Text))
+
+        var response = await agent.RunAsync($"How would you describe the weather at temp {temp} in celsius? Provide the response in 1 word with no punctuation.").ConfigureAwait(false);
+
+        var responseText = response.Text ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(responseText))
         {
-            logger.LogWarning("Empty AI completion text (Temp={Temp})", temp);
-            return "unknown";
+            logger.LogWarning("Empty AI agent response (Temp={Temp}), using fallback", temp);
+            return GetFallbackSummary(temp);
         }
-        var trimmed = completion.Text.Trim();
+        var trimmed = responseText.Trim();
         if (trimmed.Length > 20)
         {
-            trimmed = trimmed[..20];
+            logger.LogWarning("AI response too long (Temp={Temp}, Length={Length}), using fallback", temp, trimmed.Length);
+            return GetFallbackSummary(temp);
         }
-        logger.LogDebug("AI completion received: {Excerpt}", trimmed);
+        logger.LogDebug("AI agent response received: {Excerpt}", trimmed);
 
-        return $"{completion.Text}";
+        return trimmed;
     }
+
+    static string GetFallbackSummary(int temp) => temp switch
+    {
+        < 0 => "freezing",
+        < 10 => "cold",
+        < 20 => "cool",
+        < 30 => "warm",
+        _ => "hot"
+    };
 })
 .WithName("GetWeatherForecast")
-.WithOpenApi();
+.WithOpenApi()
+.RequireRateLimiting("weather");
 
 // Conversation endpoints
 app.MapGet("/conversations", async (ChatDbContext db) =>
@@ -306,7 +354,8 @@ app.MapPost("/conversations/{id}/messages", async (Guid id, [FromBody] SendMessa
     }
 })
 .WithName("SendMessage")
-.WithOpenApi();
+.WithOpenApi()
+.RequireRateLimiting("chat");
 
 app.MapDelete("/conversations/{id}", async (Guid id, ChatDbContext db) =>
 {
@@ -327,7 +376,8 @@ app.MapDelete("/conversations/{id}", async (Guid id, ChatDbContext db) =>
 // Keep the original chat endpoint for backward compatibility
 app.MapGet("/chat", async (ChatService chatService, string message) => await chatService.ProcessMessage(message).ConfigureAwait(false))
     .WithName("GetChat")
-    .WithOpenApi();
+    .WithOpenApi()
+    .RequireRateLimiting("chat");
 
 app.Run();
 

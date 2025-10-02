@@ -10,7 +10,7 @@ public class ChatServiceSimpleTests
         // Arrange
         var mockChatClient = Substitute.For<IChatClient>();
         var mockLogger = Substitute.For<ILogger<ChatService>>();
-        var aiSettings = new AIConfiguration.AISettings(AIConfiguration.AIProvider.Ollama, "test", "test-model");
+        var aiSettings = new AIConfiguration.AISettings(AIConfiguration.AIProvider.Ollama, "test", "test-model", 120);
 
         // Act & Assert
         var service = new ChatService(mockChatClient, mockLogger, aiSettings);
@@ -23,7 +23,7 @@ public class ChatServiceSimpleTests
         // Arrange
         var mockChatClient = Substitute.For<IChatClient>();
         var mockLogger = Substitute.For<ILogger<ChatService>>();
-        var aiSettings = new AIConfiguration.AISettings(AIConfiguration.AIProvider.Ollama, "test", "test-model");
+        var aiSettings = new AIConfiguration.AISettings(AIConfiguration.AIProvider.Ollama, "test", "test-model", 120);
         var service = new ChatService(mockChatClient, mockLogger, aiSettings);
 
         // Act & Assert
@@ -36,7 +36,7 @@ public class ChatServiceSimpleTests
         // Arrange
         var mockChatClient = Substitute.For<IChatClient>();
         var mockLogger = Substitute.For<ILogger<ChatService>>();
-        var aiSettings = new AIConfiguration.AISettings(AIConfiguration.AIProvider.Ollama, "test", "test-model");
+        var aiSettings = new AIConfiguration.AISettings(AIConfiguration.AIProvider.Ollama, "test", "test-model", 120);
         var service = new ChatService(mockChatClient, mockLogger, aiSettings);
 
         // Act & Assert
@@ -65,12 +65,14 @@ public class ChatServiceSimpleTests
         var settings = new AIConfiguration.AISettings(
             AIConfiguration.AIProvider.AzureOpenAI,
             "test-deployment",
-            "gpt-4o"
+            "gpt-4o",
+            120
         );
 
         // Assert
         Assert.Equal(AIConfiguration.AIProvider.AzureOpenAI, settings.Provider);
         Assert.Equal("test-deployment", settings.DeploymentName);
         Assert.Equal("gpt-4o", settings.Model);
+        Assert.Equal(120, settings.TimeoutSeconds);
     }
 }

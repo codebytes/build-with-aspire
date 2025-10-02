@@ -9,13 +9,15 @@ public class ChatServiceTests
         var settings = new AIConfiguration.AISettings(
             AIConfiguration.AIProvider.Ollama,
             "test-deployment",
-            "test-model"
+            "test-model",
+            120
         );
 
         // Assert
         Assert.Equal(AIConfiguration.AIProvider.Ollama, settings.Provider);
         Assert.Equal("test-deployment", settings.DeploymentName);
         Assert.Equal("test-model", settings.Model);
+        Assert.Equal(120, settings.TimeoutSeconds);
     }
 
     [Fact]

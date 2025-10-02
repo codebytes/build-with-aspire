@@ -63,13 +63,15 @@ public class AIConfigurationExtendedTests
         var ollamaSettings = new AIConfiguration.AISettings(
             AIConfiguration.AIProvider.Ollama,
             "llama-deployment",
-            "llama3.2"
+            "llama3.2",
+            120
         );
 
         var azureSettings = new AIConfiguration.AISettings(
             AIConfiguration.AIProvider.AzureOpenAI,
             "gpt-deployment",
-            "gpt-4o"
+            "gpt-4o",
+            120
         );
 
         // Assert

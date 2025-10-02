@@ -6,6 +6,6 @@
   </PropertyGroup>
 
     <ItemGroup>
-w      <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.9" />
+      <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.9" />
     </ItemGroup>
 </Project>
