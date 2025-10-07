@@ -4,10 +4,6 @@ theme: custom-default
 footer: '@Chris_L_Ayers - https://chris-ayers.com'
 ---
 
-![bg fit](./img/aspire_title.png)
-
----
-
 <!-- _footer: 'https://github.com/codebytes/build-with-aspire' -->
 
 # Aspiring .NET with Azure OpenAI and Ollama
@@ -22,7 +18,7 @@ footer: '@Chris_L_Ayers - https://chris-ayers.com'
 
 ## Chris Ayers
 
-### Senior Risk SRE<br>Azure CXP AzRel<br>Microsoft
+### Senior Software Engineer<br>Azure CXP AzRel<br>Microsoft
 
 <i class="fa-brands fa-bluesky"></i> BlueSky: [@chris-ayers.com](https://bsky.app/profile/chris-ayers.com)
 <i class="fa-brands fa-linkedin"></i> LinkedIn: - [chris\-l\-ayers](https://linkedin.com/in/chris-l-ayers/)
@@ -37,52 +33,51 @@ footer: '@Chris_L_Ayers - https://chris-ayers.com'
 
 # Agenda
 
-- Why .NET Aspire?
-- .NET Aspire Integrations
+- Why Aspire?
+- Aspire Integrations
 - Consuming Resources
 - Local Azure Development
 - Deploying to Azure
-- **What's New in 9.3**
+- **What's New in 9.5**
 - Demos
 - Q&A
 
 ---
 
-# <!-- fit --> .NET Aspire is designed to improve the<br> experience of building .NET cloud-native apps
+# <!-- fit --> Aspire is designed to improve the<br> experience of building cloud-native apps
 
 ---
 
-# Why .NET Aspire
+# Why Aspire
 
 <div class="columns3">
 <div>
 
-## Orchestration and Fundamentals
+## Orchestration
 
-- **Service Management**
-- **Configuration**
-- **Service Discovery**
-- **Health & Telemetry**
+- Service Management
+- Configuration
+- Service Discovery
+- Health & Telemetry
 
 </div>
 <div>
 
 ## Integrations
 
-- **Azure Services**
-- **Local Development**
-- **Multi-Platform**
-- **Community Ecosystem**
+- Azure Services
+- Local Development
+- Multi-Platform
+- Community Ecosystem
 
 </div>
 <div>
 
 ## Tooling
 
-- **IDE Integration**
-- **Dashboard**
-- **AppHost Project**
-- **CLI Support**
+- IDE Integration
+- Dashboard
+- AppHost & CLI
 
 </div>
 </div>
@@ -117,7 +112,7 @@ footer: '@Chris_L_Ayers - https://chris-ayers.com'
 
 ---
 
-# .NET Aspire Dashboard
+# Aspire Dashboard
 
 <div class="columns">
 <div>
@@ -127,13 +122,12 @@ footer: '@Chris_L_Ayers - https://chris-ayers.com'
 </div>
 <div>
 
-## Dashboard Features
-
-- **Real-time Monitoring**
-- **Interactive Debugging**
-- **Resource Management**
-- **Secret Management**
-- **Copilot AI Debugging**
+- Real-time Monitoring
+- Interactive Debugging
+- Resource Management
+- Secret Management
+- Copilot AI Debugging
+- GenAI Visualizer
 
 </div>
 </div>
@@ -147,11 +141,11 @@ footer: '@Chris_L_Ayers - https://chris-ayers.com'
 - **Named Endpoints**: Multiple endpoints per service
 - **Environment Variables**: Structured configuration strings
 
-![bg right fit](./img/service-discovery.png)
+![bg right w:600px](./img/service-discovery.png)
 
 ---
 
-# Testing in .NET Aspire
+# Testing in Aspire
 
 - **Integration Testing**: Test multiple components together
 - **Container Testing**: Test with containerized services
@@ -162,13 +156,13 @@ footer: '@Chris_L_Ayers - https://chris-ayers.com'
 
 ---
 
-# .NET Aspire Integrations
+# Aspire Integrations
 
 ![Integrations](img/integrations.png)
 
 ---
 
-# The Two Sides to .NET Aspire Integrations
+# Aspire Integrations
 
 <div class="columns">
 <div>
@@ -251,65 +245,28 @@ footer: '@Chris_L_Ayers - https://chris-ayers.com'
 
 # Local to Cloud Integrations
 
-| **Provider** | **Local Development** | **Cloud Production** |
-|--------------|----------------------|---------------------|
-| **OpenAI** | Ollama, Foundry local, LM Studio | Azure OpenAI Service, Azure AI Foundry |
-| **Models** | Llama 3, Phi-4, Qwen | GPT-4o, GPT-4o-mini |
-| **Embeddings** | Local embedding models | text-embedding-3-small/large |
+| **Component** | **Local** | **Cloud** |
+|--------------|----------|----------|
+| **AI Models** | Ollama, Foundry local, LM Studio | Azure OpenAI, AI Foundry |
+| **Models** | Llama 3, Phi-4, Qwen | GPT-4.1, GPT-5-mini, Claude 4 |
 | **Vector DB** | Qdrant, Chroma, pgvector | Azure AI Search, Cosmos DB |
-| **Image Gen** | DALL-E via API | DALL-E 3 via Azure |
 
----
-
-# Resource Management & Development
-
-<div class="columns">
-<div>
-
-## Local to Cloud
-- **Zero-Friction**: Seamless local to cloud transitions
-- **Emulator Support**: Local containers for speed
-- **Hybrid Development**: Mix local/cloud resources
-- **Environment Control**: Component-level targeting
-
-</div>
-<div>
-
-## Configuration
-- **Simple Connections**: Easy Azure and third-party integration
-- **Auto Configuration**: Service discovery and management
-- **Secret Handling**: Secure credential management
-- **Minimal Code**: Connect with just a few lines
-
-</div>
-</div>
+**Features**: Zero-friction transitions • Emulator support • Hybrid development • Auto configuration • Secret management
 
 ---
 
 # Microsoft.Extensions.AI
 
-<div class="columns">
-<div>
-
-- **Unified API**: Common interface for AI providers
-- **Pipeline Architecture**: Chain components efficiently
-- **DI Integration**: Works with .NET service container
-- **Provider-Agnostic**: Single interface, multiple backends
-
-</div>
-<div>
-
-- **Local Development**: Connect to Ollama, LM Studio
-- **Cloud Ready**: Same code for Azure OpenAI
-- **Transport Options**: HTTP, gRPC, direct calls
-- **Performance**: Auto-batching and throttling
-
-</div>
-</div>
+| **API & Architecture** | **Description** | **Development** | **Description** |
+|------------------------|-----------------|-----------------|-----------------|
+| **Unified API** | Common interface for AI providers | **Local Development** | Connect to Ollama, LM Studio |
+| **Pipeline Architecture** | Chain components efficiently | **Cloud Ready** | Same code for Azure OpenAI |
+| **DI Integration** | Works with .NET service container | **Transport Options** | HTTP, gRPC, direct calls |
+| **Provider-Agnostic** | Single interface, multiple backends | **Performance** | Auto-batching and throttling |
 
 ---
 
-# AI Local-to-Cloud Transitions
+# AI Local Development
 
 <div class="columns">
 <div>
@@ -317,123 +274,233 @@ footer: '@Chris_L_Ayers - https://chris-ayers.com'
 ```csharp
 // Local development with Ollama
 builder.AddOllama("ollama")
-    .WithModel("llama3");
+  .WithModel("llama3");
 
 // Add client to use the model
- builder.AddOllamaApiClient();
+builder.AddOllamaApiClient()
+  .AddChatClient();
 ```
+
+```csharp
+public class ExampleService(IChatClient chatClient)
+{
+    // Use chat client...
+}
+```
+
+</div>
+<div>
+
+- **Zero Cost Development**: No API charges for local models
+- **Privacy & Security**: All data stays on your machine
+- **Offline Capability**: Work without internet connectivity
+- **Fast Iteration**: No network latency for testing
+- **Model Experimentation**: Try different open-source models
+
+</div>
+</div>
+
+---
+
+# AI Cloud Development
+
+<div class="columns">
+<div>
 
 ```csharp
 // Single line change for production
 builder.AddAzureOpenAI("ai");
 
 // Same client code works unchanged
-builder.AddAzureOpenAIClient();
+builder.AddAzureOpenAIClient()
+  .AddChatClient();
+```
+
+```csharp
+public class ExampleService(IChatClient chatClient)
+{
+    // Use chat client...
+}
 ```
 
 </div>
 <div>
 
-- **Same Application Code**: Business logic remains identical
-- **Configuration-Based Switching**: Environment determines provider
-- **Consistent Capabilities**: Text completion, embeddings, image generation
-- **Resource Integration**: Works with .NET Aspire's resource model
-- **Example**: Use Ollama locally → Azure OpenAI in production
+- **Latest Models**: Access to GPT-4, Claude, and cutting-edge AI
+- **Global Availability**: 99.9% SLA with worldwide deployment
+- **Managed Infrastructure**: No server maintenance required
+- **Advanced Features**: Function calling, vision, audio processing
+- **Compliance Ready**: SOC 2, HIPAA, and enterprise certifications
 
 </div>
 </div>
 
 ---
 
-# Azure Deployment & Authentication
+# The Evolution of .NET AI Frameworks
 
 <div class="columns">
 <div>
 
-## Deployment Targets
-- **Azure App Service**
-- **Azure Container Apps**
-- **Kubernetes**
-  
-## New in 9.3
-- **Per-resource publishing**
-- **Resource-to-compute mapping**
-- **Improved CI/CD parameters**
+## Previous Landscape
+
+- **Semantic Kernel**: High-level orchestration framework
+- **AutoGen**: Multi-agent conversation framework
+- **Fragmented Ecosystem**: Different APIs, patterns, abstractions
 
 </div>
 <div>
 
-## Authentication
-- **Credential Providers**
-- **Key Vault Integration**
-- **Secure Access**
-## Developer CLI
-- Native .NET Aspire support
+## The Challenge
+
+- **Inconsistent APIs**: Each framework had unique approaches
+- **Integration Complexity**: Difficult to combine tools
+- **Provider Lock-in**: Hard to switch AI providers
+- **Learning Curve**: Multiple frameworks to master
+
+</div>
+</div>
+
+---
+
+# Microsoft Agent Framework
+
+<div class="columns">
+<div>
+
+## Unified Multi-Agent Platform
+
+- **Consolidation**: Replaces Semantic Kernel & AutoGen
+- **Built on Microsoft.Extensions.AI**: Leverages unified abstractions
+- **Multi-Agent Orchestration**: Coordinate multiple AI agents
+- **Event-Driven Architecture**: Flexible agent communication
+
+</div>
+<div>
+
+## Key Features
+
+- **Agent Types**: Task-based, conversational, autonomous
+- **Memory Systems**: Short-term and long-term context
+- **Tool Integration**: Function calling and external tools
+- **Provider Agnostic**: Works with any AI backend
+
+**Learn more**: [Microsoft Agent Framework](https://github.com/microsoft/agent-framework)
+
+</div>
+</div>
+
+---
+
+# Azure Deployment
+
+<div class="columns">
+<div>
+
+## Targets
+
+- Azure App Service
+- Azure Container Apps
+- Kubernetes
+
+## Azure Developer CLI
+
+```bash
+azd up         # Deploy everything
+azd deploy     # App only
+azd provision  # Infrastructure only
+azd init       # Initialize
+```
+
+</div>
+<div>
+
+## Features
+
 - Auto-detects app structure
 - Environment variable mapping
+- Native Aspire support
+- Credential providers
+- Key Vault integration
+- Secure access
 
 </div>
 </div>
 
 ---
 
-# Kubernetes Deployment (9.3)
+# What's New in .NET Aspire 9.5
 
 <div class="columns">
 <div>
 
-- **Kubernetes Environment Support**
-  - `AddKubernetesEnvironment("env")`
-  - Configure global manifest settings
-  - Per-resource customization
-  - Strong typing for deployment definitions
+## ⚙️ CLI & Tooling
+
+- **aspire update** - Auto-update packages
+- **Single-file AppHost** (experimental)
+- **SSH Remote port forwarding** in VS Code
+- Enhanced `aspire exec` command
+
+## 🎨 Dashboard Enhancements
+
+- **GenAI Visualizer** - Explore AI interactions
+- **Multi-resource console** logs view
+- Custom resource icons
+- Enhanced trace filtering
 
 </div>
 <div>
 
-```csharp
-builder.AddKubernetesEnvironment("env")
-       .WithProperties(env =>
-       {
-           env.DefaultImagePullPolicy = "Always";
-       });
+## 🤖 New Integrations
 
-builder.AddContainer("service", "nginx")
-       .PublishAsKubernetesService(resource =>
-       {
-           resource.Deployment!.Spec.RevisionHistoryLimit = 5;
-       });
-```
+- **OpenAI hosting** integration
+- **GitHub Models** & **Azure AI Foundry** catalogs
+- **Dev Tunnels** hosting support
+- **Azure Kusto** and **App Config** emulators
+
+## 🚀 Deployment
+
+- **Azure Container App Jobs**
+- **Built-in Azure deployment** via `aspire deploy`
+- Deployment image tag callbacks
 
 </div>
 </div>
 
 ---
 
-# Compute Environments (9.3)
+# Compute Environments & Aspire CLI
 
 <div class="columns">
 <div>
 
-- **Multiple Environment Support**
-  - Deploy to different targets
-  - Mix container/non-container
-  - Support hybrid deployments
-  - Resource-specific control
-
-</div>
-<div>
+## Multiple Environments
 
 ```csharp
-// Support for explicit environment mapping
-var k8s = builder.AddKubernetesEnvironment("k8s-env");
-var compose = builder.AddDockerComposeEnvironment("docker-env");
+var k8s = builder.AddKubernetesEnvironment("k8s");
+var compose = builder.AddDockerComposeEnvironment("docker");
 
 builder.AddProject<Projects.Api>("api")
-       .WithComputeEnvironment(compose);
+    .WithComputeEnvironment(compose);
 
 builder.AddProject<Projects.Frontend>("frontend")
-       .WithComputeEnvironment(k8s);
+    .WithComputeEnvironment(k8s);
+```
+
+</div>
+<div>
+
+## Aspire CLI
+
+```bash
+# Install
+curl -sSL https://aspire.dev/install.sh | bash
+dotnet tool install -g Aspire.Cli
+
+# Commands
+aspire new | run | add | update
+aspire config | publish | deploy
+aspire exec
 ```
 
 </div>
@@ -441,43 +508,85 @@ builder.AddProject<Projects.Frontend>("frontend")
 
 ---
 
-# What's New in .NET Aspire 9.3
+# AI Integration Examples
 
-<div class="columns3">
+<div class="columns">
 <div>
 
-## App Model
+## GitHub Models
 
-- Easier container config
-- Custom URLs
-- YARP (Preview)
-- New lifecycle events
-- MySQL support
-- Hidden resources
+```csharp
+var chat = builder.AddGitHubModel("chat",
+    "openai/gpt-4o-mini");
+
+builder.AddProject<Projects.ChatService>("chatservice")
+    .WithReference(chat);
+```
+
+## Azure AI Foundry (Cloud)
+
+```csharp
+var foundry = builder.AddAzureAIFoundry("foundry");
+
+var chat = foundry.AddDeployment("chat",
+    "Phi-4", "1", "Microsoft");
+
+builder.AddProject<Projects.Web>("web")
+    .WithReference(chat)
+    .WaitFor(chat);
+```
 
 </div>
 <div>
 
-## Dashboard
+## Azure AI Foundry (Local)
 
-- Copilot AI debugging
-- Persistent filters
-- Traces view
-- Context menus
-- Friendly names
-- Metrics pause alert
+```csharp
+var foundry = builder.AddAzureAIFoundry("foundry")
+    .RunAsFoundryLocal();
+
+var chat = foundry.AddDeployment("chat",
+    "phi-3.5-mini", "1", "Microsoft");
+
+builder.AddProject<Projects.Web>("web")
+    .WithReference(chat)
+    .WaitFor(chat);
+```
+
+**Benefits**: Privacy, performance, offline operation, cost reduction
+
+</div>
+</div>
+
+---
+
+# Interactive Parameter Prompting
+
+<div class="columns">
+<div>
+
+```csharp
+// Parameters without defaults trigger dashboard prompts
+var apiKey = builder.AddParameter("api-key", secret: true);
+var dbUrl = builder.AddParameter("database-url");
+
+var api = builder.AddProject<Projects.Api>("api")
+    .WithEnvironment("API_KEY", apiKey)
+    .WithEnvironment("DATABASE_URL", dbUrl);
+```
 
 </div>
 <div>
 
-## Deployment
+## Features
 
-- New publisher model
-- Azure App Service
-- Use existing ACR
-- Improved CI/CD params
-- Docker/K8s customization
-- Better telemetry & security
+- **Automatic prompting** for missing parameters
+- **Rich form inputs** in dashboard
+- **Secret masking** for sensitive data
+- **Validation support** with custom rules
+- **Save to user secrets** for persistence
+
+**Input Types**: Text, Password, Choice, Boolean, Number
 
 </div>
 </div>
@@ -504,34 +613,12 @@ builder.AddProject<Projects.Frontend>("frontend")
 ## Links
 
 - [.NET Aspire](https://learn.microsoft.com/en-us/dotnet/aspire/get-started/aspire-overview)
-- [What's new in .NET Aspire 9.3](https://learn.microsoft.com/en-us/dotnet/aspire/whats-new/aspire-9.3)
+- [What's new in .NET Aspire 9.5](https://learn.microsoft.com/en-us/dotnet/aspire/whats-new/dotnet-aspire-9.5)
+- [Microsoft.Extensions.AI](https://learn.microsoft.com/en-us/dotnet/ai/microsoft-extensions-ai)
+- [Microsoft Agent Framework](https://github.com/microsoft/agent-framework)
 - [Aspirify](https://aspireify.net/)
 - [Aspire Samples](https://github.com/dotnet/aspire-samples)
 - [eShopLite](https://github.com/Azure-Samples/eShopLite)
- 
-</div>
-<div>
-
-## Follow Chris Ayers
-
-<i class="fa-brands fa-bluesky"></i> BlueSky: [@chris-ayers.com](https://bsky.app/profile/chris-ayers.com)
-<i class="fa-brands fa-linkedin"></i> LinkedIn: - [chris\-l\-ayers](https://linkedin.com/in/chris-l-ayers/)
-<i class="fa fa-window-maximize"></i> Blog: [https://chris-ayers\.com/](https://chris-ayers.com/)
-<i class="fa-brands fa-github"></i> GitHub: [Codebytes](https://github.com/codebytes)
-<i class="fa-brands fa-mastodon"></i> Mastodon: [@Chrisayers@hachyderm.io](https://hachyderm.io/@Chrisayers)
-~~<i class="fa-brands fa-twitter"></i> Twitter: @Chris_L_Ayers~~
-
-</div>
-</div>
-
----
-
-# Feedback
-
-<div class="columns">
-<div>
-
-![](./img/aspiring_net_with_azure_open_ai_and_ollama-qr-code.png)
 
 </div>
 <div>
@@ -546,9 +633,7 @@ builder.AddProject<Projects.Frontend>("frontend")
 ~~<i class="fa-brands fa-twitter"></i> Twitter: @Chris_L_Ayers~~
 
 </div>
-
 </div>
-
 
 <!-- Needed for mermaid, can be anywhere in file except frontmatter -->
 <script type="module">

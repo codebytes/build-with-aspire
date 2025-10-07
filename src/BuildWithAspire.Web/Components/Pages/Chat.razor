@@ -3,13 +3,13 @@
 @using BuildWithAspire.Web.Clients
 @using BuildWithAspire.Web.Models
 @using Markdig
+@using Microsoft.Extensions.AI
+@using ChatRole = Microsoft.Extensions.AI.ChatRole
 @using Microsoft.JSInterop
 @using Microsoft.AspNetCore.Components.Web
 @rendermode InteractiveServer
 @inject IJSRuntime JS
 @inject ILogger<Chat> Logger
-@inject NavigationManager Navigation
-@inject ConversationApiClient ConversationApiClient
 
 <PageTitle>Chat with History</PageTitle>
 
@@ -73,67 +73,50 @@
                 }
                 else
                 {
-                    foreach (var item in _messages)
+                    @foreach (var item in _messages?.ToList() ?? new List<BuildWithAspire.Web.Models.Message>())
                     {
-                        <div class="@GetMessageCss(item.Role)" data-message-id="@item.Id">
-                            <div class="user">@item.Role</div>
-                            <div class="msg">
-                                @if (item.Role == "assistant")
-                                {
-                                    @((MarkupString)Markdown.ToHtml(item.Content))
-                                }
-                                else
-                                {
-                                    @item.Content
-                                }
+                        <div class="message-container">
+                            <div class="@GetMessageCss(item.Role)">
+                                <div class="user">@item.Role</div>
+                                <div class="msg">
+                                    @if (item.Role == "assistant")
+                                    {
+                                        @((MarkupString)Markdown.ToHtml(item.Content))
+                                    }
+                                    else
+                                    {
+                                        @item.Content
+                                    }
+                                </div>
+                                <div class="timestamp">@item.CreatedAt.ToLocalTime().ToString("HH:mm")</div>
                             </div>
-                            <div class="timestamp">@item.CreatedAt.ToLocalTime().ToString("HH:mm")</div>
                         </div>
                     }
                 }
                 
-                @if (_isProcessing)
+                @if (_isLoading)
                 {
-                    <div class="received">
-                        <div class="user">assistant</div>
-                        <div class="msg">
-                            <div class="thinking-indicator">
-                                <span class="thinking-dots">⠋</span> Thinking...
-                            </div>
+                    <div class="message-container">
+                        <div class="received">
+                            <div class="user">assistant</div>
+                            <div class="msg">Thinking...</div>
                         </div>
                     </div>
                 }
             </div>
 
             <div class="chat-input">
-                @if (!string.IsNullOrWhiteSpace(_errorMessage))
-                {
-                    <div class="error-message">
-                        <span class="error-icon">⚠️</span> @_errorMessage
-                        <button class="error-dismiss" @onclick="() => _errorMessage = string.Empty">×</button>
-                    </div>
-                }
-                <div class="input-container">
-                    <input @ref="_inputRef" 
-                           class="form-control" 
-                           placeholder="Type your message..." 
-                           @bind="_newMessage" 
-                           @onkeydown="OnKeyDown" 
-                           disabled="@_isProcessing" />
-                    <button type="button" 
-                            class="btn btn-primary" 
-                            @onclick="SendMessageAsync" 
-                            disabled="@(_isProcessing || string.IsNullOrWhiteSpace(_newMessage))">
-                        @if (_isProcessing)
-                        {
-                            <span class="spinner">⠋</span>
-                        }
-                        else
-                        {
-                            <span>Send</span>
-                        }
-                    </button>
-                </div>
+                <input @ref="_inputRef" class="input-lg" placeholder="Type your message..." @bind="_newMessage" @onkeyup="OnKeyUp" disabled="@_isLoading" />
+                <button type="button" class="btn btn-default btn-primary" @onclick="OnSendClick" @onclick:preventDefault="true" disabled="@(_isLoading || string.IsNullOrWhiteSpace(_newMessage))">
+                    @if (_isLoading)
+                    {
+                        <span>Sending...</span>
+                    }
+                    else
+                    {
+                        <span>Send</span>
+                    }
+                </button>
             </div>
         }
     </div>
@@ -157,216 +140,180 @@
     [Parameter]
     public Guid? ConversationId { get; set; }
 
-    // State
+    [Inject]
+    public ConversationApiClient conversationApiClient { get; set; } = default!;
+
+    [Inject]
+    public NavigationManager Navigation { get; set; } = default!;
+
     private List<ConversationSummary>? _conversations;
-    private List<BuildWithAspire.Web.Models.Message> _messages = new();
+    private List<BuildWithAspire.Web.Models.Message>? _messages;
     private string _currentConversationName = string.Empty;
     private string _newMessage = string.Empty;
-    private string _errorMessage = string.Empty;
-    private bool _isProcessing;
+    private bool _isLoading;
     private bool _showNewConversationDialog;
     private string _newConversationName = string.Empty;
     private bool _isInitialized;
-    private Guid? _lastLoadedConversationId;
-    
-    // UI References
     private ElementReference _scrollBoxRef;
     private ElementReference _inputRef;
     private bool _shouldScrollToBottom;
 
     protected override async Task OnInitializedAsync()
     {
-        try
-        {
-            await LoadConversationsAsync();
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Error during chat component initialization");
-            _conversations = new List<ConversationSummary>();
-            SetError("Failed to load conversations. Please refresh the page.");
-        }
-        finally
-        {
-            _isInitialized = true;
-        }
+        await LoadConversations();
+        _isInitialized = true;
     }
 
     protected override async Task OnParametersSetAsync()
     {
-        if (_isInitialized && ConversationId != _lastLoadedConversationId)
+        if (_isInitialized)
         {
-            await LoadConversationAsync();
+            await LoadConversationDetails();
         }
     }
 
 
 
 
-    private async Task LoadConversationAsync()
+    private async Task LoadConversationDetails()
     {
-        ClearError();
-        
         if (!ConversationId.HasValue || ConversationId.Value == Guid.Empty)
         {
-            _messages.Clear();
-            _currentConversationName = string.Empty;
-            _lastLoadedConversationId = null;
+            _messages = null;
+            _currentConversationName = "";
             return;
         }
         
-        if (_lastLoadedConversationId == ConversationId)
-        {
-            return; // Already loaded
-        }
-        
-        Logger.LogInformation("Loading conversation {ConversationId}", ConversationId);
-        
         try
         {
-            var conversation = await ConversationApiClient.GetConversationAsync(ConversationId.Value);
+            var conversation = await conversationApiClient.GetConversationAsync(ConversationId.Value);
             
             if (conversation != null)
             {
-                _messages = conversation.Messages?.OrderBy(m => m.CreatedAt).ToList() ?? new List<BuildWithAspire.Web.Models.Message>();
+                _messages = conversation.Messages ?? new List<BuildWithAspire.Web.Models.Message>();
                 _currentConversationName = conversation.Name;
-                _lastLoadedConversationId = ConversationId;
                 _shouldScrollToBottom = true;
-                
-                Logger.LogInformation("Loaded conversation {ConversationId} with {MessageCount} messages", 
-                    ConversationId, _messages.Count);
+                StateHasChanged();
             }
             else
             {
-                Logger.LogWarning("Conversation {ConversationId} not found", ConversationId);
-                _messages.Clear();
-                _currentConversationName = "Conversation Not Found";
-                SetError("Conversation not found.");
+                _messages = new List<BuildWithAspire.Web.Models.Message>();
+                _currentConversationName = "Unknown Conversation";
+                StateHasChanged();
             }
         }
         catch (HttpRequestException ex) when (ex.Message.Contains("404"))
         {
-            Logger.LogWarning("Conversation {ConversationId} returned 404", ConversationId);
-            _messages.Clear();
+            _messages = new List<BuildWithAspire.Web.Models.Message>();
             _currentConversationName = "Conversation Not Found";
-            SetError("Conversation not found.");
+            StateHasChanged();
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error loading conversation {ConversationId}", ConversationId);
-            _messages.Clear();
+            Logger.LogError(ex, "Error loading conversation details. ConversationId: {ConversationId}", ConversationId);
+            _messages = new List<BuildWithAspire.Web.Models.Message>();
             _currentConversationName = "Error Loading Conversation";
-            SetError("Failed to load conversation. Please try again.");
+            StateHasChanged();
         }
-        
-        StateHasChanged();
     }
 
 
-    private async Task LoadConversationsAsync()
+    private async Task LoadConversations()
     {
         try
         {
-            _conversations = await ConversationApiClient.GetConversationsAsync();
+            _conversations = await conversationApiClient.GetConversationsAsync();
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Error loading conversations list");
             _conversations = new List<ConversationSummary>();
-            SetError("Failed to load conversations.");
         }
     }
 
-    private async Task OnKeyDown(KeyboardEventArgs e)
+    private async Task OnSendClick()
     {
-        if (e.Key == "Enter" && !e.ShiftKey && !_isProcessing && !string.IsNullOrWhiteSpace(_newMessage))
+        if (!_isLoading && !string.IsNullOrWhiteSpace(_newMessage))
         {
-            await SendMessageAsync();
+            await SendAsync();
         }
     }
 
-    private async Task SendMessageAsync()
+    private async Task OnKeyUp(KeyboardEventArgs e)
     {
-        if (string.IsNullOrWhiteSpace(_newMessage) || !ConversationId.HasValue || _isProcessing)
+        if (e.Key == "Enter" && !e.ShiftKey && !_isLoading && !string.IsNullOrWhiteSpace(_newMessage))
         {
-            return;
+            await SendAsync();
         }
+    }
 
-        var messageText = _newMessage.Trim();
-        _newMessage = string.Empty;
-        _isProcessing = true;
-        ClearError();
-        
-        // Add user message optimistically
-        var userMessage = new BuildWithAspire.Web.Models.Message
+    private async Task SendAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(_newMessage) && ConversationId.HasValue && !_isLoading)
         {
-            Id = Guid.NewGuid(),
-            ConversationId = ConversationId.Value,
-            Role = "user",
-            Content = messageText,
-            CreatedAt = DateTime.UtcNow
-        };
-        
-        _messages.Add(userMessage);
-        _shouldScrollToBottom = true;
-        StateHasChanged();
+            _isLoading = true;
+            var messageText = _newMessage;
+            _newMessage = "";
 
-        Logger.LogInformation("Sending message to conversation {ConversationId}", ConversationId);
-
-        try
-        {
-            using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(10));
-            var response = await ConversationApiClient.SendMessageAsync(ConversationId.Value, messageText, cts.Token);
-            
-            // Add assistant response
-            var assistantMessage = new BuildWithAspire.Web.Models.Message
+            // Add user message to UI immediately
+            var userMessage = new BuildWithAspire.Web.Models.Message
             {
                 Id = Guid.NewGuid(),
                 ConversationId = ConversationId.Value,
-                Role = "assistant",
-                Content = response.Response ?? "No response received.",
+                Role = "user",
+                Content = messageText,
                 CreatedAt = DateTime.UtcNow
             };
             
-            _messages.Add(assistantMessage);
+            _messages ??= new List<BuildWithAspire.Web.Models.Message>();
+            _messages.Add(userMessage);
             _shouldScrollToBottom = true;
-            
-            Logger.LogInformation("Message sent successfully to conversation {ConversationId}", ConversationId);
-            
-            // Refresh conversations list to update message counts
-            _ = Task.Run(LoadConversationsAsync);
-        }
-        catch (OperationCanceledException)
-        {
-            Logger.LogWarning("Message sending timed out for conversation {ConversationId}", ConversationId);
-            SetError("Request timed out. Please try again.");
-            
-            // Remove the optimistically added user message
-            _messages.Remove(userMessage);
-            _newMessage = messageText; // Restore message
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Error sending message to conversation {ConversationId}", ConversationId);
-            SetError("Failed to send message. Please try again.");
-            
-            // Remove the optimistically added user message
-            _messages.Remove(userMessage);
-            _newMessage = messageText; // Restore message
-        }
-        finally
-        {
-            _isProcessing = false;
             StateHasChanged();
-            
-            // Focus input
+
             try
             {
-                await _inputRef.FocusAsync();
+                // First verify the conversation exists
+                var existingConv = await conversationApiClient.GetConversationAsync(ConversationId.Value);
+                
+                if (existingConv == null)
+                {
+                    _messages.Remove(userMessage);
+                    return;
+                }
+                
+                // Send message to API
+                var response = await conversationApiClient.SendMessageAsync(ConversationId.Value, messageText);
+                
+                // Add assistant response
+                var assistantMessage = new BuildWithAspire.Web.Models.Message
+                {
+                    Id = Guid.NewGuid(),
+                    ConversationId = ConversationId.Value,
+                    Role = "assistant",
+                    Content = response.Response,
+                    CreatedAt = DateTime.UtcNow
+                };
+                
+                _messages.Add(assistantMessage);
+                _shouldScrollToBottom = true;
+                
+                // Reload conversations to update the sidebar
+                await LoadConversations();
             }
-            catch
+            catch (Exception ex)
             {
-                // Ignore focus errors
+                Logger.LogError(ex, "Error sending message. ConversationId: {ConversationId}, MessageLength: {MessageLength}", 
+                    ConversationId, messageText?.Length ?? 0);
+                // Remove the user message if there was an error
+                _messages.Remove(userMessage);
+            }
+            finally
+            {
+                _isLoading = false;
+                _shouldScrollToBottom = true;
+                StateHasChanged();
+                await Task.Delay(100); // Small delay to ensure UI updates
+                await _inputRef.FocusAsync();
             }
         }
     }
@@ -379,46 +326,32 @@
 
     private async Task CreateNewConversation()
     {
-        if (string.IsNullOrWhiteSpace(_newConversationName))
+        if (!string.IsNullOrWhiteSpace(_newConversationName))
         {
-            return;
-        }
-
-        try
-        {
-            var conversation = await ConversationApiClient.CreateConversationAsync(_newConversationName.Trim());
+            var conversation = await conversationApiClient.CreateConversationAsync(_newConversationName);
             _showNewConversationDialog = false;
-            _newConversationName = string.Empty;
-            await LoadConversationsAsync();
+            _newConversationName = "";
+            await LoadConversations();
             Navigation.NavigateTo($"/chat/{conversation.Id}");
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Error creating conversation {ConversationName}", _newConversationName);
-            SetError("Failed to create conversation. Please try again.");
         }
     }
 
-    private void SelectConversation(Guid id)
+    private async Task SelectConversation(Guid id)
     {
-        Navigation.NavigateTo($"/chat/{id}");
+        ConversationId = id;
+        await LoadConversationDetails();
+        StateHasChanged();
+        await Task.Delay(100); // Small delay to ensure UI updates
+        await _inputRef.FocusAsync();
     }
 
     private async Task DeleteConversation(Guid id)
     {
-        try
+        await conversationApiClient.DeleteConversationAsync(id);
+        await LoadConversations();
+        if (ConversationId == id)
         {
-            await ConversationApiClient.DeleteConversationAsync(id);
-            await LoadConversationsAsync();
-            if (ConversationId == id)
-            {
-                Navigation.NavigateTo("/chat");
-            }
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Error deleting conversation {ConversationId}", id);
-            SetError("Failed to delete conversation. Please try again.");
+            Navigation.NavigateTo("/chat");
         }
     }
 
@@ -434,17 +367,6 @@
     private string GetMessageCss(string role)
     {
         return role.ToLower() == "user" ? "sent" : "received";
-    }
-    
-    private void SetError(string message)
-    {
-        _errorMessage = message;
-        StateHasChanged();
-    }
-    
-    private void ClearError()
-    {
-        _errorMessage = string.Empty;
     }
 
 
@@ -551,114 +473,55 @@
 
     .chat-input {
         display: flex;
-        flex-direction: column;
         gap: 0.5rem;
     }
 
-    .input-container {
-        display: flex;
-        gap: 0.5rem;
-    }
-
-    .input-container input {
+    .chat-input input {
         flex: 1;
     }
 
-    .error-message {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
+    .message-container {
+        width: 100%;
+        margin-bottom: 1rem;
+        display: block;
+        clear: both;
+    }
+
+    .sent, .received {
+        display: block;
         padding: 0.75rem;
-        background-color: #f8d7da;
-        color: #721c24;
-        border: 1px solid #f5c6cb;
-        border-radius: 4px;
+        border-radius: 8px;
+        margin-bottom: 0;
+        max-width: 70%;
+        word-wrap: break-word;
+        width: fit-content;
+        position: relative;
+    }
+
+    .sent {
+        background-color: #0d6efd;
+        color: white;
+        margin-left: auto;
+        margin-right: 0;
+        text-align: left;
+    }
+
+    .received {
+        background-color: white;
+        color: black;
+        border: 1px solid #dee2e6;
+        margin-left: 0;
+        margin-right: auto;
+        text-align: left;
+    }
+
+    .user {
+        font-weight: bold;
+        margin-bottom: 0.25rem;
         font-size: 0.875rem;
     }
 
-    .error-icon {
-        font-size: 1rem;
-    }
-
-    .error-dismiss {
-        margin-left: auto;
-        background: none;
-        border: none;
-        font-size: 1.2rem;
-        cursor: pointer;
-        color: #721c24;
-        opacity: 0.7;
-    }
-
-    .error-dismiss:hover {
-        opacity: 1;
-    }
-
-    .thinking-indicator {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .thinking-dots {
-        animation: spin 1s linear infinite;
-    }
-
-    .spinner {
-        animation: spin 1s linear infinite;
-    }
-
-    @@keyframes spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
-
-    .chat-container .sent, 
-    .chat-container .received {
-        margin-bottom: 1rem;
-        padding: 0.75rem;
-        border-radius: 8px;
-        position: relative;
-        clear: both;
-        top: auto !important;
-        text-align: left !important;
-    }
-
-    .chat-container .sent {
-        background-color: #0d6efd !important;
-        color: white !important;
-        margin-left: 25% !important;
-        margin-right: 1rem !important;
-        float: right;
-    }
-
-    .chat-container .received {
-        background-color: white !important;
-        color: black !important;
-        margin-right: 25% !important;
-        margin-left: 1rem !important;
-        border: 1px solid #dee2e6 !important;
-        float: left;
-    }
-
-    .chat-container .sent:after,
-    .chat-container .received:after {
-        display: none !important;
-    }
-
-    .chat-container .user {
-        font-weight: bold !important;
-        margin-bottom: 0.25rem;
-        font-size: 0.875rem !important;
-        color: inherit !important;
-    }
-
-    .chat-container .msg {
-        display: block;
-        word-wrap: break-word;
-    }
-
-    .chat-container .timestamp {
+    .timestamp {
         font-size: 0.75rem;
         opacity: 0.7;
         margin-top: 0.25rem;
@@ -705,5 +568,13 @@
         if (element) {
             element.scrollTop = element.scrollHeight;
         }
+    };
+
+    window.handleEnterKey = (event) => {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            return false;
+        }
+        return true;
     };
 </script>

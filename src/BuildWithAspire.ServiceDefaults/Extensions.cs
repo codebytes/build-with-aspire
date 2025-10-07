@@ -24,17 +24,48 @@ public static class Extensions
 
         builder.Services.ConfigureHttpClientDefaults(http =>
         {
-            // Turn on resilience by default with extended timeouts for AI operations
+            // ---- Resilience Configuration (per official docs) ----
+            // Config keys (override defaults):
+            //   Http:AttemptTimeoutSeconds (default 60)
+            //   Http:TotalRequestTimeoutSeconds (default 180)
+            //   Http:MaxRetries (default 3)  -- applies to primary retry strategy
+            //   Http:EnableDevExtendedPipeline (true/false) adds a named extended handler in Development
+            int attemptSeconds = HttpTimeoutHelpers.ParsePositive(builder.Configuration["Http:AttemptTimeoutSeconds"], 60);
+            int totalSeconds   = HttpTimeoutHelpers.ParsePositive(builder.Configuration["Http:TotalRequestTimeoutSeconds"], 180);
+            int maxRetries     = HttpTimeoutHelpers.ParsePositive(builder.Configuration["Http:MaxRetries"], 3);
+            bool devExtended   = bool.TryParse(builder.Configuration["Http:EnableDevExtendedPipeline"], out var de) && de;
+
             http.AddStandardResilienceHandler(options =>
             {
-                // Increase default timeouts for AI operations
-                options.TotalRequestTimeout.Timeout = TimeSpan.FromMinutes(10);
-                options.AttemptTimeout.Timeout = TimeSpan.FromMinutes(5);
-                options.CircuitBreaker.SamplingDuration = TimeSpan.FromMinutes(10); // Must be at least double attempt timeout
-                options.Retry.MaxRetryAttempts = 3; // Reduce retries for AI operations
+                // Attempt timeout: each try budget
+                options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(attemptSeconds);
+                // Total request timeout: overall budget including retries
+                options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(totalSeconds);
+                // Adjust retry count (default is usually 3). Ensure at least 0.
+                if (maxRetries >= 0)
+                {
+                    options.Retry.MaxRetryAttempts = maxRetries;
+                }
+                // Circuit breaker sampling must be >= 2 * attempt timeout per validation rules.
+                // Allow override via Http:CircuitBreakerSamplingSeconds; else pick max(2*attemptSeconds,120).
+                var samplingSecondsOverride = HttpTimeoutHelpers.ParsePositive(builder.Configuration["Http:CircuitBreakerSamplingSeconds"], 0);
+                var requiredSampling = Math.Max(attemptSeconds * 2, 120);
+                var samplingSeconds = samplingSecondsOverride > 0 ? Math.Max(samplingSecondsOverride, requiredSampling) : requiredSampling;
+                options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(samplingSeconds);
+                // Keep other circuit breaker defaults but allow MinimumThroughput override.
+                var minThroughput = HttpTimeoutHelpers.ParsePositive(builder.Configuration["Http:CircuitBreakerMinimumThroughput"], 0);
+                if (minThroughput > 0)
+                {
+                    options.CircuitBreaker.MinimumThroughput = minThroughput;
+                }
+                // Partitioning strategy left as default; expose config key if needed later.
             });
 
-            // Turn on service discovery by default
+            // Extended dev pipeline removed (current package lacks required builder extensions in this solution).
+            // If future upgrade adds builder methods (AddRetry/AddAttemptTimeout/etc.), reintroduce here.
+
+            // Diagnostics record removed per user request (timeouts still applied).
+
             http.AddServiceDiscovery();
         });
 
@@ -114,5 +145,17 @@ public static class Extensions
         }
 
         return app;
+    }
+}
+
+file static class HttpTimeoutHelpers
+{
+    public static int ParsePositive(string? raw, int fallback)
+    {
+        if (int.TryParse(raw, out var v) && v > 0)
+        {
+            return v;
+        }
+        return fallback;
     }
 }

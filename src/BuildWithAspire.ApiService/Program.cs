@@ -1,15 +1,15 @@
+using System.Threading.RateLimiting;
 using BuildWithAspire.ApiService.Data;
 using BuildWithAspire.ApiService.Extensions;
 using BuildWithAspire.ApiService.Models;
 using BuildWithAspire.ApiService.Services;
+using BuildWithAspire.Abstractions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.ChatCompletion;
 using Scalar.AspNetCore;
-using System.Text.Json;
+using ChatRole = Microsoft.Extensions.AI.ChatRole;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,19 +18,35 @@ builder.AddServiceDefaults();
 // Add PostgreSQL DbContext
 builder.AddNpgsqlDbContext<ChatDbContext>("chatdb");
 
-// Add AI services using official Aspire integrations
+// Add AI services
 builder.AddAIServices();
+
+// Add rate limiting for AI endpoints
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    // Rate limit for chat endpoints - 10 requests per minute
+    options.AddFixedWindowLimiter("chat", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = 10;
+        limiterOptions.Window = TimeSpan.FromMinutes(1);
+        limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        limiterOptions.QueueLimit = 2;
+    });
+
+    // Rate limit for weather endpoint - 20 requests per minute (less expensive)
+    options.AddFixedWindowLimiter("weather", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = 20;
+        limiterOptions.Window = TimeSpan.FromMinutes(1);
+        limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        limiterOptions.QueueLimit = 5;
+    });
+});
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnetcore/openapi
 builder.Services.AddEndpointsApiExplorer();
-
-// Configure JSON options to ensure proper serialization
-builder.Services.ConfigureHttpJsonOptions(options =>
-{
-    options.SerializerOptions.PropertyNamingPolicy = null; // Keep original property names
-    options.SerializerOptions.WriteIndented = true;
-});
-
 builder.Services.AddOpenApi(options =>
 {
     options.AddDocumentTransformer((document, context, cancellationToken) =>
@@ -42,20 +58,7 @@ builder.Services.AddOpenApi(options =>
     });
 });
 
-// Register ChatService with simplified dependencies
-builder.Services.TryAddTransient<ChatService>();
-
-// Register HttpClient for MCP client with service discovery
-builder.Services.AddHttpClient<IMcpClient, McpClient>(client =>
-{
-    client.Timeout = TimeSpan.FromSeconds(30);
-    client.DefaultRequestHeaders.Add("User-Agent", "BuildWithAspire-MCP-Client/1.0");
-    // Base address will be set via service discovery to mcpserver
-    client.BaseAddress = new Uri("https+http://mcpserver/");
-}).AddServiceDiscovery();
-
-// Register MCP client as scoped to ensure proper HttpClient disposal
-builder.Services.TryAddScoped<IMcpClient, McpClient>();
+builder.Services.AddTransient<ChatService>();
 
 var app = builder.Build();
 
@@ -74,39 +77,115 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// Enable rate limiting
+app.UseRateLimiter();
+
 // Apply migrations on startup
 try
 {
-    app.Logger.LogInformation("Initializing database connection and schema");
+    app.Logger.LogInformation("Applying database migrations");
     using (var scope = app.Services.CreateScope())
     {
         var dbContext = scope.ServiceProvider.GetRequiredService<ChatDbContext>();
         var startTime = DateTime.UtcNow;
 
-        // Ensure database schema exists
-        var wasCreated = await dbContext.Database.EnsureCreatedAsync().ConfigureAwait(false);
-        var duration = DateTime.UtcNow - startTime;
+        // Apply pending migrations
+        var pendingMigrations = await dbContext.Database.GetPendingMigrationsAsync().ConfigureAwait(false);
+        var pendingCount = pendingMigrations.Count();
 
-        if (wasCreated)
+        if (pendingCount > 0)
         {
-            app.Logger.LogInformation("Database schema created successfully. Duration: {Duration}ms", duration.TotalMilliseconds);
+            app.Logger.LogInformation("Applying {Count} pending migrations", pendingCount);
+            await dbContext.Database.MigrateAsync().ConfigureAwait(false);
+            var duration = DateTime.UtcNow - startTime;
+            app.Logger.LogInformation("Database migrations applied successfully. Duration: {Duration}ms", duration.TotalMilliseconds);
         }
         else
         {
-            app.Logger.LogInformation("Database schema already exists. Duration: {Duration}ms", duration.TotalMilliseconds);
+            var duration = DateTime.UtcNow - startTime;
+            app.Logger.LogInformation("Database is up to date. Duration: {Duration}ms", duration.TotalMilliseconds);
         }
     }
 }
 catch (Exception ex)
 {
-    app.Logger.LogError(ex, "Database initialization failed. Service will continue without database.");
+    app.Logger.LogError(ex, "Database migration failed. Service will continue without database.");
 }
 
-// All tool-specific endpoints have been removed in favor of generic MCP endpoints:
-// - Use /mcp/tools to list all available tools
-// - Use /mcp/call/{toolName} to call any tool with parameters
-// - Use /mcp/tools/metadata for detailed tool metadata
-// This approach allows for dynamic tool discovery without hardcoded endpoints
+app.MapGet("/weatherforecast", (IChatClient client, ILoggerFactory lf, AIConfiguration.AISettings settings) =>
+{
+    var logger = lf.CreateLogger("WeatherForecastEndpoint");
+
+    // Create a weather agent using the Microsoft Agent Framework
+    var weatherAgent = new Microsoft.Agents.AI.ChatClientAgent(
+        client,
+        new Microsoft.Agents.AI.ChatClientAgentOptions
+        {
+            Name = "WeatherAssistant",
+            Instructions = "You are a helpful assistant that provides a description of the weather in one word based on the temperature."
+        });
+
+    async IAsyncEnumerable<WeatherForecast> GetForecasts()
+    {
+        for (int index = 1; index <= 5; index++)
+        {
+            var temperature = Random.Shared.Next(-20, 55);
+            string summary;
+            try
+            {
+                summary = await GetWeatherSummary(weatherAgent, temperature, logger, settings).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "AI summary generation failed (temp={Temp}, Provider={Provider}, Deployment={Deployment}, Model={Model})", temperature, settings.Provider, settings.DeploymentName, settings.Model);
+                summary = GetFallbackSummary(temperature);
+            }
+            yield return new WeatherForecast
+            (
+                DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
+                temperature,
+                summary
+            );
+        }
+    }
+
+    return GetForecasts();
+
+    static async Task<string> GetWeatherSummary(Microsoft.Agents.AI.AIAgent agent, int temp, ILogger logger, AIConfiguration.AISettings settings)
+    {
+        logger.LogDebug("Requesting AI weather summary (Provider={Provider}, Deployment={Deployment}, Model={Model}, Temp={Temp})", settings.Provider, settings.DeploymentName, settings.Model, temp);
+
+        var response = await agent.RunAsync($"How would you describe the weather at temp {temp} in celsius? Provide the response in 1 word with no punctuation.").ConfigureAwait(false);
+
+        var responseText = response.Text ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(responseText))
+        {
+            logger.LogWarning("Empty AI agent response (Temp={Temp}), using fallback", temp);
+            return GetFallbackSummary(temp);
+        }
+        var trimmed = responseText.Trim();
+        if (trimmed.Length > 20)
+        {
+            logger.LogWarning("AI response too long (Temp={Temp}, Length={Length}), using fallback", temp, trimmed.Length);
+            return GetFallbackSummary(temp);
+        }
+        logger.LogDebug("AI agent response received: {Excerpt}", trimmed);
+
+        return trimmed;
+    }
+
+    static string GetFallbackSummary(int temp) => temp switch
+    {
+        < 0 => "freezing",
+        < 10 => "cold",
+        < 20 => "cool",
+        < 30 => "warm",
+        _ => "hot"
+    };
+})
+.WithName("GetWeatherForecast")
+.WithOpenApi()
+.RequireRateLimiting("weather");
 
 // Conversation endpoints
 app.MapGet("/conversations", async (ChatDbContext db) =>
@@ -159,6 +238,8 @@ app.MapGet("/conversations/{id}", async (Guid id, ChatDbContext db) =>
 })
 .WithName("GetConversation")
 .WithOpenApi();
+
+// Diagnostics endpoint
 
 app.MapPost("/conversations", async ([FromBody] CreateConversationRequest request, ChatDbContext db) =>
 {
@@ -273,7 +354,8 @@ app.MapPost("/conversations/{id}/messages", async (Guid id, [FromBody] SendMessa
     }
 })
 .WithName("SendMessage")
-.WithOpenApi();
+.WithOpenApi()
+.RequireRateLimiting("chat");
 
 app.MapDelete("/conversations/{id}", async (Guid id, ChatDbContext db) =>
 {
@@ -294,65 +376,8 @@ app.MapDelete("/conversations/{id}", async (Guid id, ChatDbContext db) =>
 // Keep the original chat endpoint for backward compatibility
 app.MapGet("/chat", async (ChatService chatService, string message) => await chatService.ProcessMessage(message).ConfigureAwait(false))
     .WithName("GetChat")
-    .WithOpenApi();
-
-// MCP integration test endpoints
-app.MapGet("/mcp/tools", async (IMcpClient mcpClient) =>
-{
-    try
-    {
-        await mcpClient.InitializeAsync().ConfigureAwait(false);
-        var tools = await mcpClient.ListToolsAsync().ConfigureAwait(false);
-        return Results.Ok(new { tools = tools.Select(t => t.Name).ToArray(), count = tools.Length });
-    }
-    catch (Exception ex)
-    {
-        return Results.Problem($"MCP error: {ex.Message}", statusCode: 500);
-    }
-})
-.WithName("ListMcpTools")
-.WithOpenApi();
-
-app.MapPost("/mcp/call/{toolName}", async (string toolName, object? parameters, IMcpClient mcpClient, ILogger<Program> logger) =>
-{
-    try
-    {
-        logger.LogInformation("MCP tool call: {ToolName} with parameters: {Parameters}", toolName, parameters);
-        
-        await mcpClient.InitializeAsync().ConfigureAwait(false);
-        var result = await mcpClient.CallToolAsync(toolName, parameters).ConfigureAwait(false);
-        
-        logger.LogInformation("MCP tool result - IsError: {IsError}, Content count: {ContentCount}", 
-            result.IsError, result.Content?.Length ?? 0);
-        
-        return Results.Ok(result);
-    }
-    catch (Exception ex)
-    {
-        logger.LogError(ex, "MCP tool call failed for tool {ToolName}", toolName);
-        return Results.Problem($"MCP tool call error: {ex.Message}", statusCode: 500);
-    }
-})
-.WithName("CallMcpTool")
-.WithOpenApi();
-
-// MCP tools metadata endpoint
-app.MapGet("/mcp/tools/metadata", async (IMcpClient mcpClient) =>
-{
-    try
-    {
-        await mcpClient.InitializeAsync().ConfigureAwait(false);
-        var tools = await mcpClient.ListToolsAsync().ConfigureAwait(false);
-        return Results.Ok(new { tools = tools, count = tools.Length });
-    }
-    catch (Exception ex)
-    {
-        return Results.Problem($"MCP metadata error: {ex.Message}", statusCode: 500);
-    }
-})
-.WithName("ListMcpToolMetadata")
-.WithOpenApi();
-
+    .WithOpenApi()
+    .RequireRateLimiting("chat");
 
 app.Run();
 

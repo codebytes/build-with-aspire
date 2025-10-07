@@ -24,31 +24,20 @@ IResourceBuilder<IResourceWithConnectionString>? chatDb = builder.ExecutionConte
         .AddAzurePostgresFlexibleServer("postgres")
         .AddDatabase("chatdb")
     : builder
+        // Use a non-secret parameter with a default value so Aspire CLI won't prompt
         .AddPostgres("postgres",
-            password: builder.AddParameter("postgres-password", "aspire123!", secret: true))
+            password: builder.AddParameter("postgres-password", "aspire123!", secret: false))
         .WithDataVolume()
         .AddDatabase("chatdb");
 
-// Add AI service using official integrations based on configuration
+// Always add AI resource (FoundryLocal returns a simple connection string resource)
 var aiService = builder.AddAIModel();
 
-// Add API service with AI model configuration
 var apiService = builder.AddProject<Projects.BuildWithAspire_ApiService>("apiservice")
     .WithExternalHttpEndpoints()
     .WithAIModel(aiService)
     .WithReference(chatDb)
     .WaitFor(chatDb);
-
-// MCP Server runs as a standalone HTTP service with weather endpoints
-var mcpServer = builder.AddProject<Projects.BuildWithAspire_MCPServer>("mcpserver")
-    .WithHttpEndpoint(port: 5267, name: "http")
-    .WithExternalHttpEndpoints()
-    .WithEnvironmentConfig(builder.Environment.EnvironmentName);
-
-// Add service discovery reference from API to MCP server
-apiService = apiService
-    .WithReference(mcpServer)
-    .WaitFor(mcpServer);
 
 // Add Web service
 var _ = builder.AddProject<Projects.BuildWithAspire_Web>("webfrontend")

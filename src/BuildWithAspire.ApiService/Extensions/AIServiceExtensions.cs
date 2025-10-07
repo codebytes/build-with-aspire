@@ -1,63 +1,99 @@
-using Microsoft.Extensions.DependencyInjection.Extensions;
+
+using BuildWithAspire.Abstractions;
 
 namespace BuildWithAspire.ApiService.Extensions;
 
-/// <summary>
-/// Extensions for configuring AI services using official Aspire integrations
-/// </summary>
 public static class AIServiceExtensions
 {
     /// <summary>
-    /// Adds AI services to the host application builder.
-    /// The AI provider and connection strings are configured through Aspire's official integrations in the AppHost.
-    /// This service will use the IChatClient provided by the connection string.
+    /// Adds AI services to the host application builder based on the configured provider.
     /// </summary>
     /// <param name="builder">The host application builder.</param>
     /// <returns>The host application builder for method chaining.</returns>
     public static IHostApplicationBuilder AddAIServices(this IHostApplicationBuilder builder)
     {
-        var aiProvider = GetAIProvider(builder.Configuration);
-        var deploymentName = builder.Configuration["AI:DeploymentName"] ?? "chat";
+        var aiSettings = AIConfiguration.GetSettings(builder.Configuration);
 
-        // Add Semantic Kernel services
-        // The IChatClient is already provided by the AppHost's connection string configuration
-        builder.Services.AddKernel();
+        // Register AI settings once
+        builder.Services.AddSingleton(aiSettings);
 
-        // Add a simple configuration logger
-        builder.Services.TryAddSingleton<IHostedService>(serviceProvider =>
+        // Register provider specific services (pure registration – no provider builds/logging here)
+        switch (aiSettings.Provider)
         {
-            var logger = serviceProvider.GetRequiredService<ILogger<AIConfigurationLogger>>();
-            return new AIConfigurationLogger(logger, aiProvider, deploymentName);
-        });
+            case AIConfiguration.AIProvider.Ollama:
+                builder.AddOllamaAIServices(aiSettings);
+                break;
+            case AIConfiguration.AIProvider.AzureOpenAI:
+                builder.AddAzureOpenAIServices(aiSettings);
+                break;
+            case AIConfiguration.AIProvider.GitHubModels:
+                builder.AddGitHubModelsAIServices(aiSettings);
+                break;
+            case AIConfiguration.AIProvider.AzureAIFoundry:
+                builder.AddFoundryLocalAIServices(aiSettings);
+                break;
+            default:
+                throw new InvalidOperationException($"Unsupported AI provider: {aiSettings.Provider}");
+        }
+
+        // Add hosted startup logger (single provider – final container)
+        builder.Services.AddHostedService<AIStartupLogger>();
 
         return builder;
     }
 
-    private static string GetAIProvider(IConfiguration configuration)
+    private static void AddOllamaAIServices(this IHostApplicationBuilder builder, AIConfiguration.AISettings aiSettings)
     {
-        return configuration["AI:Provider"]?.ToLowerInvariant() ?? "ollama";
+        builder.AddOllamaApiClient(aiSettings.DeploymentName)
+            .AddChatClient();
     }
+
+    private static void AddAzureOpenAIServices(this IHostApplicationBuilder builder, AIConfiguration.AISettings aiSettings)
+        => builder.AddAzureOpenAIClient("ai-service")
+                   .AddChatClient(aiSettings.DeploymentName);
+
+    private static void AddGitHubModelsAIServices(this IHostApplicationBuilder builder, AIConfiguration.AISettings aiSettings)
+        => builder.AddOpenAIClient(aiSettings.DeploymentName)
+                   .AddChatClient();
+
+    private static void AddFoundryLocalAIServices(this IHostApplicationBuilder builder, AIConfiguration.AISettings aiSettings)
+        => builder.AddAzureChatCompletionsClient(aiSettings.DeploymentName)
+                   .AddChatClient();
 }
 
-/// <summary>
-/// Simple configuration logger for AI settings
-/// </summary>
-internal sealed class AIConfigurationLogger : BackgroundService
+// Hosted service that logs final AI configuration once the real container is built.
+internal sealed class AIStartupLogger : IHostedService
 {
-    private readonly ILogger<AIConfigurationLogger> _logger;
-    private readonly string _provider;
-    private readonly string _deployment;
+    private readonly ILogger<AIStartupLogger> _logger;
+    private readonly AIConfiguration.AISettings _settings;
+    private readonly IConfiguration _configuration;
 
-    public AIConfigurationLogger(ILogger<AIConfigurationLogger> logger, string provider, string deployment)
+    public AIStartupLogger(ILogger<AIStartupLogger> logger,
+                           AIConfiguration.AISettings settings,
+                           IConfiguration configuration)
     {
         _logger = logger;
-        _provider = provider;
-        _deployment = deployment;
+        _settings = settings;
+        _configuration = configuration;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    public Task StartAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("AI Configuration: Provider={Provider}, Deployment={Deployment}", _provider, _deployment);
-        await Task.CompletedTask.ConfigureAwait(false);
+        if (_settings.Provider == AIConfiguration.AIProvider.AzureOpenAI)
+        {
+            var hasConn = !string.IsNullOrEmpty(_configuration.GetConnectionString("ai-service"));
+            _logger.LogInformation("AI configured: Provider={Provider} Deployment={Deployment} Model={Model} AzureConnPresent={HasConn}",
+                _settings.Provider, _settings.DeploymentName, _settings.Model, hasConn);
+        }
+        else
+        {
+            _logger.LogInformation("AI configured: Provider={Provider} Deployment={Deployment} Model={Model}",
+                _settings.Provider, _settings.DeploymentName, _settings.Model);
+        }
+        return Task.CompletedTask;
     }
+
+    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 }
+
+
