@@ -14,9 +14,11 @@ public static class InfrastructureExtensions
     /// <param name="environmentName">The environment name</param>
     /// <returns>The project resource builder</returns>
     public static IResourceBuilder<ProjectResource> WithEnvironmentConfig(
-        this IResourceBuilder<ProjectResource> builder, 
+        this IResourceBuilder<ProjectResource> builder,
         string environmentName)
     {
-        return builder.WithEnvironment("ASPNETCORE_ENVIRONMENT", environmentName);
+        return builder
+            .WithEnvironment("DOTNET_ENVIRONMENT", environmentName)
+            .WithEnvironment("ASPNETCORE_ENVIRONMENT", environmentName);
     }
 }

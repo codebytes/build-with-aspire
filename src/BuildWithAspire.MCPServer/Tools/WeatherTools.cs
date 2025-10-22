@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Server;
 
 namespace BuildWithAspire.MCPServer.Tools;
@@ -12,17 +13,21 @@ namespace BuildWithAspire.MCPServer.Tools;
 public sealed class WeatherTools
 {
     private readonly IChatClient? _chatClient;
+    private readonly ILogger<WeatherTools> _logger;
 
-    public WeatherTools(IChatClient? chatClient = null)
+    public WeatherTools(ILogger<WeatherTools> logger, IChatClient? chatClient = null)
     {
+        _logger = logger;
         _chatClient = chatClient;
     }
 
-    [McpServerTool]
+    [McpServerTool(Name = "getWeatherForecast")]
     [Description("Gets a weather forecast for the next 5 days with AI-generated weather descriptions.")]
     public async Task<WeatherForecast[]> GetWeatherForecast(
         [Description("Maximum number of forecast days to return (1-10)")] int maxDays = 5)
     {
+        _logger.LogInformation("MCP Tool 'getWeatherForecast' called with maxDays={MaxDays}", maxDays);
+
         if (maxDays < 1)
         {
             maxDays = 1;
@@ -38,7 +43,7 @@ public sealed class WeatherTools
         {
             var temperature = Random.Shared.Next(-20, 55);
             var summary = await GetWeatherSummary(temperature).ConfigureAwait(false);
-            
+
             forecasts.Add(new WeatherForecast(
                 DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
                 temperature,
@@ -49,13 +54,15 @@ public sealed class WeatherTools
         return forecasts.ToArray();
     }
 
-    [McpServerTool]
+    [McpServerTool(Name = "getCurrentWeather")]
     [Description("Gets current weather information for today with AI-generated description.")]
     public async Task<WeatherForecast> GetCurrentWeather()
     {
+        _logger.LogInformation("MCP Tool 'getCurrentWeather' called");
+
         var temperature = Random.Shared.Next(-20, 55);
         var summary = await GetWeatherSummary(temperature).ConfigureAwait(false);
-        
+
         return new WeatherForecast(
             DateOnly.FromDateTime(DateTime.Today),
             temperature,
@@ -63,14 +70,14 @@ public sealed class WeatherTools
         );
     }
 
-    [McpServerTool]
+    [McpServerTool(Name = "convertTemperature")]
     [Description("Converts temperature between Celsius and Fahrenheit.")]
     public static TemperatureConversion ConvertTemperature(
         [Description("Temperature value to convert")] double temperature,
         [Description("Source unit: 'C' for Celsius, 'F' for Fahrenheit")] string fromUnit = "C")
     {
         bool isCelsius = fromUnit.ToUpper() == "C";
-        
+
         if (isCelsius)
         {
             var fahrenheit = (temperature * 9.0 / 5.0) + 32;
@@ -105,7 +112,7 @@ public sealed class WeatherTools
                 new(ChatRole.System, "You are a helpful assistant that provides a description of the weather in one word based on the temperature."),
                 new(ChatRole.User, $"How would you describe the weather at temp {temp} in celsius? Provide the response in 1 word with no punctuation.")
             };
-            
+
             var completion = await _chatClient.GetResponseAsync(conversation).ConfigureAwait(false);
             return completion.Text ?? "Pleasant";
         }
@@ -115,7 +122,7 @@ public sealed class WeatherTools
             return temp switch
             {
                 < 0 => "Freezing",
-                < 10 => "Cold", 
+                < 10 => "Cold",
                 < 20 => "Cool",
                 < 30 => "Warm",
                 _ => "Hot"

@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Server;
 
 namespace BuildWithAspire.MCPServer.Tools;
@@ -10,13 +11,21 @@ namespace BuildWithAspire.MCPServer.Tools;
 [McpServerToolType]
 public sealed class MathTools
 {
-    [McpServerTool]
+    private readonly ILogger<MathTools> _logger;
+
+    public MathTools(ILogger<MathTools> logger)
+    {
+        _logger = logger;
+    }
+
+    [McpServerTool(Name = "calculate")]
     [Description("Performs basic arithmetic operations (add, subtract, multiply, divide).")]
-    public static CalculationResult Calculate(
+    public CalculationResult Calculate(
         [Description("First number")] double a,
         [Description("Second number")] double b,
         [Description("Operation: 'add', 'subtract', 'multiply', 'divide'")] string operation)
     {
+        _logger.LogInformation("MCP Tool 'calculate' called with a={A}, b={B}, operation={Operation}", a, b, operation);
         try
         {
             var result = operation.ToLower() switch
@@ -47,11 +56,12 @@ public sealed class MathTools
         }
     }
 
-    [McpServerTool]
+    [McpServerTool(Name = "squareRoot")]
     [Description("Calculates the square root of a number.")]
-    public static CalculationResult SquareRoot(
+    public CalculationResult SquareRoot(
         [Description("Number to find square root of")] double number)
     {
+        _logger.LogInformation("MCP Tool 'squareRoot' called with number={Number}", number);
         if (number < 0)
         {
             return new CalculationResult(
@@ -71,12 +81,13 @@ public sealed class MathTools
         );
     }
 
-    [McpServerTool]
+    [McpServerTool(Name = "power")]
     [Description("Raises a number to a specified power.")]
-    public static CalculationResult Power(
+    public CalculationResult Power(
         [Description("Base number")] double baseNumber,
         [Description("Exponent")] double exponent)
     {
+        _logger.LogInformation("MCP Tool 'power' called with baseNumber={BaseNumber}, exponent={Exponent}", baseNumber, exponent);
         try
         {
             var result = Math.Pow(baseNumber, exponent);
@@ -98,11 +109,12 @@ public sealed class MathTools
         }
     }
 
-    [McpServerTool]
+    [McpServerTool(Name = "generateFibonacci")]
     [Description("Generates the Fibonacci sequence up to n terms.")]
-    public static FibonacciResult GenerateFibonacci(
+    public FibonacciResult GenerateFibonacci(
         [Description("Number of terms to generate (1-50)")] int terms)
     {
+        _logger.LogInformation("MCP Tool 'generateFibonacci' called with terms={Terms}", terms);
         if (terms < 1)
         {
             return new FibonacciResult(
@@ -124,7 +136,7 @@ public sealed class MathTools
         }
 
         var sequence = new long[terms];
-        
+
         if (terms >= 1) sequence[0] = 0;
         if (terms >= 2) sequence[1] = 1;
 
@@ -141,11 +153,12 @@ public sealed class MathTools
         );
     }
 
-    [McpServerTool]
+    [McpServerTool(Name = "isPrime")]
     [Description("Checks if a number is prime.")]
-    public static PrimeCheckResult IsPrime(
+    public PrimeCheckResult IsPrime(
         [Description("Number to check for primality")] long number)
     {
+        _logger.LogInformation("MCP Tool 'isPrime' called with number={Number}", number);
         if (number < 2)
         {
             return new PrimeCheckResult(

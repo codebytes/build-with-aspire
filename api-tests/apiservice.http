@@ -15,50 +15,50 @@ GET {{baseUrl}}/mcp/tools
 ### Get MCP Tools Metadata
 GET {{baseUrl}}/mcp/tools/metadata
 
-### Call Current Weather Tool
-POST {{baseUrl}}/mcp/call/GetCurrentWeather
+### Call Current Weather Tool (camelCase as per MCP SDK)
+POST {{baseUrl}}/mcp/call/getCurrentWeather
 Content-Type: application/json
 
 {}
 
-### Call Weather Forecast Tool
-POST {{baseUrl}}/mcp/call/GetWeatherForecast
+### Call Weather Forecast Tool (camelCase as per MCP SDK)
+POST {{baseUrl}}/mcp/call/getWeatherForecast
 Content-Type: application/json
 
 {
-  "MaxDays": 5
+  "maxDays": 5
 }
 
 ### Call Weather Forecast Tool (7 days)
-POST {{baseUrl}}/mcp/call/GetWeatherForecast
+POST {{baseUrl}}/mcp/call/getWeatherForecast
 Content-Type: application/json
 
 {
-  "MaxDays": 7
+  "maxDays": 7
 }
 
-### Call Temperature Conversion Tool
-POST {{baseUrl}}/mcp/call/ConvertTemperature
+### Call Temperature Conversion Tool (camelCase as per MCP SDK)
+POST {{baseUrl}}/mcp/call/convertTemperature
 Content-Type: application/json
 
 {
-  "Temperature": 25,
-  "FromUnit": "C"
+  "temperature": 25,
+  "fromUnit": "C"
 }
 
-### Call System Info Tool
-POST {{baseUrl}}/mcp/call/GetSystemInfo
+### Call System Info Tool (camelCase as per MCP SDK)
+POST {{baseUrl}}/mcp/call/getSystemInfo
 Content-Type: application/json
 
 {}
 
-### Call Random Number Tool
-POST {{baseUrl}}/mcp/call/GenerateRandomNumber
+### Call Random Number Tool (camelCase as per MCP SDK)
+POST {{baseUrl}}/mcp/call/generateRandomNumber
 Content-Type: application/json
 
 {
-  "Min": 1,
-  "Max": 100
+  "min": 1,
+  "max": 100
 }
 
 ### Chat (legacy endpoint)

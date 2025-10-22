@@ -14,28 +14,29 @@ public class WeatherApiClient(HttpClient httpClient, ILogger<WeatherApiClient> l
         {
             logger.LogInformation("Starting weather request for {MaxItems} items", maxItems);
             logger.LogInformation("HttpClient BaseAddress: {BaseAddress}", httpClient.BaseAddress);
-            
-            // Call the MCP GetWeatherForecast tool with maxItems parameter
-            var requestBody = new { MaxDays = Math.Min(maxItems, 10) }; // Limit to 10 days max
+
+            // Call the MCP getWeatherForecast tool with maxDays parameter (camelCase as per MCP SDK)
+            var requestBody = new { maxDays = Math.Min(maxItems, 10) }; // Limit to 10 days max
             var jsonContent = JsonSerializer.Serialize(requestBody);
             var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-            
-            logger.LogInformation("Making POST request to mcp/call/GetWeatherForecast with body: {RequestBody}", jsonContent);
-            
-            var response = await httpClient.PostAsync($"mcp/call/GetWeatherForecast", content, cancellationToken).ConfigureAwait(false);
-            
+
+            logger.LogInformation("Making POST request to mcp/call/getWeatherForecast with body: {RequestBody}", jsonContent);
+
+            // Use camelCase tool name as per official MCP SDK conventions
+            var response = await httpClient.PostAsync($"mcp/call/getWeatherForecast", content, cancellationToken).ConfigureAwait(false);
+
             logger.LogInformation("Response received - Status: {StatusCode}, ReasonPhrase: {ReasonPhrase}", response.StatusCode, response.ReasonPhrase);
-            
+
             if (!response.IsSuccessStatusCode)
             {
                 logger.LogWarning("MCP forecast call failed with status {StatusCode}: {ReasonPhrase}", response.StatusCode, response.ReasonPhrase);
                 // Fallback to current weather if forecast fails
                 return await GetCurrentWeatherFallback(cancellationToken).ConfigureAwait(false);
             }
-            
+
             var responseJson = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             var mcpResult = JsonSerializer.Deserialize<McpCallResult>(responseJson);
-            
+
             if (mcpResult?.Content != null && mcpResult.Content.Length > 0)
             {
                 var contentText = mcpResult.Content[0].Text;
@@ -44,8 +45,8 @@ public class WeatherApiClient(HttpClient httpClient, ILogger<WeatherApiClient> l
                 {
                     // The contentText is already a valid JSON string, just deserialize directly
                     logger.LogInformation("Deserializing weather data from JSON: {ContentText}", contentText);
-                    
-                    try 
+
+                    try
                     {
                         var options = new JsonSerializerOptions
                         {
@@ -54,13 +55,13 @@ public class WeatherApiClient(HttpClient httpClient, ILogger<WeatherApiClient> l
                         };
                         var weatherData = JsonSerializer.Deserialize<WeatherForecast[]>(contentText, options);
                         logger.LogInformation("Deserialized {WeatherEntryCount} weather entries", weatherData?.Length ?? 0);
-                        
+
                         if (weatherData != null && weatherData.Length > 0)
                         {
-                            logger.LogInformation("First weather entry: Date={Date}, Temp={Temp}C, Summary={Summary}", 
+                            logger.LogInformation("First weather entry: Date={Date}, Temp={Temp}C, Summary={Summary}",
                                 weatherData[0].Date, weatherData[0].TemperatureC, weatherData[0].Summary);
                         }
-                        
+
                         return weatherData ?? Array.Empty<WeatherForecast>();
                     }
                     catch (JsonException ex)
@@ -74,7 +75,7 @@ public class WeatherApiClient(HttpClient httpClient, ILogger<WeatherApiClient> l
             {
                 logger.LogWarning("MCP result is null or has no content. IsError: {IsError}", mcpResult?.IsError);
             }
-            
+
             return Array.Empty<WeatherForecast>();
         }
         catch (Exception ex)
@@ -85,20 +86,21 @@ public class WeatherApiClient(HttpClient httpClient, ILogger<WeatherApiClient> l
             return await GetCurrentWeatherFallback(cancellationToken).ConfigureAwait(false);
         }
     }
-    
+
     private async Task<WeatherForecast[]> GetCurrentWeatherFallback(CancellationToken cancellationToken)
     {
         try
         {
-            logger.LogInformation("Trying fallback GetCurrentWeather");
-            var response = await httpClient.PostAsync("mcp/call/GetCurrentWeather", new StringContent("{}", Encoding.UTF8, "application/json"), cancellationToken).ConfigureAwait(false);
-            
+            logger.LogInformation("Trying fallback getCurrentWeather");
+            // Use camelCase tool name as per official MCP SDK conventions
+            var response = await httpClient.PostAsync("mcp/call/getCurrentWeather", new StringContent("{}", Encoding.UTF8, "application/json"), cancellationToken).ConfigureAwait(false);
+
             logger.LogInformation("Fallback current weather call status: {StatusCode}", response.StatusCode);
             if (response.IsSuccessStatusCode)
             {
                 var responseJson = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
                 var mcpResult = JsonSerializer.Deserialize<McpCallResult>(responseJson);
-                
+
                 if (mcpResult?.Content != null && mcpResult.Content.Length > 0)
                 {
                     var contentText = mcpResult.Content[0].Text;
@@ -120,7 +122,7 @@ public class WeatherApiClient(HttpClient httpClient, ILogger<WeatherApiClient> l
         {
             logger.LogError(ex, "Error calling MCP current weather fallback tool 'GetCurrentWeather'");
         }
-        
+
         return Array.Empty<WeatherForecast>();
     }
 }
@@ -135,7 +137,7 @@ public class McpCallResult
 {
     [JsonPropertyName("Content")]
     public McpContent[]? Content { get; set; }
-    
+
     [JsonPropertyName("IsError")]
     public bool IsError { get; set; }
 }
@@ -144,7 +146,7 @@ public class McpContent
 {
     [JsonPropertyName("type")]
     public string Type { get; set; } = "text";
-    
+
     [JsonPropertyName("text")]
     public string Text { get; set; } = string.Empty;
 }

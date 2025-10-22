@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Text;
 using System.Globalization;
+using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Server;
 
 namespace BuildWithAspire.MCPServer.Tools;
@@ -12,10 +13,18 @@ namespace BuildWithAspire.MCPServer.Tools;
 [McpServerToolType]
 public sealed class SystemTools
 {
-    [McpServerTool]
-    [Description("Gets the current date and time information.")]
-    public static DateTimeInfo GetCurrentDateTime()
+    private readonly ILogger<SystemTools> _logger;
+
+    public SystemTools(ILogger<SystemTools> logger)
     {
+        _logger = logger;
+    }
+
+    [McpServerTool(Name = "getCurrentDateTime")]
+    [Description("Gets the current date and time information.")]
+    public DateTimeInfo GetCurrentDateTime()
+    {
+        _logger.LogInformation("MCP Tool 'getCurrentDateTime' called");
         var now = DateTime.Now;
         var utcNow = DateTime.UtcNow;
 
@@ -27,10 +36,11 @@ public sealed class SystemTools
         );
     }
 
-    [McpServerTool]
+    [McpServerTool(Name = "getSystemInfo")]
     [Description("Gets basic system information including OS and .NET version.")]
-    public static SystemInfo GetSystemInfo()
+    public SystemInfo GetSystemInfo()
     {
+        _logger.LogInformation("MCP Tool 'getSystemInfo' called");
         return new SystemInfo(
             OperatingSystem: Environment.OSVersion.ToString(),
             MachineName: Environment.MachineName,
@@ -40,12 +50,13 @@ public sealed class SystemTools
         );
     }
 
-    [McpServerTool]
+    [McpServerTool(Name = "generateRandomNumber")]
     [Description("Generates a random number within the specified range.")]
-    public static RandomNumber GenerateRandomNumber(
+    public RandomNumber GenerateRandomNumber(
         [Description("Minimum value (inclusive)")] int min = 1,
         [Description("Maximum value (exclusive)")] int max = 100)
     {
+        _logger.LogInformation("MCP Tool 'generateRandomNumber' called with min={Min}, max={Max}", min, max);
         if (min >= max)
         {
             max = min + 1;
@@ -55,11 +66,12 @@ public sealed class SystemTools
         return new RandomNumber(value, min, max - 1);
     }
 
-    [McpServerTool]
+    [McpServerTool(Name = "encodeToBase64")]
     [Description("Encodes text to Base64 format.")]
-    public static EncodingResult EncodeToBase64(
+    public EncodingResult EncodeToBase64(
         [Description("Text to encode")] string text)
     {
+        _logger.LogInformation("MCP Tool 'encodeToBase64' called with text length={Length}", text?.Length ?? 0);
         if (string.IsNullOrEmpty(text))
         {
             return new EncodingResult("", "base64", "Empty input provided");
@@ -77,11 +89,12 @@ public sealed class SystemTools
         }
     }
 
-    [McpServerTool]
+    [McpServerTool(Name = "decodeFromBase64")]
     [Description("Decodes Base64 text to plain text.")]
-    public static EncodingResult DecodeFromBase64(
+    public EncodingResult DecodeFromBase64(
         [Description("Base64 text to decode")] string base64Text)
     {
+        _logger.LogInformation("MCP Tool 'decodeFromBase64' called with base64 text length={Length}", base64Text?.Length ?? 0);
         if (string.IsNullOrEmpty(base64Text))
         {
             return new EncodingResult("", "plain", "Empty input provided");

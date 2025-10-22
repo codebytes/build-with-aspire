@@ -1,8 +1,9 @@
-using ModelContextProtocol;
-using ModelContextProtocol.Client;
 using Microsoft.Extensions.AI;
+using ModelContextProtocol.Client;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using McpTool = ModelContextProtocol.Protocol.Tool;
+using McpCallToolResult = ModelContextProtocol.Protocol.CallToolResult;
 
 namespace BuildWithAspire.ApiService.Services;
 
@@ -11,11 +12,15 @@ public sealed class Tool
 {
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
+    public object? InputSchema { get; set; } // JSON schema for tool parameters
 }
 
 public sealed class CallToolResult
 {
+    [JsonPropertyName("Content")]
     public McpContent[] Content { get; set; } = Array.Empty<McpContent>();
+
+    [JsonPropertyName("IsError")]
     public bool IsError { get; set; }
 }
 
@@ -26,11 +31,11 @@ public class McpContent
 
     [JsonPropertyName("text")]
     public string Text { get; set; } = string.Empty;
-    
+
     public McpContent()
     {
     }
-    
+
     public McpContent(string text)
     {
         Type = "text";
@@ -44,20 +49,21 @@ public sealed class McpTextContent : McpContent
     public McpTextContent() : base()
     {
     }
-    
+
     public McpTextContent(string text) : base(text)
     {
     }
 }
 
 /// <summary>
-/// MCP-compliant client using the official SDK for integrating with MCP servers.
-/// Provides AI with dynamic tool access through standard MCP protocol.
+/// MCP-compliant client using the official C# SDK for dynamic tool discovery.
+/// Connects to MCP server over HTTPS/SSE and loads tools dynamically.
 /// </summary>
 public interface IMcpClient : IAsyncDisposable
 {
     Task<bool> InitializeAsync(CancellationToken cancellationToken = default);
     Task<Tool[]> ListToolsAsync(CancellationToken cancellationToken = default);
+    Task<IList<AIFunction>> ListAIFunctionsAsync(CancellationToken cancellationToken = default);
     Task<CallToolResult> CallToolAsync(string toolName, object? parameters = null, CancellationToken cancellationToken = default);
     Task<string> GetWeatherInfoAsync(string request, CancellationToken cancellationToken = default);
 }
@@ -66,43 +72,140 @@ public sealed class McpClient : IMcpClient
 {
     private readonly ILogger<McpClient> _logger;
     private readonly IConfiguration _configuration;
-    // Reserved for future official client implementation
+    private readonly HttpClient _httpClient;
+    private ModelContextProtocol.Client.McpClient? _mcpClient;
     private bool _isInitialized;
     private Tool[] _cachedTools = Array.Empty<Tool>();
 
-    public McpClient(ILogger<McpClient> logger, IConfiguration configuration)
+    public McpClient(
+        ILogger<McpClient> logger,
+        IConfiguration configuration,
+        IHttpClientFactory httpClientFactory)
     {
         _logger = logger;
         _configuration = configuration;
+        _httpClient = httpClientFactory.CreateClient("mcpserver");
     }
 
-    public Task<bool> InitializeAsync(CancellationToken cancellationToken = default)
+    public async Task<bool> InitializeAsync(CancellationToken cancellationToken = default)
     {
         if (_isInitialized)
         {
-            return Task.FromResult(true);
+            return true;
         }
 
         try
         {
-            // For now, we'll use a simplified approach since the official client setup is complex
-            // and we need to maintain compatibility with the existing API
+            _logger.LogInformation("Initializing MCP Client connection to server");
+
+            // DEBUG: Log ALL configuration keys to understand what Aspire is injecting
+            var allKeys = _configuration.AsEnumerable()
+                .Where(k => !string.IsNullOrEmpty(k.Key))
+                .OrderBy(k => k.Key)
+                .ToList();
+
+            _logger.LogInformation("Total configuration keys: {Count}", allKeys.Count);
+
+            // Log service-related keys
+            var serviceKeys = allKeys.Where(k => k.Key.Contains("service", StringComparison.OrdinalIgnoreCase)).ToList();
+            _logger.LogInformation("Found {Count} service-related configuration keys", serviceKeys.Count);
+            foreach (var key in serviceKeys.Take(30))
+            {
+                _logger.LogInformation("Config Key: {Key} = {Value}", key.Key, key.Value ?? "(null)");
+            }
+
+            // Get the MCP server URL from Aspire service discovery
+            // Try multiple possible formats that Aspire might use
+            var mcpServerUrl =
+                // Standard Aspire format with double underscores
+                _configuration["services__mcpserver__http__0"] ??
+                _configuration["services__mcpserver__https__0"] ??
+                // Alternative format with single underscores
+                _configuration["services_mcpserver_http_0"] ??
+                _configuration["services_mcpserver_https_0"] ??
+                // Colon format (legacy)
+                _configuration["services:mcpserver:http:0"] ??
+                _configuration["services:mcpserver:https:0"] ??
+                // Direct endpoint format
+                _configuration["mcpserver:http:0"] ??
+                _configuration["mcpserver:https:0"] ??
+                // Connection string format
+                _configuration.GetConnectionString("mcpserver");
+
+            if (string.IsNullOrEmpty(mcpServerUrl))
+            {
+                _logger.LogError("MCP server URL not found in configuration. Service discovery may not be working.");
+                _logger.LogWarning("Tried multiple configuration key formats");
+
+                // Log ALL keys containing 'mcp' for debugging
+                var mcpKeys = allKeys.Where(k => k.Key.Contains("mcp", StringComparison.OrdinalIgnoreCase)).ToList();
+                if (mcpKeys.Any())
+                {
+                    _logger.LogInformation("Found {Count} keys containing 'mcp':", mcpKeys.Count);
+                    foreach (var key in mcpKeys)
+                    {
+                        _logger.LogInformation("  {Key} = {Value}", key.Key, key.Value ?? "(null)");
+                    }
+                }
+                else
+                {
+                    _logger.LogError("NO configuration keys found containing 'mcp'. Service reference may be missing in AppHost.");
+                }
+
+                return false;
+            }
+
+            _logger.LogInformation("Using Aspire service discovery URL for MCP server: {McpServerUrl}", mcpServerUrl);
+
+            // Use root endpoint for Streamable HTTP transport (not /sse)
+            // The MCP server uses Streamable HTTP which communicates via POST to /
+            var endpoint = new Uri(mcpServerUrl.TrimEnd('/') + "/");
+            _logger.LogInformation("Connecting to MCP server via Streamable HTTP: {Endpoint}", endpoint);
+
+            // Create HTTP transport for Streamable HTTP connection
+            // NOTE: Do NOT use HttpTransportMode.Sse - the server uses Streamable HTTP (POST/GET)
+            // Session management is handled automatically by the SDK via Mcp-Session-Id header
+            var transport = new HttpClientTransport(
+                new HttpClientTransportOptions
+                {
+                    Endpoint = endpoint,
+                    Name = "BuildWithAspire API Client"
+                    // TransportMode defaults to Streamable HTTP (POST/GET) when not specified
+                },
+                _httpClient,
+                ownsHttpClient: false
+            );
+
+            // Create and connect MCP client
+            _mcpClient = await ModelContextProtocol.Client.McpClient.CreateAsync(
+                transport,
+                cancellationToken: cancellationToken
+            ).ConfigureAwait(false);
+
+            _logger.LogInformation("MCP Client connected successfully to server: {ServerName} v{ServerVersion}",
+                _mcpClient.ServerInfo.Name, _mcpClient.ServerInfo.Version);
+
             _isInitialized = true;
-            _logger.LogInformation("MCP Client initialized successfully (simplified mode)");
-            return Task.FromResult(true);
+            return true;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to initialize MCP Client");
-            return Task.FromResult(false);
+            _logger.LogError(ex, "Failed to initialize MCP Client connection. Check if MCP server is running and accessible.");
+            return false;
         }
     }
 
     public async Task<Tool[]> ListToolsAsync(CancellationToken cancellationToken = default)
     {
-        if (!_isInitialized)
+        if (!_isInitialized || _mcpClient == null)
         {
             await InitializeAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        if (_mcpClient == null)
+        {
+            _logger.LogWarning("MCP Client not initialized, returning empty tool list");
+            return Array.Empty<Tool>();
         }
 
         try
@@ -113,25 +216,24 @@ public sealed class McpClient : IMcpClient
                 return _cachedTools;
             }
 
-            // Return the tools that are available on the MCP server
-            _cachedTools = new[]
-            {
-                new Tool { Name = "GetCurrentWeather", Description = "Gets current weather information for today" },
-                new Tool { Name = "GetWeatherForecast", Description = "Gets weather forecast for multiple days" },
-                new Tool { Name = "ConvertTemperature", Description = "Converts temperature between Celsius and Fahrenheit" },
-                new Tool { Name = "Calculate", Description = "Performs basic arithmetic operations" },
-                new Tool { Name = "GetCurrentDateTime", Description = "Gets the current date and time information" },
-                new Tool { Name = "GenerateRandomNumber", Description = "Generates a random number within a range" },
-                new Tool { Name = "GetSystemInfo", Description = "Gets basic system information" },
-                new Tool { Name = "EncodeToBase64", Description = "Encode plain text to Base64" },
-                new Tool { Name = "DecodeFromBase64", Description = "Decode Base64 text to plain text" },
-                new Tool { Name = "SquareRoot", Description = "Compute square root of a number" },
-                new Tool { Name = "Power", Description = "Raise base number to exponent" },
-                new Tool { Name = "GenerateFibonacci", Description = "Generate Fibonacci sequence" },
-                new Tool { Name = "IsPrime", Description = "Check if a number is prime" }
-            };
+            // List tools from MCP server dynamically
+            var mcpTools = await _mcpClient.ListToolsAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
 
-            _logger.LogInformation("Listed {ToolCount} MCP tools", _cachedTools.Length);
+            _cachedTools = mcpTools.Select(t =>
+            {
+                _logger.LogDebug("MCP Tool discovered: {ToolName} - {Description}", t.Name, t.Description);
+
+                return new Tool
+                {
+                    Name = t.Name,
+                    Description = t.Description ?? string.Empty,
+                    // Note: InputSchema is embedded in the McpClientTool (AIFunction) metadata
+                    // We don't need to extract it here - it will be used by the AI framework automatically
+                    InputSchema = null
+                };
+            }).ToArray();
+
+            _logger.LogInformation("Dynamically loaded {ToolCount} MCP tools from server", _cachedTools.Length);
             return _cachedTools;
         }
         catch (Exception ex)
@@ -141,482 +243,139 @@ public sealed class McpClient : IMcpClient
         }
     }
 
+    public async Task<IList<AIFunction>> ListAIFunctionsAsync(CancellationToken cancellationToken = default)
+    {
+        if (!_isInitialized || _mcpClient == null)
+        {
+            await InitializeAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        if (_mcpClient == null)
+        {
+            _logger.LogWarning("MCP Client not initialized, returning empty AIFunction list");
+            return Array.Empty<AIFunction>();
+        }
+
+        try
+        {
+            // Use the MCP SDK's ListToolsAsync which returns McpClientTool instances
+            // McpClientTool inherits from AIFunction, so we can use them directly!
+            var mcpClientTools = await _mcpClient.ListToolsAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
+
+            _logger.LogInformation("Retrieved {ToolCount} MCP tools as AIFunctions from server", mcpClientTools.Count);
+
+            // McpClientTool already implements AIFunction, so we can return directly
+            return mcpClientTools.Cast<AIFunction>().ToList();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to list MCP tools as AIFunctions");
+            return Array.Empty<AIFunction>();
+        }
+    }
+
     public async Task<CallToolResult> CallToolAsync(string toolName, object? parameters = null, CancellationToken cancellationToken = default)
     {
-        if (!_isInitialized)
+        if (!_isInitialized || _mcpClient == null)
+        {
+            await InitializeAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        if (_mcpClient == null)
+        {
+            _logger.LogWarning("MCP Client not initialized");
+            return new CallToolResult
+            {
+                Content = [new McpContent("MCP Client not initialized")],
+                IsError = true
+            };
+        }
+
+        try
+        {
+            _logger.LogInformation("Calling MCP tool: {ToolName}", toolName);
+
+            // Convert parameters object to dictionary for MCP
+            var paramDict = new Dictionary<string, object?>();
+            if (parameters != null)
+            {
+                var paramsJson = JsonSerializer.Serialize(parameters);
+                paramDict = JsonSerializer.Deserialize<Dictionary<string, object?>>(paramsJson) ?? new();
+            }
+
+            // Call tool on MCP server
+            var mcpResult = await _mcpClient.CallToolAsync(
+                toolName,
+                paramDict,
+                progress: null,
+                cancellationToken: cancellationToken).ConfigureAwait(false);
+
+            // Convert MCP result to our CallToolResult format
+            var content = mcpResult.Content.Select(c =>
+            {
+                if (c is ModelContextProtocol.Protocol.TextContentBlock textBlock)
+                {
+                    return new McpContent(textBlock.Text);
+                }
+                return new McpContent(c.ToString() ?? string.Empty);
+            }).ToArray();
+
+            return new CallToolResult
+            {
+                Content = content,
+                IsError = mcpResult.IsError == true
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to call MCP tool: {ToolName}", toolName);
+            return new CallToolResult
+            {
+                Content = [new McpContent($"Error calling tool: {ex.Message}")],
+                IsError = true
+            };
+        }
+    }
+
+    public async Task<string> GetWeatherInfoAsync(string request, CancellationToken cancellationToken = default)
+    {
+        if (!_isInitialized || _mcpClient == null)
         {
             await InitializeAsync(cancellationToken).ConfigureAwait(false);
         }
 
         try
         {
-            // For now, provide mock implementations of the tools since the MCP server session management is complex
-            var result = toolName switch
-            {
-                "GetCurrentWeather" => await GetMockCurrentWeather().ConfigureAwait(false),
-                "GetWeatherForecast" => await GetMockWeatherForecast(parameters).ConfigureAwait(false),
-                "ConvertTemperature" => await GetMockTemperatureConversion(parameters).ConfigureAwait(false),
-                "Calculate" => await GetMockCalculation(parameters).ConfigureAwait(false),
-                "GetCurrentDateTime" => await GetMockDateTime().ConfigureAwait(false),
-                "GenerateRandomNumber" => await GetMockRandomNumber(parameters).ConfigureAwait(false),
-                "GetSystemInfo" => await GetMockSystemInfo().ConfigureAwait(false),
-                "EncodeToBase64" => await GetMockEncodeBase64(parameters).ConfigureAwait(false),
-                "DecodeFromBase64" => await GetMockDecodeBase64(parameters).ConfigureAwait(false),
-                "SquareRoot" => await GetMockSquareRoot(parameters).ConfigureAwait(false),
-                "Power" => await GetMockPower(parameters).ConfigureAwait(false),
-                "GenerateFibonacci" => await GetMockFibonacci(parameters).ConfigureAwait(false),
-                "IsPrime" => await GetMockIsPrime(parameters).ConfigureAwait(false),
-                _ => new CallToolResult 
-                { 
-                    Content = new[] { new McpTextContent { Type = "text", Text = $"Tool {toolName} not found" } }, 
-                    IsError = true 
-                }
-            };
+            // Determine which weather tool to call based on request
+            // Use camelCase names as per MCP SDK conventions
+            var toolName = request.ToLowerInvariant().Contains("forecast")
+                ? "getWeatherForecast"
+                : "getCurrentWeather";
 
-            _logger.LogInformation("Successfully called MCP tool {ToolName}", toolName);
-            return result;
+            var result = await CallToolAsync(toolName, null, cancellationToken).ConfigureAwait(false);
+
+            if (result.IsError)
+            {
+                return "Unable to fetch weather information";
+            }
+
+            return result.Content.FirstOrDefault()?.Text ?? "No weather data available";
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to call MCP tool {ToolName}", toolName);
-            return new CallToolResult
-            {
-                Content = new[] { new McpTextContent { Type = "text", Text = $"Tool call error: {ex.Message}" } },
-                IsError = true
-            };
+            _logger.LogError(ex, "Failed to get weather information");
+            return "Error fetching weather information";
         }
     }
 
-    private static async Task<CallToolResult> GetMockCurrentWeather()
+    public async ValueTask DisposeAsync()
     {
-        await Task.Delay(10).ConfigureAwait(false); // Simulate async operation
-        var temperature = Random.Shared.Next(-20, 55);
-        var summary = temperature switch
+        if (_mcpClient != null)
         {
-            < 0 => "Freezing",
-            < 10 => "Cold",
-            < 20 => "Cool", 
-            < 30 => "Warm",
-            _ => "Hot"
-        };
-        
-        var weather = new
-        {
-            date = DateOnly.FromDateTime(DateTime.Today),
-            temperatureC = temperature,
-            summary = summary,
-            temperatureF = 32 + (int)(temperature / 0.5556)
-        };
-        
-        return new CallToolResult
-        {
-            Content = new[] { new McpTextContent { Type = "text", Text = JsonSerializer.Serialize(weather) } },
-            IsError = false
-        };
-    }
-
-    private static async Task<CallToolResult> GetMockWeatherForecast(object? parameters)
-    {
-        await Task.Delay(10).ConfigureAwait(false); // Simulate async operation
-        var maxDays = 5;
-        
-        if (parameters != null)
-        {
-            try
-            {
-                var paramJson = JsonSerializer.Serialize(parameters);
-                var paramObj = JsonSerializer.Deserialize<JsonElement>(paramJson);
-                if (paramObj.TryGetProperty("MaxDays", out var maxDaysElement))
-                {
-                    maxDays = Math.Max(1, Math.Min(10, maxDaysElement.GetInt32()));
-                }
-            }
-            catch { /* Use default */ }
+            await _mcpClient.DisposeAsync().ConfigureAwait(false);
+            _mcpClient = null;
         }
 
-        var forecasts = new List<object>();
-        for (int i = 1; i <= maxDays; i++)
-        {
-            var temperature = Random.Shared.Next(-20, 55);
-            var summary = temperature switch
-            {
-                < 0 => "Freezing",
-                < 10 => "Cold",
-                < 20 => "Cool",
-                < 30 => "Warm", 
-                _ => "Hot"
-            };
-            
-            forecasts.Add(new
-            {
-                date = DateOnly.FromDateTime(DateTime.Now.AddDays(i)),
-                temperatureC = temperature,
-                summary = summary,
-                temperatureF = 32 + (int)(temperature / 0.5556)
-            });
-        }
-        
-        return new CallToolResult
-        {
-            Content = new[] { new McpTextContent { Type = "text", Text = JsonSerializer.Serialize(forecasts) } },
-            IsError = false
-        };
-    }
-
-    private static async Task<CallToolResult> GetMockTemperatureConversion(object? parameters)
-    {
-        await Task.Delay(10).ConfigureAwait(false);
-        // Mock temperature conversion
-        return new CallToolResult
-        {
-            Content = new[] { new McpTextContent { Type = "text", Text = JsonSerializer.Serialize(new { originalValue = 20, originalUnit = "C", convertedValue = 68, convertedUnit = "F" }) } },
-            IsError = false
-        };
-    }
-
-    private static async Task<CallToolResult> GetMockCalculation(object? parameters)
-    {
-        await Task.Delay(10).ConfigureAwait(false);
-        // Mock calculation
-        return new CallToolResult
-        {
-            Content = new[] { new McpTextContent { Type = "text", Text = JsonSerializer.Serialize(new { result = 42 }) } },
-            IsError = false
-        };
-    }
-
-    private static async Task<CallToolResult> GetMockDateTime()
-    {
-        await Task.Delay(10).ConfigureAwait(false);
-        var now = DateTime.Now;
-        return new CallToolResult
-        {
-            Content = new[] { new McpTextContent { Type = "text", Text = JsonSerializer.Serialize(new { currentDateTime = now, timeZone = TimeZoneInfo.Local.Id }) } },
-            IsError = false
-        };
-    }
-
-    private static async Task<CallToolResult> GetMockRandomNumber(object? parameters)
-    {
-        await Task.Delay(10).ConfigureAwait(false);
-        var min = 1;
-        var max = 100;
-        
-        if (parameters != null)
-        {
-            try
-            {
-                var paramJson = JsonSerializer.Serialize(parameters);
-                var paramObj = JsonSerializer.Deserialize<JsonElement>(paramJson);
-                if (paramObj.TryGetProperty("Min", out var minElement))
-                {
-                    min = minElement.GetInt32();
-                }
-                if (paramObj.TryGetProperty("Max", out var maxElement))
-                {
-                    max = maxElement.GetInt32();
-                }
-            }
-            catch { /* Use defaults */ }
-        }
-
-        var randomNumber = Random.Shared.Next(min, max + 1);
-        var result = new McpTextContent { Type = "text", Text = $"Random number: {randomNumber}" };
-        return new CallToolResult
-        {
-            Content = new[] { result },
-            IsError = false
-        };
-    }
-
-    public async Task<string> GetWeatherInfoAsync(string request, CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            // Determine which weather tool to use based on the request
-            if (request.ToLower().Contains("current"))
-            {
-                var result = await CallToolAsync("GetCurrentWeather", cancellationToken: cancellationToken).ConfigureAwait(false);
-                return ExtractContentFromResult(result);
-            }
-            else if (request.ToLower().Contains("forecast"))
-            {
-                // Extract number of days if specified
-                var days = 5; // default
-                var words = request.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                foreach (var word in words)
-                {
-                    if (int.TryParse(word, out var parsedDays) && parsedDays > 0 && parsedDays <= 10)
-                    {
-                        days = parsedDays;
-                        break;
-                    }
-                }
-
-                var result = await CallToolAsync("GetWeatherForecast", new { MaxDays = days }, cancellationToken).ConfigureAwait(false);
-                return ExtractContentFromResult(result);
-            }
-            else
-            {
-                // Default to current weather
-                var result = await CallToolAsync("GetCurrentWeather", cancellationToken: cancellationToken).ConfigureAwait(false);
-                return ExtractContentFromResult(result);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to get weather info for request: {Request}", request);
-            return "Unable to retrieve weather information at this time.";
-        }
-    }
-
-    private static string ExtractContentFromResult(CallToolResult result)
-    {
-        if (result.IsError)
-        {
-            var errorContent = result.Content?.FirstOrDefault() as McpTextContent;
-            return errorContent?.Text ?? "Error occurred";
-        }
-        
-        var textContent = result.Content?.FirstOrDefault() as McpTextContent;
-        return textContent?.Text ?? "No data available";
-    }
-
-    private static async Task<CallToolResult> GetMockSystemInfo()
-    {
-        await Task.Delay(10).ConfigureAwait(false);
-        var systemInfo = new
-        {
-            operatingSystem = Environment.OSVersion.ToString(),
-            machineName = Environment.MachineName,
-            dotNetVersion = Environment.Version.ToString(),
-            processorCount = Environment.ProcessorCount,
-            workingSet = Environment.WorkingSet / 1024 / 1024 + " MB"
-        };
-        
-        return new CallToolResult
-        {
-            Content = new[] { new McpTextContent { Type = "text", Text = JsonSerializer.Serialize(systemInfo) } },
-            IsError = false
-        };
-    }
-
-    private static async Task<CallToolResult> GetMockEncodeBase64(object? parameters)
-    {
-        await Task.Delay(10).ConfigureAwait(false);
-        var text = "Hello World"; // Default
-        
-        if (parameters != null)
-        {
-            try
-            {
-                var paramJson = JsonSerializer.Serialize(parameters);
-                var paramObj = JsonSerializer.Deserialize<JsonElement>(paramJson);
-                if (paramObj.TryGetProperty("Text", out var textElement))
-                {
-                    text = textElement.GetString() ?? text;
-                }
-            }
-            catch { /* Use default */ }
-        }
-
-        var encoded = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(text));
-        return new CallToolResult
-        {
-            Content = new[] { new McpTextContent { Type = "text", Text = JsonSerializer.Serialize(new { originalText = text, encodedBase64 = encoded }) } },
-            IsError = false
-        };
-    }
-
-    private static async Task<CallToolResult> GetMockDecodeBase64(object? parameters)
-    {
-        await Task.Delay(10).ConfigureAwait(false);
-        var base64Text = "SGVsbG8gV29ybGQ="; // "Hello World" in base64
-        
-        if (parameters != null)
-        {
-            try
-            {
-                var paramJson = JsonSerializer.Serialize(parameters);
-                var paramObj = JsonSerializer.Deserialize<JsonElement>(paramJson);
-                if (paramObj.TryGetProperty("Base64Text", out var base64Element))
-                {
-                    base64Text = base64Element.GetString() ?? base64Text;
-                }
-            }
-            catch { /* Use default */ }
-        }
-
-        try
-        {
-            var decoded = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(base64Text));
-            return new CallToolResult
-            {
-                Content = new[] { new McpTextContent { Type = "text", Text = JsonSerializer.Serialize(new { base64Input = base64Text, decodedText = decoded }) } },
-                IsError = false
-            };
-        }
-        catch
-        {
-            return new CallToolResult
-            {
-                Content = new[] { new McpTextContent { Type = "text", Text = JsonSerializer.Serialize(new { error = "Invalid Base64 string" }) } },
-                IsError = true
-            };
-        }
-    }
-
-    private static async Task<CallToolResult> GetMockSquareRoot(object? parameters)
-    {
-        await Task.Delay(10).ConfigureAwait(false);
-        var number = 16.0; // Default
-        
-        if (parameters != null)
-        {
-            try
-            {
-                var paramJson = JsonSerializer.Serialize(parameters);
-                var paramObj = JsonSerializer.Deserialize<JsonElement>(paramJson);
-                if (paramObj.TryGetProperty("Number", out var numberElement))
-                {
-                    number = numberElement.GetDouble();
-                }
-            }
-            catch { /* Use default */ }
-        }
-
-        if (number < 0)
-        {
-            return new CallToolResult
-            {
-                Content = new[] { new McpTextContent { Type = "text", Text = JsonSerializer.Serialize(new { error = "Cannot compute square root of negative number" }) } },
-                IsError = true
-            };
-        }
-
-        var result = Math.Sqrt(number);
-        return new CallToolResult
-        {
-            Content = new[] { new McpTextContent { Type = "text", Text = JsonSerializer.Serialize(new { input = number, squareRoot = result }) } },
-            IsError = false
-        };
-    }
-
-    private static async Task<CallToolResult> GetMockPower(object? parameters)
-    {
-        await Task.Delay(10).ConfigureAwait(false);
-        var baseNumber = 2.0;
-        var exponent = 3.0;
-        
-        if (parameters != null)
-        {
-            try
-            {
-                var paramJson = JsonSerializer.Serialize(parameters);
-                var paramObj = JsonSerializer.Deserialize<JsonElement>(paramJson);
-                if (paramObj.TryGetProperty("BaseNumber", out var baseElement))
-                {
-                    baseNumber = baseElement.GetDouble();
-                }
-                if (paramObj.TryGetProperty("Exponent", out var expElement))
-                {
-                    exponent = expElement.GetDouble();
-                }
-            }
-            catch { /* Use defaults */ }
-        }
-
-        var result = Math.Pow(baseNumber, exponent);
-        return new CallToolResult
-        {
-            Content = new[] { new McpTextContent { Type = "text", Text = JsonSerializer.Serialize(new { baseNumber = baseNumber, exponent = exponent, result = result }) } },
-            IsError = false
-        };
-    }
-
-    private static async Task<CallToolResult> GetMockFibonacci(object? parameters)
-    {
-        await Task.Delay(10).ConfigureAwait(false);
-        var terms = 10;
-        
-        if (parameters != null)
-        {
-            try
-            {
-                var paramJson = JsonSerializer.Serialize(parameters);
-                var paramObj = JsonSerializer.Deserialize<JsonElement>(paramJson);
-                if (paramObj.TryGetProperty("Terms", out var termsElement))
-                {
-                    terms = Math.Max(1, Math.Min(50, termsElement.GetInt32()));
-                }
-            }
-            catch { /* Use default */ }
-        }
-
-        var fibonacci = new List<long>();
-        if (terms >= 1) fibonacci.Add(0);
-        if (terms >= 2) fibonacci.Add(1);
-        
-        for (int i = 2; i < terms; i++)
-        {
-            fibonacci.Add(fibonacci[i - 1] + fibonacci[i - 2]);
-        }
-
-        return new CallToolResult
-        {
-            Content = new[] { new McpTextContent { Type = "text", Text = JsonSerializer.Serialize(new { terms = terms, sequence = fibonacci }) } },
-            IsError = false
-        };
-    }
-
-    private static async Task<CallToolResult> GetMockIsPrime(object? parameters)
-    {
-        await Task.Delay(10).ConfigureAwait(false);
-        var number = 17L;
-        
-        if (parameters != null)
-        {
-            try
-            {
-                var paramJson = JsonSerializer.Serialize(parameters);
-                var paramObj = JsonSerializer.Deserialize<JsonElement>(paramJson);
-                if (paramObj.TryGetProperty("Number", out var numberElement))
-                {
-                    number = numberElement.GetInt64();
-                }
-            }
-            catch { /* Use default */ }
-        }
-
-        var isPrime = IsPrimeNumber(number);
-        return new CallToolResult
-        {
-            Content = new[] { new McpTextContent { Type = "text", Text = JsonSerializer.Serialize(new { number = number, isPrime = isPrime }) } },
-            IsError = false
-        };
-    }
-
-    private static bool IsPrimeNumber(long n)
-    {
-        if (n <= 1) return false;
-        if (n <= 3) return true;
-        if (n % 2 == 0 || n % 3 == 0) return false;
-        
-        for (long i = 5; i * i <= n; i += 6)
-        {
-            if (n % i == 0 || n % (i + 2) == 0)
-                return false;
-        }
-        return true;
-    }
-
-    public ValueTask DisposeAsync()
-    {
-        // Note: _officialClient is commented out, but keeping this pattern for future use
-        // if (_officialClient != null)
-        // {
-        //     return _officialClient.DisposeAsync();
-        // }
-        return ValueTask.CompletedTask;
+        GC.SuppressFinalize(this);
     }
 }
