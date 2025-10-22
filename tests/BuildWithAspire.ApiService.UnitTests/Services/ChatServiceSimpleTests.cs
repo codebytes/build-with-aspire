@@ -9,11 +9,12 @@ public class ChatServiceSimpleTests
     {
         // Arrange
         var mockChatClient = Substitute.For<IChatClient>();
+        var mockToolConverter = Substitute.For<IDynamicMcpToolConverter>();
         var mockLogger = Substitute.For<ILogger<ChatService>>();
         var aiSettings = new AIConfiguration.AISettings(AIConfiguration.AIProvider.Ollama, "test", "test-model", 120);
 
         // Act & Assert
-        var service = new ChatService(mockChatClient, mockLogger, aiSettings);
+        var service = new ChatService(mockChatClient, mockToolConverter, mockLogger, aiSettings);
         Assert.NotNull(service);
     }
 
@@ -22,9 +23,10 @@ public class ChatServiceSimpleTests
     {
         // Arrange
         var mockChatClient = Substitute.For<IChatClient>();
+        var mockToolConverter = Substitute.For<IDynamicMcpToolConverter>();
         var mockLogger = Substitute.For<ILogger<ChatService>>();
         var aiSettings = new AIConfiguration.AISettings(AIConfiguration.AIProvider.Ollama, "test", "test-model", 120);
-        var service = new ChatService(mockChatClient, mockLogger, aiSettings);
+        var service = new ChatService(mockChatClient, mockToolConverter, mockLogger, aiSettings);
 
         // Act & Assert
         await Assert.ThrowsAnyAsync<Exception>(() => service.ProcessMessage(null!));
@@ -35,9 +37,10 @@ public class ChatServiceSimpleTests
     {
         // Arrange
         var mockChatClient = Substitute.For<IChatClient>();
+        var mockToolConverter = Substitute.For<IDynamicMcpToolConverter>();
         var mockLogger = Substitute.For<ILogger<ChatService>>();
         var aiSettings = new AIConfiguration.AISettings(AIConfiguration.AIProvider.Ollama, "test", "test-model", 120);
-        var service = new ChatService(mockChatClient, mockLogger, aiSettings);
+        var service = new ChatService(mockChatClient, mockToolConverter, mockLogger, aiSettings);
 
         // Act & Assert
         await Assert.ThrowsAsync<InvalidOperationException>(() => service.ProcessMessagesWithHistory(null!));

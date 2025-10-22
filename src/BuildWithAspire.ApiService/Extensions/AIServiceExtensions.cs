@@ -30,7 +30,8 @@ public static class AIServiceExtensions
                 builder.AddGitHubModelsAIServices(aiSettings);
                 break;
             case AIConfiguration.AIProvider.AzureAIFoundry:
-                builder.AddFoundryLocalAIServices(aiSettings);
+                // Handles both Azure AI Foundry (cloud) and FoundryLocal (on-device)
+                builder.AddAzureAIFoundryServices(aiSettings);
                 break;
             default:
                 throw new InvalidOperationException($"Unsupported AI provider: {aiSettings.Provider}");
@@ -56,7 +57,11 @@ public static class AIServiceExtensions
         => builder.AddOpenAIClient(aiSettings.DeploymentName)
                    .AddChatClient();
 
-    private static void AddFoundryLocalAIServices(this IHostApplicationBuilder builder, AIConfiguration.AISettings aiSettings)
+    /// <summary>
+    /// Adds Azure AI Foundry services for both cloud and local (FoundryLocal) deployments.
+    /// The AppHost layer determines whether to use cloud Azure AI Foundry or FoundryLocal.
+    /// </summary>
+    private static void AddAzureAIFoundryServices(this IHostApplicationBuilder builder, AIConfiguration.AISettings aiSettings)
         => builder.AddAzureChatCompletionsClient(aiSettings.DeploymentName)
                    .AddChatClient();
 }

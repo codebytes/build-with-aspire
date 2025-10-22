@@ -21,6 +21,15 @@ builder.AddNpgsqlDbContext<ChatDbContext>("chatdb");
 // Add AI services
 builder.AddAIServices();
 
+// Add HTTP client for MCP server communication with service discovery
+// Don't set BaseAddress - let service discovery resolve it dynamically
+builder.Services.AddHttpClient("mcpserver")
+    .AddServiceDiscovery();
+
+// Register MCP client and dynamic tool converter for Agent Framework integration
+builder.Services.AddSingleton<IMcpClient, McpClient>();
+builder.Services.AddSingleton<IDynamicMcpToolConverter, DynamicMcpToolConverter>();
+
 // Add rate limiting for AI endpoints
 builder.Services.AddRateLimiter(options =>
 {
@@ -89,27 +98,43 @@ try
         var dbContext = scope.ServiceProvider.GetRequiredService<ChatDbContext>();
         var startTime = DateTime.UtcNow;
 
-        // Apply pending migrations
-        var pendingMigrations = await dbContext.Database.GetPendingMigrationsAsync().ConfigureAwait(false);
-        var pendingCount = pendingMigrations.Count();
+        try
+        {
+            // Check if database can be accessed
+            var canConnect = await dbContext.Database.CanConnectAsync().ConfigureAwait(false);
+            if (!canConnect)
+            {
+                app.Logger.LogWarning("Cannot connect to database. Skipping migrations.");
+                return;
+            }
 
-        if (pendingCount > 0)
-        {
-            app.Logger.LogInformation("Applying {Count} pending migrations", pendingCount);
-            await dbContext.Database.MigrateAsync().ConfigureAwait(false);
-            var duration = DateTime.UtcNow - startTime;
-            app.Logger.LogInformation("Database migrations applied successfully. Duration: {Duration}ms", duration.TotalMilliseconds);
+            // Apply pending migrations
+            var pendingMigrations = await dbContext.Database.GetPendingMigrationsAsync().ConfigureAwait(false);
+            var pendingCount = pendingMigrations.Count();
+
+            if (pendingCount > 0)
+            {
+                app.Logger.LogInformation("Applying {Count} pending migrations", pendingCount);
+                await dbContext.Database.MigrateAsync().ConfigureAwait(false);
+                var duration = DateTime.UtcNow - startTime;
+                app.Logger.LogInformation("Database migrations applied successfully. Duration: {Duration}ms", duration.TotalMilliseconds);
+            }
+            else
+            {
+                var duration = DateTime.UtcNow - startTime;
+                app.Logger.LogInformation("Database is up to date. Duration: {Duration}ms", duration.TotalMilliseconds);
+            }
         }
-        else
+        catch (Npgsql.PostgresException pgEx) when (pgEx.SqlState == "42P07")
         {
-            var duration = DateTime.UtcNow - startTime;
-            app.Logger.LogInformation("Database is up to date. Duration: {Duration}ms", duration.TotalMilliseconds);
+            // 42P07 = relation already exists - this is fine, table is already there
+            app.Logger.LogInformation("Database tables already exist. Skipping migration creation.");
         }
     }
 }
 catch (Exception ex)
 {
-    app.Logger.LogError(ex, "Database migration failed. Service will continue without database.");
+    app.Logger.LogWarning(ex, "Database migration encountered an issue. Service will continue.");
 }
 
 app.MapGet("/weatherforecast", (IChatClient client, ILoggerFactory lf, AIConfiguration.AISettings settings) =>
@@ -186,6 +211,137 @@ app.MapGet("/weatherforecast", (IChatClient client, ILoggerFactory lf, AIConfigu
 .WithName("GetWeatherForecast")
 .WithOpenApi()
 .RequireRateLimiting("weather");
+
+// MCP tool call endpoint
+app.MapPost("/mcp/call/{toolName}", async (string toolName, [FromBody] Dictionary<string, object?>? parameters, IMcpClient mcpClient, ILogger<Program> logger) =>
+{
+    try
+    {
+        logger.LogInformation("MCP tool call request received: {ToolName}", toolName);
+
+        // Initialize MCP client if needed
+        var initialized = await mcpClient.InitializeAsync().ConfigureAwait(false);
+        if (!initialized)
+        {
+            logger.LogError("Failed to initialize MCP client");
+            return Results.Problem("MCP client initialization failed", statusCode: 503);
+        }
+
+        // Call the MCP tool
+        var result = await mcpClient.CallToolAsync(toolName, parameters).ConfigureAwait(false);
+
+        logger.LogInformation("MCP tool {ToolName} completed. IsError: {IsError}", toolName, result.IsError);
+
+        if (result.IsError)
+        {
+            return Results.BadRequest(result);
+        }
+
+        return Results.Ok(result);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error calling MCP tool: {ToolName}", toolName);
+
+        // If it's an unknown tool error, list available tools
+        if (ex.Message.Contains("Unknown tool", StringComparison.OrdinalIgnoreCase))
+        {
+            try
+            {
+                var availableTools = await mcpClient.ListToolsAsync().ConfigureAwait(false);
+                var toolNames = string.Join(", ", availableTools.Select(t => t.Name));
+                logger.LogWarning("Unknown tool '{ToolName}'. Available tools: {AvailableTools}", toolName, toolNames);
+                return Results.Problem(
+                    $"Unknown tool '{toolName}'. Available tools: {toolNames}",
+                    statusCode: 404);
+            }
+            catch
+            {
+                // If we can't list tools, just return the original error
+            }
+        }
+
+        return Results.Problem($"Error calling MCP tool: {ex.Message}", statusCode: 500);
+    }
+})
+.WithName("CallMcpTool")
+.WithOpenApi()
+.RequireRateLimiting("weather");
+
+// MCP tools list endpoint
+app.MapGet("/mcp/tools", async (IMcpClient mcpClient, ILogger<Program> logger) =>
+{
+    try
+    {
+        logger.LogInformation("MCP tools list request received");
+
+        // Initialize MCP client if needed
+        var initialized = await mcpClient.InitializeAsync().ConfigureAwait(false);
+        if (!initialized)
+        {
+            logger.LogError("Failed to initialize MCP client");
+            return Results.Problem("MCP client initialization failed", statusCode: 503);
+        }
+
+        // List available tools
+        var tools = await mcpClient.ListToolsAsync().ConfigureAwait(false);
+
+        logger.LogInformation("Retrieved {ToolCount} MCP tools", tools.Length);
+
+        return Results.Ok(tools);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error listing MCP tools");
+        return Results.Problem($"Error listing MCP tools: {ex.Message}", statusCode: 500);
+    }
+})
+.WithName("ListMcpTools")
+.WithOpenApi();
+
+// MCP health check endpoint to verify connectivity
+app.MapGet("/mcp/health", async (IMcpClient mcpClient, ILogger<Program> logger) =>
+{
+    try
+    {
+        logger.LogInformation("MCP health check request received");
+
+        // Try to initialize the MCP client
+        var initialized = await mcpClient.InitializeAsync().ConfigureAwait(false);
+
+        if (!initialized)
+        {
+            logger.LogWarning("MCP client initialization failed");
+            return Results.Problem(
+                "MCP server connection failed",
+                statusCode: 503,
+                title: "Service Unavailable");
+        }
+
+        // Try to list tools to verify full connectivity
+        var tools = await mcpClient.ListToolsAsync().ConfigureAwait(false);
+
+        logger.LogInformation("MCP health check passed. Tools available: {ToolCount}", tools.Length);
+
+        return Results.Ok(new
+        {
+            status = "healthy",
+            mcpServerConnected = true,
+            toolsAvailable = tools.Length,
+            timestamp = DateTime.UtcNow
+        });
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "MCP health check failed");
+        return Results.Problem(
+            $"MCP health check failed: {ex.Message}",
+            statusCode: 503,
+            title: "Service Unavailable");
+    }
+})
+.WithName("McpHealthCheck")
+.WithOpenApi();
 
 // Conversation endpoints
 app.MapGet("/conversations", async (ChatDbContext db) =>

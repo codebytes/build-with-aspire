@@ -33,11 +33,19 @@ IResourceBuilder<IResourceWithConnectionString>? chatDb = builder.ExecutionConte
 // Always add AI resource (FoundryLocal returns a simple connection string resource)
 var aiService = builder.AddAIModel();
 
+// Add MCP Server for tools integration
+// Ports are defined in launchSettings.json (8080 http, 8081 https)
+var mcpServer = builder.AddProject<Projects.BuildWithAspire_MCPServer>("mcpserver");
+
+// Add API Service
+// Ports are defined in launchSettings.json (5020 http, 7287 https)
 var apiService = builder.AddProject<Projects.BuildWithAspire_ApiService>("apiservice")
     .WithExternalHttpEndpoints()
     .WithAIModel(aiService)
     .WithReference(chatDb)
-    .WaitFor(chatDb);
+    .WithReference(mcpServer)
+    .WaitFor(chatDb)
+    .WaitFor(mcpServer);
 
 // Add Web service
 var _ = builder.AddProject<Projects.BuildWithAspire_Web>("webfrontend")

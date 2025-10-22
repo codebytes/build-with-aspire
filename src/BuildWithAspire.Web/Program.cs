@@ -13,8 +13,8 @@ builder.Services.AddHttpClient<WeatherApiClient>(client =>
 {
     // This URL uses "https+http://" to indicate HTTPS is preferred over HTTP.
     // Learn more about service discovery scheme resolution at https://aka.ms/dotnet/sdschemes.
-    client.BaseAddress = new("https+http://apiservice/weatherforecast");
-});
+    client.BaseAddress = new("https+http://apiservice/");
+}).AddServiceDiscovery();
 
 builder.Services.AddHttpClient<ChatApiClient>(client =>
 {
@@ -28,7 +28,13 @@ builder.Services.AddHttpClient<ConversationApiClient>(client =>
     // This URL uses "https+http://" to indicate HTTPS is preferred over HTTP.
     // Learn more about service discovery scheme resolution at https://aka.ms/dotnet/sdschemes.
     client.BaseAddress = new("https+http://apiservice/");
-});
+    client.Timeout = TimeSpan.FromMinutes(30); // Increase timeout for AI operations with Ollama
+})
+.ConfigurePrimaryHttpMessageHandler(() =>
+{
+    return new HttpClientHandler();
+})
+.AddServiceDiscovery(); // Only add service discovery, skip resilience for now
 
 var app = builder.Build();
 
@@ -49,6 +55,7 @@ app.UseAntiforgery();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
 
 app.Run();
 

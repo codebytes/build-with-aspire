@@ -19,13 +19,14 @@
     <PackageReference Include="Aspire.Hosting.GitHub.Models" Version="9.5.1-preview.1.25502.11" />
     <PackageReference Include="Azure.Provisioning.AppConfiguration" Version="1.1.0" />
     <PackageReference Include="CommunityToolkit.Aspire.Hosting.Ollama" Version="9.8.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.9" />
-    <PackageReference Include="System.Text.Json" Version="9.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="9.0.10" />
+    <PackageReference Include="System.Text.Json" Version="9.0.10" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="../BuildWithAspire.ApiService/BuildWithAspire.ApiService.csproj" />
     <ProjectReference Include="../BuildWithAspire.Web/BuildWithAspire.Web.csproj" />
+    <ProjectReference Include="../BuildWithAspire.McpServer/BuildWithAspire.MCPServer.csproj" />
     <ProjectReference Include="../BuildWithAspire.Abstractions/BuildWithAspire.Abstractions.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 

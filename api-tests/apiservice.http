@@ -1,0 +1,101 @@
+### BuildWithAspire API Service
+### Base URL: https://localhost:7287 or http://localhost:5020
+
+@baseUrl = https://localhost:7287
+@apiBaseUrl = http://localhost:5020
+
+### Health Check
+GET {{baseUrl}}/health
+
+### === MCP Tool Integration ===
+
+### List All Available MCP Tools
+GET {{baseUrl}}/mcp/tools
+
+### Get MCP Tools Metadata
+GET {{baseUrl}}/mcp/tools/metadata
+
+### Call Current Weather Tool (camelCase as per MCP SDK)
+POST {{baseUrl}}/mcp/call/getCurrentWeather
+Content-Type: application/json
+
+{}
+
+### Call Weather Forecast Tool (camelCase as per MCP SDK)
+POST {{baseUrl}}/mcp/call/getWeatherForecast
+Content-Type: application/json
+
+{
+  "maxDays": 5
+}
+
+### Call Weather Forecast Tool (7 days)
+POST {{baseUrl}}/mcp/call/getWeatherForecast
+Content-Type: application/json
+
+{
+  "maxDays": 7
+}
+
+### Call Temperature Conversion Tool (camelCase as per MCP SDK)
+POST {{baseUrl}}/mcp/call/convertTemperature
+Content-Type: application/json
+
+{
+  "temperature": 25,
+  "fromUnit": "C"
+}
+
+### Call System Info Tool (camelCase as per MCP SDK)
+POST {{baseUrl}}/mcp/call/getSystemInfo
+Content-Type: application/json
+
+{}
+
+### Call Random Number Tool (camelCase as per MCP SDK)
+POST {{baseUrl}}/mcp/call/generateRandomNumber
+Content-Type: application/json
+
+{
+  "min": 1,
+  "max": 100
+}
+
+### Chat (legacy endpoint)
+GET {{baseUrl}}/chat?message=Hello, how is the weather today?
+
+### === Conversation Management ===
+
+### Get All Conversations
+GET {{baseUrl}}/conversations
+
+### Create New Conversation
+POST {{baseUrl}}/conversations
+Content-Type: application/json
+
+{
+  "name": "Test Conversation"
+}
+
+### Get Specific Conversation (replace with actual ID)
+@conversationId = 12345678-1234-1234-1234-123456789012
+GET {{baseUrl}}/conversations/{{conversationId}}
+
+### Send Message to Conversation
+POST {{baseUrl}}/conversations/{{conversationId}}/messages
+Content-Type: application/json
+
+{
+  "message": "What's the weather like today?"
+}
+
+### Delete Conversation
+DELETE {{baseUrl}}/conversations/{{conversationId}}
+
+### === OpenAPI Documentation ===
+
+### Get OpenAPI Specification
+GET {{baseUrl}}/openapi/v1.json
+
+### Scalar API Documentation (Development only)
+### Visit in browser: {{baseUrl}}/scalar/v1

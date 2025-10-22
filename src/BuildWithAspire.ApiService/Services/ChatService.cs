@@ -7,26 +7,80 @@ namespace BuildWithAspire.ApiService.Services;
 
 public class ChatService
 {
-    private readonly AIAgent _agent;
+    private AIAgent? _agent;
+    private readonly IChatClient _chatClient;
     private readonly ILogger<ChatService> _logger;
     private readonly AIConfiguration.AISettings _aiSettings;
+    private readonly IDynamicMcpToolConverter _toolConverter;
+    private IEnumerable<AIFunction>? _tools;
+    private bool _isInitialized;
 
-    public ChatService(IChatClient chatClient, ILogger<ChatService> logger, AIConfiguration.AISettings aiSettings)
+    public ChatService(
+        IChatClient chatClient,
+        IDynamicMcpToolConverter toolConverter,
+        ILogger<ChatService> logger,
+        AIConfiguration.AISettings aiSettings)
     {
+        _chatClient = chatClient;
+        _toolConverter = toolConverter;
         _logger = logger;
         _aiSettings = aiSettings;
+        _isInitialized = false;
 
-        // Create an AI Agent using the Microsoft Agent Framework
+        _logger.LogInformation("ChatService initialized, tools will be loaded dynamically from MCP server on first use");
+    }
+
+    /// <summary>
+    /// Ensures the agent is initialized with dynamic tools from the MCP server
+    /// </summary>
+    private async Task EnsureInitializedAsync(CancellationToken cancellationToken = default)
+    {
+        if (_isInitialized && _agent != null)
+        {
+            return;
+        }
+
+        _logger.LogInformation("Initializing AI Agent with dynamic MCP tools...");
+
+        // Dynamically load tools from MCP server
+        _tools = await _toolConverter.GetAllToolsAsync(cancellationToken).ConfigureAwait(false);
+        _logger.LogInformation("Loaded {ToolCount} tools from MCP server", _tools.Count());
+
+        // Create a chat client with function invocation enabled and tools configured via middleware
+        var toolEnabledClient = _chatClient.AsBuilder()
+            .Use((chatMessages, options, next, cancellationToken) =>
+            {
+                // Inject tools into ChatOptions for every request
+                if (options.Tools == null || options.Tools.Count == 0)
+                {
+                    options.Tools = _tools?.Select(t => (AITool)t).ToList();
+                    _logger.LogInformation("Middleware: Injected {ToolCount} tools into ChatOptions", options.Tools?.Count ?? 0);
+                }
+
+                _logger.LogInformation("Middleware: Sending request to model with {ToolCount} tools available", options.Tools?.Count ?? 0);
+                var result = next(chatMessages, options, cancellationToken);
+                _logger.LogInformation("Middleware: Received response from model");
+                return result;
+            })
+            .UseFunctionInvocation()
+            .Build();
+
+        // Create an AI Agent using the Microsoft Agent Framework with dynamic tools
         _agent = new ChatClientAgent(
-            chatClient,
+            toolEnabledClient,
             new ChatClientAgentOptions
             {
                 Name = "ChatAssistant",
                 Instructions = @"You are an AI demonstration application.
-                    You are a helpful chatbot.
+                    You are a helpful chatbot with access to various tools dynamically discovered from the MCP server.
+                    Use the available tools when appropriate to provide accurate information.
+                    When a user asks for something that a tool can provide (like a random number, weather, calculations, etc.), USE THE TOOL instead of making up an answer.
                     Respond to the user's input responsibly.
                     All responses should be safe for work."
             });
+
+        _isInitialized = true;
+        _logger.LogInformation("AI Agent initialized with {ToolCount} MCP tools available", _tools.Count());
     }
 
     public async Task<string> ProcessMessage(string message)
@@ -35,6 +89,14 @@ public class ChatService
 
         try
         {
+            // Ensure agent is initialized with dynamic MCP tools
+            await EnsureInitializedAsync().ConfigureAwait(false);
+
+            if (_agent == null)
+            {
+                throw new InvalidOperationException("AI Agent failed to initialize");
+            }
+
             _logger.LogDebug("Running agent with user message");
 
             var startTime = DateTime.UtcNow;
@@ -66,6 +128,14 @@ public class ChatService
 
         try
         {
+            // Ensure agent is initialized with dynamic MCP tools
+            await EnsureInitializedAsync().ConfigureAwait(false);
+
+            if (_agent == null)
+            {
+                throw new InvalidOperationException("AI Agent failed to initialize");
+            }
+
             // Build conversation history for the agent
             var chatMessages = new List<ChatMessage>();
 
