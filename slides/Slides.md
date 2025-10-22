@@ -6,7 +6,7 @@ footer: '@Chris_L_Ayers - https://chris-ayers.com'
 
 <!-- _footer: 'https://github.com/codebytes/build-with-aspire' -->
 
-# Aspiring .NET with Azure OpenAI and Ollama
+# Building Smarter .NET Apps with Aspire, Azure OpenAI, and Ollama
 
 ## Chris Ayers
 
@@ -26,21 +26,6 @@ footer: '@Chris_L_Ayers - https://chris-ayers.com'
 <i class="fa-brands fa-github"></i> GitHub: [Codebytes](https://github.com/codebytes)
 <i class="fa-brands fa-mastodon"></i> Mastodon: [@Chrisayers@hachyderm.io](https://hachyderm.io/@Chrisayers)
 ~~<i class="fa-brands fa-twitter"></i> Twitter: @Chris_L_Ayers~~
-
----
-
-![bg left ](./img/dotnet-logo.png)
-
-# Agenda
-
-- Why Aspire?
-- Aspire Integrations
-- Consuming Resources
-- Local Azure Development
-- Deploying to Azure
-- **What's New in 9.5**
-- Demos
-- Q&A
 
 ---
 
@@ -437,16 +422,12 @@ azd init       # Initialize
 ## ⚙️ CLI & Tooling
 
 - **aspire update** - Auto-update packages
-- **Single-file AppHost** (experimental)
 - **SSH Remote port forwarding** in VS Code
-- Enhanced `aspire exec` command
 
 ## 🎨 Dashboard Enhancements
 
 - **GenAI Visualizer** - Explore AI interactions
 - **Multi-resource console** logs view
-- Custom resource icons
-- Enhanced trace filtering
 
 </div>
 <div>
@@ -456,13 +437,11 @@ azd init       # Initialize
 - **OpenAI hosting** integration
 - **GitHub Models** & **Azure AI Foundry** catalogs
 - **Dev Tunnels** hosting support
-- **Azure Kusto** and **App Config** emulators
 
 ## 🚀 Deployment
 
 - **Azure Container App Jobs**
 - **Built-in Azure deployment** via `aspire deploy`
-- Deployment image tag callbacks
 
 </div>
 </div>
@@ -625,12 +604,15 @@ var api = builder.AddProject<Projects.Api>("api")
 
 ## Follow Chris Ayers
 
+![w:400px](./img/chris_ayers.svg)
+
+<!--
 <i class="fa-brands fa-bluesky"></i> BlueSky: [@chris-ayers.com](https://bsky.app/profile/chris-ayers.com)
 <i class="fa-brands fa-linkedin"></i> LinkedIn: - [chris\-l\-ayers](https://linkedin.com/in/chris-l-ayers/)
 <i class="fa fa-window-maximize"></i> Blog: [https://chris-ayers\.com/](https://chris-ayers.com/)
 <i class="fa-brands fa-github"></i> GitHub: [Codebytes](https://github.com/codebytes)
 <i class="fa-brands fa-mastodon"></i> Mastodon: [@Chrisayers@hachyderm.io](https://hachyderm.io/@Chrisayers)
-~~<i class="fa-brands fa-twitter"></i> Twitter: @Chris_L_Ayers~~
+~~<i class="fa-brands fa-twitter"></i> Twitter: @Chris_L_Ayers~~ -->
 
 </div>
 </div>
