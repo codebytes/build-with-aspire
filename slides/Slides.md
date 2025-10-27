@@ -4,15 +4,21 @@ theme: custom-default
 footer: '@Chris_L_Ayers - https://chris-ayers.com'
 ---
 
-<!-- _footer: 'https://github.com/codebytes/build-with-aspire' -->
+![bg](./img/aspire_title.png)
 
-# Building Smarter .NET Apps with Aspire, Azure OpenAI, and Ollama
+---
+
+<!--
+
+# Aspiring .NET with OpenAI and Ollama
 
 ## Chris Ayers
 
 ![bg right](./img/dotnet-logo.png)
 
 ---
+
+-->
 
 ![bg left:40%](./img/portrait.png)
 
@@ -377,43 +383,6 @@ public class ExampleService(IChatClient chatClient)
 
 ---
 
-# Azure Deployment
-
-<div class="columns">
-<div>
-
-## Targets
-
-- Azure App Service
-- Azure Container Apps
-- Kubernetes
-
-## Azure Developer CLI
-
-```bash
-azd up         # Deploy everything
-azd deploy     # App only
-azd provision  # Infrastructure only
-azd init       # Initialize
-```
-
-</div>
-<div>
-
-## Features
-
-- Auto-detects app structure
-- Environment variable mapping
-- Native Aspire support
-- Credential providers
-- Key Vault integration
-- Secure access
-
-</div>
-</div>
-
----
-
 # What's New in .NET Aspire 9.5
 
 <div class="columns">
@@ -487,52 +456,37 @@ aspire exec
 
 ---
 
-# AI Integration Examples
+# Azure Deployment
 
 <div class="columns">
 <div>
 
-## GitHub Models
+## Targets
 
-```csharp
-var chat = builder.AddGitHubModel("chat",
-    "openai/gpt-4o-mini");
+- Azure App Service
+- Azure Container Apps
+- Kubernetes
 
-builder.AddProject<Projects.ChatService>("chatservice")
-    .WithReference(chat);
-```
+## Azure Developer CLI
 
-## Azure AI Foundry (Cloud)
-
-```csharp
-var foundry = builder.AddAzureAIFoundry("foundry");
-
-var chat = foundry.AddDeployment("chat",
-    "Phi-4", "1", "Microsoft");
-
-builder.AddProject<Projects.Web>("web")
-    .WithReference(chat)
-    .WaitFor(chat);
+```bash
+azd up         # Deploy everything
+azd deploy     # App only
+azd provision  # Infrastructure only
+azd init       # Initialize
 ```
 
 </div>
 <div>
 
-## Azure AI Foundry (Local)
+## Features
 
-```csharp
-var foundry = builder.AddAzureAIFoundry("foundry")
-    .RunAsFoundryLocal();
-
-var chat = foundry.AddDeployment("chat",
-    "phi-3.5-mini", "1", "Microsoft");
-
-builder.AddProject<Projects.Web>("web")
-    .WithReference(chat)
-    .WaitFor(chat);
-```
-
-**Benefits**: Privacy, performance, offline operation, cost reduction
+- Auto-detects app structure
+- Environment variable mapping
+- Native Aspire support
+- Credential providers
+- Key Vault integration
+- Secure access
 
 </div>
 </div>
@@ -622,3 +576,10 @@ var api = builder.AddProject<Projects.Api>("api")
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
   mermaid.initialize({ startOnLoad: true });
 </script>
+
+---
+
+# Feedback
+
+![bg fit](./img/aspiring_net_with_azure_open_ai_and_ollama-qr-code.png)
+
