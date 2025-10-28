@@ -1,18 +1,16 @@
-using Microsoft.Extensions.Configuration;
-
 namespace BuildWithAspire.AppHost.Extensions;
 
 /// <summary>
-/// Extensions for infrastructure and deployment configuration
+/// Extension methods for configuring environment settings in Aspire projects.
 /// </summary>
 public static class InfrastructureExtensions
 {
     /// <summary>
-    /// Adds infrastructure-specific environment configuration to a project
+    /// Sets the environment name for both .NET and ASP.NET Core.
     /// </summary>
     /// <param name="builder">The project resource builder</param>
-    /// <param name="environmentName">The environment name</param>
-    /// <returns>The project resource builder</returns>
+    /// <param name="environmentName">Environment name (e.g., "Development", "Production")</param>
+    /// <returns>The builder for method chaining</returns>
     public static IResourceBuilder<ProjectResource> WithEnvironmentConfig(
         this IResourceBuilder<ProjectResource> builder,
         string environmentName)

@@ -19,16 +19,19 @@ builder.Services.Configure<Aspire.Hosting.Azure.AzureProvisioningOptions>(
 builder.AddAzureProvisioning();
 
 // Add PostgreSQL database - use Azure PostgreSQL when publishing, local when developing
+// For local development, use a non-secret parameter with a default value so Aspire CLI won't prompt
+var postgresPassword = builder.AddParameter("postgres-password", "aspire123!", secret: false);
+
 IResourceBuilder<IResourceWithConnectionString>? chatDb = builder.ExecutionContext.IsPublishMode
     ? builder
         .AddAzurePostgresFlexibleServer("postgres")
         .AddDatabase("chatdb")
     : builder
-        // Use a non-secret parameter with a default value so Aspire CLI won't prompt
-        .AddPostgres("postgres",
-            password: builder.AddParameter("postgres-password", "aspire123!", secret: false))
+        .AddPostgres("postgres", password: postgresPassword)
         .WithDataVolume()
         .AddDatabase("chatdb");
+
+postgresPassword.WithParentRelationship(chatDb);
 
 // Always add AI resource (FoundryLocal returns a simple connection string resource)
 var aiService = builder.AddAIModel();

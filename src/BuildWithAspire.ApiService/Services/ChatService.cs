@@ -51,13 +51,14 @@ public class ChatService
             .Use((chatMessages, options, next, cancellationToken) =>
             {
                 // Inject tools into ChatOptions for every request
-                if (options.Tools == null || options.Tools.Count == 0)
+                if (options.Tools?.Count is null or 0)
                 {
                     options.Tools = _tools?.Select(t => (AITool)t).ToList();
                     _logger.LogInformation("Middleware: Injected {ToolCount} tools into ChatOptions", options.Tools?.Count ?? 0);
                 }
 
-                _logger.LogInformation("Middleware: Sending request to model with {ToolCount} tools available", options.Tools?.Count ?? 0);
+                var toolCount = options.Tools?.Count ?? 0;
+                _logger.LogInformation("Middleware: Sending request to model with {ToolCount} tools available", toolCount);
                 var result = next(chatMessages, options, cancellationToken);
                 _logger.LogInformation("Middleware: Received response from model");
                 return result;

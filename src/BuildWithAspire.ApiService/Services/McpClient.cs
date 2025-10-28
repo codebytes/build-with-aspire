@@ -2,8 +2,6 @@ using Microsoft.Extensions.AI;
 using ModelContextProtocol.Client;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using McpTool = ModelContextProtocol.Protocol.Tool;
-using McpCallToolResult = ModelContextProtocol.Protocol.CallToolResult;
 
 namespace BuildWithAspire.ApiService.Services;
 
