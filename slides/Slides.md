@@ -234,6 +234,150 @@ footer: '@Chris_L_Ayers - https://chris-ayers.com'
 
 ---
 
+
+# What's New in .NET Aspire 9.5
+
+<div class="columns">
+<div>
+
+## ⚙️ CLI & Tooling
+
+- **aspire update** - Auto-update packages
+- **SSH Remote port forwarding** in VS Code
+
+## 🎨 Dashboard Enhancements
+
+- **GenAI Visualizer** - Explore AI interactions
+- **Multi-resource console** logs view
+
+</div>
+<div>
+
+## 🤖 New Integrations
+
+- **OpenAI hosting** integration
+- **GitHub Models** & **Azure AI Foundry** catalogs
+- **Dev Tunnels** hosting support
+
+## 🚀 Deployment
+
+- **Azure Container App Jobs**
+- **Built-in Azure deployment** via `aspire deploy`
+
+</div>
+</div>
+
+---
+
+# Compute Environments & Aspire CLI
+
+<div class="columns">
+<div>
+
+## Multiple Environments
+
+```csharp
+var k8s = builder.AddKubernetesEnvironment("k8s");
+var compose = builder.AddDockerComposeEnvironment("docker");
+
+builder.AddProject<Projects.Api>("api")
+    .WithComputeEnvironment(compose);
+
+builder.AddProject<Projects.Frontend>("frontend")
+    .WithComputeEnvironment(k8s);
+```
+
+</div>
+<div>
+
+## Aspire CLI
+
+```bash
+# Install
+curl -sSL https://aspire.dev/install.sh | bash
+dotnet tool install -g Aspire.Cli
+
+# Commands
+aspire new | run | add | update
+aspire config | publish | deploy
+aspire exec
+```
+
+</div>
+</div>
+
+---
+
+# Azure Deployment
+
+<div class="columns">
+<div>
+
+## Targets
+
+- Azure App Service
+- Azure Container Apps
+- Kubernetes
+
+## Azure Developer CLI
+
+```bash
+azd up         # Deploy everything
+azd deploy     # App only
+azd provision  # Infrastructure only
+azd init       # Initialize
+```
+
+</div>
+<div>
+
+## Features
+
+- Auto-detects app structure
+- Environment variable mapping
+- Native Aspire support
+- Credential providers
+- Key Vault integration
+- Secure access
+
+</div>
+</div>
+
+---
+
+# Interactive Parameter Prompting
+
+<div class="columns">
+<div>
+
+```csharp
+// Parameters without defaults trigger dashboard prompts
+var apiKey = builder.AddParameter("api-key", secret: true);
+var dbUrl = builder.AddParameter("database-url");
+
+var api = builder.AddProject<Projects.Api>("api")
+    .WithEnvironment("API_KEY", apiKey)
+    .WithEnvironment("DATABASE_URL", dbUrl);
+```
+
+</div>
+<div>
+
+## Features
+
+- **Automatic prompting** for missing parameters
+- **Rich form inputs** in dashboard
+- **Secret masking** for sensitive data
+- **Validation support** with custom rules
+- **Save to user secrets** for persistence
+
+**Input Types**: Text, Password, Choice, Boolean, Number
+
+</div>
+</div>
+
+---
+
 # Local to Cloud Integrations
 
 | **Component** | **Local** | **Cloud** |
@@ -377,149 +521,6 @@ public class ExampleService(IChatClient chatClient)
 - **Provider Agnostic**: Works with any AI backend
 
 **Learn more**: [Microsoft Agent Framework](https://github.com/microsoft/agent-framework)
-
-</div>
-</div>
-
----
-
-# What's New in .NET Aspire 9.5
-
-<div class="columns">
-<div>
-
-## ⚙️ CLI & Tooling
-
-- **aspire update** - Auto-update packages
-- **SSH Remote port forwarding** in VS Code
-
-## 🎨 Dashboard Enhancements
-
-- **GenAI Visualizer** - Explore AI interactions
-- **Multi-resource console** logs view
-
-</div>
-<div>
-
-## 🤖 New Integrations
-
-- **OpenAI hosting** integration
-- **GitHub Models** & **Azure AI Foundry** catalogs
-- **Dev Tunnels** hosting support
-
-## 🚀 Deployment
-
-- **Azure Container App Jobs**
-- **Built-in Azure deployment** via `aspire deploy`
-
-</div>
-</div>
-
----
-
-# Compute Environments & Aspire CLI
-
-<div class="columns">
-<div>
-
-## Multiple Environments
-
-```csharp
-var k8s = builder.AddKubernetesEnvironment("k8s");
-var compose = builder.AddDockerComposeEnvironment("docker");
-
-builder.AddProject<Projects.Api>("api")
-    .WithComputeEnvironment(compose);
-
-builder.AddProject<Projects.Frontend>("frontend")
-    .WithComputeEnvironment(k8s);
-```
-
-</div>
-<div>
-
-## Aspire CLI
-
-```bash
-# Install
-curl -sSL https://aspire.dev/install.sh | bash
-dotnet tool install -g Aspire.Cli
-
-# Commands
-aspire new | run | add | update
-aspire config | publish | deploy
-aspire exec
-```
-
-</div>
-</div>
-
----
-
-# Azure Deployment
-
-<div class="columns">
-<div>
-
-## Targets
-
-- Azure App Service
-- Azure Container Apps
-- Kubernetes
-
-## Azure Developer CLI
-
-```bash
-azd up         # Deploy everything
-azd deploy     # App only
-azd provision  # Infrastructure only
-azd init       # Initialize
-```
-
-</div>
-<div>
-
-## Features
-
-- Auto-detects app structure
-- Environment variable mapping
-- Native Aspire support
-- Credential providers
-- Key Vault integration
-- Secure access
-
-</div>
-</div>
-
----
-
-# Interactive Parameter Prompting
-
-<div class="columns">
-<div>
-
-```csharp
-// Parameters without defaults trigger dashboard prompts
-var apiKey = builder.AddParameter("api-key", secret: true);
-var dbUrl = builder.AddParameter("database-url");
-
-var api = builder.AddProject<Projects.Api>("api")
-    .WithEnvironment("API_KEY", apiKey)
-    .WithEnvironment("DATABASE_URL", dbUrl);
-```
-
-</div>
-<div>
-
-## Features
-
-- **Automatic prompting** for missing parameters
-- **Rich form inputs** in dashboard
-- **Secret masking** for sensitive data
-- **Validation support** with custom rules
-- **Save to user secrets** for persistence
-
-**Input Types**: Text, Password, Choice, Boolean, Number
 
 </div>
 </div>
