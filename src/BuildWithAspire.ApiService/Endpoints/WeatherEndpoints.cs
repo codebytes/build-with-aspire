@@ -14,7 +14,6 @@ public static class WeatherEndpoints
 
         group.MapGet("/", GetWeatherForecast)
             .WithName("GetWeatherForecast")
-            .WithOpenApi()
             .RequireRateLimiting("weather");
 
         return group;

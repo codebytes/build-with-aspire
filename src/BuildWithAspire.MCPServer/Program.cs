@@ -73,8 +73,7 @@ app.MapGet("/health", () =>
         sessionSupport = "Yes - via Mcp-Session-Id header"
     });
 })
-.WithName("HealthCheck")
-.WithOpenApi();
+.WithName("HealthCheck");
 
 // Add diagnostic endpoint to show session and transport information
 app.MapGet("/debug/info", () =>
@@ -99,8 +98,7 @@ app.MapGet("/debug/info", () =>
         note = "Session IDs are managed automatically by the SDK's StatefulSessionManager"
     });
 })
-.WithName("DebugInfo")
-.WithOpenApi();
+.WithName("DebugInfo");
 
 // Add diagnostic endpoint to list registered tools (for debugging)
 app.MapGet("/debug/tools", () =>
@@ -134,8 +132,7 @@ app.MapGet("/debug/tools", () =>
         }
     });
 })
-.WithName("DebugTools")
-.WithOpenApi();
+.WithName("DebugTools");
 
 // Add OpenAPI for development
 if (app.Environment.IsDevelopment())

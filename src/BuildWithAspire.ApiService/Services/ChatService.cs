@@ -44,20 +44,20 @@ public class ChatService
 
         // Dynamically load tools from MCP server
         _tools = await _toolConverter.GetAllToolsAsync(cancellationToken).ConfigureAwait(false);
-        _logger.LogInformation("Loaded {ToolCount} tools from MCP server", _tools.Count());
+        _logger.LogInformation("Loaded {ToolCount} tools from MCP server", _tools?.Count() ?? 0);
 
         // Create a chat client with function invocation enabled and tools configured via middleware
         var toolEnabledClient = _chatClient.AsBuilder()
             .Use((chatMessages, options, next, cancellationToken) =>
             {
                 // Inject tools into ChatOptions for every request
-                if (options.Tools?.Count is null or 0)
+                if (options is not null && options.Tools?.Count is null or 0)
                 {
                     options.Tools = _tools?.Select(t => (AITool)t).ToList();
                     _logger.LogInformation("Middleware: Injected {ToolCount} tools into ChatOptions", options.Tools?.Count ?? 0);
                 }
 
-                var toolCount = options.Tools?.Count ?? 0;
+                var toolCount = options?.Tools?.Count ?? 0;
                 _logger.LogInformation("Middleware: Sending request to model with {ToolCount} tools available", toolCount);
                 var result = next(chatMessages, options, cancellationToken);
                 _logger.LogInformation("Middleware: Received response from model");
@@ -81,7 +81,7 @@ public class ChatService
             });
 
         _isInitialized = true;
-        _logger.LogInformation("AI Agent initialized with {ToolCount} MCP tools available", _tools.Count());
+        _logger.LogInformation("AI Agent initialized with {ToolCount} MCP tools available", _tools?.Count() ?? 0);
     }
 
     public async Task<string> ProcessMessage(string message)

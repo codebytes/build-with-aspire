@@ -14,16 +14,13 @@ public static class McpEndpoints
 
         group.MapPost("/call/{toolName}", CallTool)
             .WithName("CallMcpTool")
-            .WithOpenApi()
             .RequireRateLimiting("weather");
 
         group.MapGet("/tools", ListTools)
-            .WithName("ListMcpTools")
-            .WithOpenApi();
+            .WithName("ListMcpTools");
 
         group.MapGet("/health", HealthCheck)
-            .WithName("McpHealthCheck")
-            .WithOpenApi();
+            .WithName("McpHealthCheck");
 
         return group;
     }
