@@ -23,6 +23,9 @@ namespace Microsoft.Extensions.Hosting;
 /// </remarks>
 public static class Extensions
 {
+    // Health check endpoint paths - used for filtering traces
+    private const string HealthEndpointPath = "/health";
+    private const string AlivenessEndpointPath = "/alive";
     /// <summary>
     /// Adds all the standard Aspire service defaults to your application.
     /// Call this once in your Program.cs to configure observability, resilience, and health checks.
@@ -118,12 +121,22 @@ public static class Extensions
             })
             .WithTracing(tracing =>
             {
+                // Add the application's tracing source
+                tracing.AddSource(builder.Environment.ApplicationName);
+
                 // Trace requests through your application
-                tracing.AddAspNetCoreInstrumentation()    // Incoming requests
-                       .AddHttpClientInstrumentation();    // Outgoing requests
+                // Filter out health check requests to reduce noise
+                tracing.AddAspNetCoreInstrumentation(options =>
+                {
+                    options.Filter = context =>
+                        !context.Request.Path.StartsWithSegments(HealthEndpointPath)
+                        && !context.Request.Path.StartsWithSegments(AlivenessEndpointPath);
+                });
+
+                tracing.AddHttpClientInstrumentation();    // Outgoing requests
 
                 // Uncomment to add gRPC tracing (requires OpenTelemetry.Instrumentation.GrpcNetClient package):
-                // .AddGrpcClientInstrumentation()
+                // tracing.AddGrpcClientInstrumentation();
             });
 
         // Configure where to send telemetry data
@@ -192,10 +205,10 @@ public static class Extensions
         if (app.Environment.IsDevelopment())
         {
             // /health - All health checks must pass (readiness)
-            app.MapHealthChecks("/health");
+            app.MapHealthChecks(HealthEndpointPath);
 
             // /alive - Only checks tagged "live" must pass (liveness)
-            app.MapHealthChecks("/alive", new HealthCheckOptions
+            app.MapHealthChecks(AlivenessEndpointPath, new HealthCheckOptions
             {
                 Predicate = healthCheck => healthCheck.Tags.Contains("live")
             });

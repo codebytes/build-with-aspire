@@ -38,12 +38,14 @@ var aiService = builder.AddAIModel();
 
 // Add MCP Server for tools integration
 // Ports are defined in launchSettings.json (8080 http, 8081 https)
-var mcpServer = builder.AddProject<Projects.BuildWithAspire_MCPServer>("mcpserver");
+var mcpServer = builder.AddProject<Projects.BuildWithAspire_MCPServer>("mcpserver")
+    .WithHttpHealthCheck("/health");
 
 // Add API Service
 // Ports are defined in launchSettings.json (5020 http, 7287 https)
 var apiService = builder.AddProject<Projects.BuildWithAspire_ApiService>("apiservice")
     .WithExternalHttpEndpoints()
+    .WithHttpHealthCheck("/health")
     .WithAIModel(aiService)
     .WithReference(chatDb)
     .WithReference(mcpServer)
@@ -53,6 +55,7 @@ var apiService = builder.AddProject<Projects.BuildWithAspire_ApiService>("apiser
 // Add Web service
 var _ = builder.AddProject<Projects.BuildWithAspire_Web>("webfrontend")
     .WithExternalHttpEndpoints()
+    .WithHttpHealthCheck("/health")
     .WithReference(apiService)
     .WaitFor(apiService);
 
