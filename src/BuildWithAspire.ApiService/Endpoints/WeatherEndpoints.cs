@@ -14,7 +14,6 @@ public static class WeatherEndpoints
 
         group.MapGet("/", GetWeatherForecast)
             .WithName("GetWeatherForecast")
-            .WithOpenApi()
             .RequireRateLimiting("weather");
 
         return group;
@@ -28,11 +27,8 @@ public static class WeatherEndpoints
         var logger = loggerFactory.CreateLogger("WeatherForecast");
         var weatherAgent = new Microsoft.Agents.AI.ChatClientAgent(
             client,
-            new Microsoft.Agents.AI.ChatClientAgentOptions
-            {
-                Name = "WeatherAssistant",
-                Instructions = "You are a helpful assistant that provides a description of the weather in one word based on the temperature."
-            });
+            instructions: "You are a helpful assistant that provides a description of the weather in one word based on the temperature.",
+            name: "WeatherAssistant");
 
         return GetForecasts(weatherAgent, logger, settings);
     }

@@ -16,31 +16,25 @@ public static class ChatEndpoints
         var group = routes.MapGroup("/conversations");
 
         group.MapGet("/", GetConversations)
-            .WithName("GetConversations")
-            .WithOpenApi();
+            .WithName("GetConversations");
 
         group.MapGet("/{id}", GetConversation)
-            .WithName("GetConversation")
-            .WithOpenApi();
+            .WithName("GetConversation");
 
         group.MapPost("/", CreateConversation)
-            .WithName("CreateConversation")
-            .WithOpenApi();
+            .WithName("CreateConversation");
 
         group.MapPost("/{id}/messages", SendMessage)
             .WithName("SendMessage")
-            .WithOpenApi()
             .RequireRateLimiting("chat");
 
         group.MapDelete("/{id}", DeleteConversation)
-            .WithName("DeleteConversation")
-            .WithOpenApi();
+            .WithName("DeleteConversation");
 
         // Legacy endpoint for backward compatibility
         routes.MapGet("/chat", async (ChatService chatService, string message) =>
                 await chatService.ProcessMessage(message).ConfigureAwait(false))
             .WithName("GetChat")
-            .WithOpenApi()
             .RequireRateLimiting("chat");
 
         return group;

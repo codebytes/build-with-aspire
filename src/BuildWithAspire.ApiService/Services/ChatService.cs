@@ -51,13 +51,13 @@ public class ChatService
             .Use((chatMessages, options, next, cancellationToken) =>
             {
                 // Inject tools into ChatOptions for every request
-                if (options.Tools?.Count is null or 0)
+                if (options is not null && options.Tools?.Count is null or 0)
                 {
                     options.Tools = _tools?.Select(t => (AITool)t).ToList();
                     _logger.LogInformation("Middleware: Injected {ToolCount} tools into ChatOptions", options.Tools?.Count ?? 0);
                 }
 
-                var toolCount = options.Tools?.Count ?? 0;
+                var toolCount = options?.Tools?.Count ?? 0;
                 _logger.LogInformation("Middleware: Sending request to model with {ToolCount} tools available", toolCount);
                 var result = next(chatMessages, options, cancellationToken);
                 _logger.LogInformation("Middleware: Received response from model");
@@ -69,16 +69,13 @@ public class ChatService
         // Create an AI Agent using the Microsoft Agent Framework with dynamic tools
         _agent = new ChatClientAgent(
             toolEnabledClient,
-            new ChatClientAgentOptions
-            {
-                Name = "ChatAssistant",
-                Instructions = @"You are an AI demonstration application.
+            instructions: @"You are an AI demonstration application.
                     You are a helpful chatbot with access to various tools dynamically discovered from the MCP server.
                     Use the available tools when appropriate to provide accurate information.
                     When a user asks for something that a tool can provide (like a random number, weather, calculations, etc.), USE THE TOOL instead of making up an answer.
                     Respond to the user's input responsibly.
-                    All responses should be safe for work."
-            });
+                    All responses should be safe for work.",
+            name: "ChatAssistant");
 
         _isInitialized = true;
         _logger.LogInformation("AI Agent initialized with {ToolCount} MCP tools available", _tools.Count());
