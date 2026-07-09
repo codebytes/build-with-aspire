@@ -34,15 +34,16 @@ public static class AIServiceExtensions
                 break;
 
             case AIConfiguration.AIProvider.AzureOpenAI:
-                builder.AddAzureOpenAIClient("ai-service")
-                    .AddChatClient(aiSettings.DeploymentName);
-                break;
-
-            case AIConfiguration.AIProvider.GitHubModels:
-                builder.AddOpenAIClient(aiSettings.DeploymentName)
+                builder.AddAzureOpenAIClient(aiSettings.DeploymentName)
                     .AddChatClient();
                 break;
 
+            // GitHub Models and Azure AI Foundry (local emulator + cloud) expose the
+            // Azure AI Inference / OpenAI-compatible chat completions protocol, so they
+            // use AddAzureChatCompletionsClient rather than the Azure OpenAI client
+            // (which targets the /openai/deployments/... URL scheme and 404s here).
+            // Matches the official Aspire FoundryEndToEnd / GitHubModelsEndToEnd playgrounds.
+            case AIConfiguration.AIProvider.GitHubModels:
             case AIConfiguration.AIProvider.AzureAIFoundry:
                 builder.AddAzureChatCompletionsClient(aiSettings.DeploymentName)
                     .AddChatClient();

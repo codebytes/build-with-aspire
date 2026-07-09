@@ -107,7 +107,7 @@ public class ChatServiceTests
         var model = AIConfiguration.GetModel(configuration, AIConfiguration.AIProvider.AzureOpenAI);
 
         // Assert
-        Assert.Equal("gpt-4o", model);
+        Assert.Equal("gpt-5", model);
     }
 
     [Fact]

@@ -64,9 +64,9 @@ public class AIConfigurationTests
 
     [Theory]
     [InlineData(AIConfiguration.AIProvider.Ollama, "llama3.2")]
-    [InlineData(AIConfiguration.AIProvider.AzureOpenAI, "gpt-4o")]
-    [InlineData(AIConfiguration.AIProvider.GitHubModels, "openai/gpt-4o-mini")]
-    [InlineData(AIConfiguration.AIProvider.AzureAIFoundry, "phi-3.5-mini")]
+    [InlineData(AIConfiguration.AIProvider.AzureOpenAI, "gpt-5")]
+    [InlineData(AIConfiguration.AIProvider.GitHubModels, "openai/gpt-5-mini")]
+    [InlineData(AIConfiguration.AIProvider.AzureAIFoundry, "gpt-5-mini")]
     public void GetModel_WithDefaultConfiguration_ReturnsProviderDefaults(AIConfiguration.AIProvider provider, string expectedModel)
     {
         // Arrange

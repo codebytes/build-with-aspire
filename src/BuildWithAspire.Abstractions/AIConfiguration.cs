@@ -12,7 +12,16 @@ public static class AIConfiguration
         AzureAIFoundry
     }
 
-    public record AISettings(AIProvider Provider, string DeploymentName, string Model, int TimeoutSeconds);
+    public record AISettings(AIProvider Provider, string DeploymentName, string Model, int TimeoutSeconds)
+    {
+        /// <summary>
+        /// True when the model was set explicitly via <c>AI:Model</c> configuration,
+        /// as opposed to falling back to the provider default. The AppHost uses this to
+        /// choose between the strongly-typed model catalog (defaults) and the string
+        /// overloads (explicit overrides).
+        /// </summary>
+        public bool ModelExplicitlyConfigured { get; init; }
+    }
 
     public static AISettings GetSettings(IConfiguration configuration)
     {
@@ -21,7 +30,10 @@ public static class AIConfiguration
         var model = GetModel(configuration, provider);
         var timeoutSeconds = GetTimeoutSeconds(configuration);
 
-        return new AISettings(provider, deploymentName, model, timeoutSeconds);
+        return new AISettings(provider, deploymentName, model, timeoutSeconds)
+        {
+            ModelExplicitlyConfigured = !string.IsNullOrEmpty(configuration["AI:Model"])
+        };
     }
 
     public static AIProvider GetProvider(IConfiguration configuration)
@@ -61,13 +73,21 @@ public static class AIConfiguration
         var model = provider switch
         {
             AIProvider.Ollama => "llama3.2",
-            AIProvider.AzureOpenAI => "gpt-4o",
-            AIProvider.GitHubModels => "openai/gpt-4o-mini",
-            AIProvider.AzureAIFoundry => "phi-3.5-mini",
+            AIProvider.AzureOpenAI => "gpt-5",
+            AIProvider.GitHubModels => "openai/gpt-5-mini",
+            // Foundry Local runs small on-device models; cloud Azure AI Foundry defaults to a
+            // hosted OpenAI model. These names mirror the strongly-typed catalog constants the
+            // AppHost deploys (FoundryModel.Local.Qwen2515b / FoundryModel.OpenAI.Gpt5Mini) so the
+            // advertised AI:Model matches the deployed model. qwen2.5-1.5b reliably emits tool
+            // calls locally (the phi-4-mini Foundry build does not).
+            AIProvider.AzureAIFoundry => IsFoundryLocal(configuration) ? "qwen2.5-1.5b" : "gpt-5-mini",
             _ => throw new InvalidOperationException($"No default model available for provider: {provider}")
         };
         return model;
     }
+
+    private static bool IsFoundryLocal(IConfiguration configuration) =>
+        configuration["AI:Provider"]?.ToLowerInvariant() == "foundrylocal";
 
     public static int GetTimeoutSeconds(IConfiguration configuration)
     {
