@@ -192,7 +192,7 @@ footer: '@Chris_L_Ayers - https://chris-ayers.com'
 
 - **Databases**: PostgreSQL, MySQL, MongoDB, SQL Server
 - **Messaging**: Kafka, RabbitMQ, NATS
-- **AI & Observability**: Ollama, Semantic Kernel, OpenTelemetry
+- **AI & Observability**: Ollama, OpenAI, Foundry, OpenTelemetry
 
 </div>
 <div>
@@ -235,34 +235,34 @@ footer: '@Chris_L_Ayers - https://chris-ayers.com'
 ---
 
 
-# What's New in .NET Aspire 9.5
+# What's New in .NET Aspire 13.4
 
 <div class="columns">
 <div>
 
 ## ⚙️ CLI & Tooling
 
-- **aspire update** - Auto-update packages
-- **SSH Remote port forwarding** in VS Code
+- **TypeScript AppHost** now GA
+- **aspire deploy / publish** GA
+- **AI agent readiness** via skills
 
-## 🎨 Dashboard Enhancements
+## 🎨 Dashboard
 
-- **GenAI Visualizer** - Explore AI interactions
-- **Multi-resource console** logs view
+- **AI Agents dialog**
+- Structured search & trace filtering
 
 </div>
 <div>
 
-## 🤖 New Integrations
+## 🧩 App Model
 
-- **OpenAI hosting** integration
-- **GitHub Models** & **Azure AI Foundry** catalogs
-- **Dev Tunnels** hosting support
+- **Go** & **Bun** hosting integrations
+- **Blazor WebAssembly** hosting (preview)
 
 ## 🚀 Deployment
 
-- **Azure Container App Jobs**
-- **Built-in Azure deployment** via `aspire deploy`
+- **Azure Container App Jobs** stable
+- Richer **Kubernetes / AKS** APIs
 
 </div>
 </div>
@@ -324,7 +324,6 @@ aspire exec
 ```bash
 azd up         # Deploy everything
 azd deploy     # App only
-azd provision  # Infrastructure only
 azd init       # Initialize
 ```
 
@@ -336,9 +335,7 @@ azd init       # Initialize
 - Auto-detects app structure
 - Environment variable mapping
 - Native Aspire support
-- Credential providers
 - Key Vault integration
-- Secure access
 
 </div>
 </div>
@@ -368,8 +365,6 @@ var api = builder.AddProject<Projects.Api>("api")
 - **Automatic prompting** for missing parameters
 - **Rich form inputs** in dashboard
 - **Secret masking** for sensitive data
-- **Validation support** with custom rules
-- **Save to user secrets** for persistence
 
 **Input Types**: Text, Password, Choice, Boolean, Number
 
@@ -383,7 +378,7 @@ var api = builder.AddProject<Projects.Api>("api")
 | **Component** | **Local** | **Cloud** |
 |--------------|----------|----------|
 | **AI Models** | Ollama, Foundry local, LM Studio | Azure OpenAI, AI Foundry |
-| **Models** | Llama 3, Phi-4, Qwen | GPT-4.1, GPT-5-mini, Claude 4 |
+| **Models** | Llama 3.2, Qwen2.5, Phi-4 | GPT-5, GPT-5-mini, Claude 4 |
 | **Vector DB** | Qdrant, Chroma, pgvector | Azure AI Search, Cosmos DB |
 
 **Features**: Zero-friction transitions • Emulator support • Hybrid development • Auto configuration • Secret management
@@ -430,7 +425,6 @@ public class ExampleService(IChatClient chatClient)
 - **Privacy & Security**: All data stays on your machine
 - **Offline Capability**: Work without internet connectivity
 - **Fast Iteration**: No network latency for testing
-- **Model Experimentation**: Try different open-source models
 
 </div>
 </div>
@@ -461,11 +455,10 @@ public class ExampleService(IChatClient chatClient)
 </div>
 <div>
 
-- **Latest Models**: Access to GPT-4, Claude, and cutting-edge AI
+- **Latest Models**: Access to GPT-5, Claude 4, and cutting-edge AI
 - **Global Availability**: 99.9% SLA with worldwide deployment
 - **Managed Infrastructure**: No server maintenance required
 - **Advanced Features**: Function calling, vision, audio processing
-- **Compliance Ready**: SOC 2, HIPAA, and enterprise certifications
 
 </div>
 </div>
@@ -491,7 +484,6 @@ public class ExampleService(IChatClient chatClient)
 - **Inconsistent APIs**: Each framework had unique approaches
 - **Integration Complexity**: Difficult to combine tools
 - **Provider Lock-in**: Hard to switch AI providers
-- **Learning Curve**: Multiple frameworks to master
 
 </div>
 </div>
@@ -505,10 +497,9 @@ public class ExampleService(IChatClient chatClient)
 
 ## Unified Multi-Agent Platform
 
-- **Consolidation**: Replaces Semantic Kernel & AutoGen
-- **Built on Microsoft.Extensions.AI**: Leverages unified abstractions
-- **Multi-Agent Orchestration**: Coordinate multiple AI agents
-- **Event-Driven Architecture**: Flexible agent communication
+- **Now GA**: Unifies Semantic Kernel & AutoGen
+- **Built on Microsoft.Extensions.AI**: Unified abstractions
+- **Multi-Agent Orchestration**: Coordinate AI agents
 
 </div>
 <div>
@@ -516,11 +507,33 @@ public class ExampleService(IChatClient chatClient)
 ## Key Features
 
 - **Agent Types**: Task-based, conversational, autonomous
-- **Memory Systems**: Short-term and long-term context
-- **Tool Integration**: Function calling and external tools
+- **Tool Integration**: MCP tools & function calling
 - **Provider Agnostic**: Works with any AI backend
 
-**Learn more**: [Microsoft Agent Framework](https://github.com/microsoft/agent-framework)
+</div>
+</div>
+
+---
+
+# Model Context Protocol (MCP)
+
+<div class="columns">
+<div>
+
+## Standardized Tool Access
+
+- **Open protocol** for exposing tools to AI
+- **Dynamic discovery**: agents load tools at runtime
+- **Transport-agnostic**: stdio, HTTP, SSE
+
+</div>
+<div>
+
+## In this Demo
+
+- **MCP server** hosts Math, Weather, System & Text tools
+- **MAF agent** discovers tools via `McpClientTool`
+- **Local tool-calling** with Foundry Local (Qwen2.5)
 
 </div>
 </div>
@@ -547,19 +560,17 @@ public class ExampleService(IChatClient chatClient)
 ## Links
 
 - [.NET Aspire](https://learn.microsoft.com/en-us/dotnet/aspire/get-started/aspire-overview)
-- [What's new in .NET Aspire 9.5](https://learn.microsoft.com/en-us/dotnet/aspire/whats-new/dotnet-aspire-9.5)
+- [What's new in .NET Aspire 13.4](https://aspire.dev/whats-new/aspire-13-4/)
 - [Microsoft.Extensions.AI](https://learn.microsoft.com/en-us/dotnet/ai/microsoft-extensions-ai)
 - [Microsoft Agent Framework](https://github.com/microsoft/agent-framework)
-- [Aspirify](https://aspireify.net/)
 - [Aspire Samples](https://github.com/dotnet/aspire-samples)
-- [eShopLite](https://github.com/Azure-Samples/eShopLite)
 
 </div>
 <div>
 
 ## Follow Chris Ayers
 
-![w:400px](./img/chris_ayers.svg)
+![w:300px](./img/chris_ayers.svg)
 
 <!--
 <i class="fa-brands fa-bluesky"></i> BlueSky: [@chris-ayers.com](https://bsky.app/profile/chris-ayers.com)
