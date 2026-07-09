@@ -21,7 +21,7 @@ public sealed class WeatherTools
         _chatClient = chatClient;
     }
 
-    [McpServerTool(Name = "getWeatherForecast")]
+    [McpServerTool(Name = "getWeatherForecast", Title = "Weather Forecast", ReadOnly = true, Idempotent = false, OpenWorld = false)]
     [Description("Gets a weather forecast for the next 5 days with AI-generated weather descriptions.")]
     public async Task<WeatherForecast[]> GetWeatherForecast(
         [Description("Maximum number of forecast days to return (1-10)")] int maxDays = 5)
@@ -54,7 +54,7 @@ public sealed class WeatherTools
         return forecasts.ToArray();
     }
 
-    [McpServerTool(Name = "getCurrentWeather")]
+    [McpServerTool(Name = "getCurrentWeather", Title = "Current Weather", ReadOnly = true, Idempotent = false, OpenWorld = false)]
     [Description("Gets current weather information for today with AI-generated description.")]
     public async Task<WeatherForecast> GetCurrentWeather()
     {
@@ -70,7 +70,7 @@ public sealed class WeatherTools
         );
     }
 
-    [McpServerTool(Name = "convertTemperature")]
+    [McpServerTool(Name = "convertTemperature", Title = "Temperature Converter", ReadOnly = true, Idempotent = true, OpenWorld = false)]
     [Description("Converts temperature between Celsius and Fahrenheit.")]
     public static TemperatureConversion ConvertTemperature(
         [Description("Temperature value to convert")] double temperature,

@@ -20,7 +20,7 @@ public sealed class SystemTools
         _logger = logger;
     }
 
-    [McpServerTool(Name = "getCurrentDateTime")]
+    [McpServerTool(Name = "getCurrentDateTime", Title = "Current Date and Time", ReadOnly = true, Idempotent = false, OpenWorld = false)]
     [Description("Gets the current date and time information.")]
     public DateTimeInfo GetCurrentDateTime()
     {
@@ -36,7 +36,7 @@ public sealed class SystemTools
         );
     }
 
-    [McpServerTool(Name = "getSystemInfo")]
+    [McpServerTool(Name = "getSystemInfo", Title = "System Information", ReadOnly = true, Idempotent = true, OpenWorld = false)]
     [Description("Gets basic system information including OS and .NET version.")]
     public SystemInfo GetSystemInfo()
     {
@@ -50,7 +50,7 @@ public sealed class SystemTools
         );
     }
 
-    [McpServerTool(Name = "generateRandomNumber")]
+    [McpServerTool(Name = "generateRandomNumber", Title = "Random Number Generator", ReadOnly = true, Idempotent = false, OpenWorld = false)]
     [Description("Generates a random number within the specified range.")]
     public RandomNumber GenerateRandomNumber(
         [Description("Minimum value (inclusive)")] int min = 1,
@@ -66,7 +66,7 @@ public sealed class SystemTools
         return new RandomNumber(value, min, max - 1);
     }
 
-    [McpServerTool(Name = "encodeToBase64")]
+    [McpServerTool(Name = "encodeToBase64", Title = "Base64 Encode", ReadOnly = true, Idempotent = true, OpenWorld = false)]
     [Description("Encodes text to Base64 format.")]
     public EncodingResult EncodeToBase64(
         [Description("Text to encode")] string text)
@@ -89,7 +89,7 @@ public sealed class SystemTools
         }
     }
 
-    [McpServerTool(Name = "decodeFromBase64")]
+    [McpServerTool(Name = "decodeFromBase64", Title = "Base64 Decode", ReadOnly = true, Idempotent = true, OpenWorld = false)]
     [Description("Decodes Base64 text to plain text.")]
     public EncodingResult DecodeFromBase64(
         [Description("Base64 text to decode")] string base64Text)
