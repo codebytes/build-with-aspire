@@ -40,10 +40,10 @@ public class AIConfigurationExtendedTests
     }
 
     [Theory]
-    [InlineData(AIConfiguration.AIProvider.AzureOpenAI, "gpt-4o")]
+    [InlineData(AIConfiguration.AIProvider.AzureOpenAI, "gpt-5")]
     [InlineData(AIConfiguration.AIProvider.Ollama, "llama3.2")]
-    [InlineData(AIConfiguration.AIProvider.GitHubModels, "openai/gpt-4o-mini")]
-    [InlineData(AIConfiguration.AIProvider.AzureAIFoundry, "phi-3.5-mini")]
+    [InlineData(AIConfiguration.AIProvider.GitHubModels, "openai/gpt-5-mini")]
+    [InlineData(AIConfiguration.AIProvider.AzureAIFoundry, "gpt-5-mini")]
     public void GetModel_WithProviders_ShouldReturnCorrectDefaults(AIConfiguration.AIProvider provider, string expectedModel)
     {
         // Arrange
@@ -51,6 +51,26 @@ public class AIConfigurationExtendedTests
 
         // Act
         var model = AIConfiguration.GetModel(configuration, provider);
+
+        // Assert
+        Assert.Equal(expectedModel, model);
+    }
+
+    [Theory]
+    [InlineData("foundrylocal", "qwen2.5-1.5b")]
+    [InlineData("azureaifoundry", "gpt-5-mini")]
+    public void GetModel_AzureAIFoundry_ShouldReturnEnvironmentSpecificDefault(string providerString, string expectedModel)
+    {
+        // Arrange
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["AI:Provider"] = providerString
+            })
+            .Build();
+
+        // Act
+        var model = AIConfiguration.GetModel(configuration, AIConfiguration.AIProvider.AzureAIFoundry);
 
         // Assert
         Assert.Equal(expectedModel, model);

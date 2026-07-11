@@ -49,7 +49,8 @@ builder.Services.AddMcpServer(options =>
 })
 .WithTools<WeatherTools>()
 .WithTools<SystemTools>()
-.WithTools<MathTools>();
+.WithTools<MathTools>()
+.WithTools<TextTools>();
 
 // Add logging
 builder.Logging.AddConsole(options =>
@@ -73,8 +74,7 @@ app.MapGet("/health", () =>
         sessionSupport = "Yes - via Mcp-Session-Id header"
     });
 })
-.WithName("HealthCheck")
-.WithOpenApi();
+.WithName("HealthCheck");
 
 // Add diagnostic endpoint to show session and transport information
 app.MapGet("/debug/info", () =>
@@ -99,31 +99,35 @@ app.MapGet("/debug/info", () =>
         note = "Session IDs are managed automatically by the SDK's StatefulSessionManager"
     });
 })
-.WithName("DebugInfo")
-.WithOpenApi();
+.WithName("DebugInfo");
 
-// Add diagnostic endpoint to list registered tools (for debugging)
-app.MapGet("/debug/tools", () =>
+// Add diagnostic endpoint to list registered tools (for debugging). Tool metadata is
+// enumerated directly from the DI-registered McpServerTool instances, so this endpoint
+// stays accurate automatically as tools are added or removed.
+app.MapGet("/debug/tools", (IEnumerable<McpServerTool> registeredTools) =>
 {
-    // This is a diagnostic endpoint to show the actual registered tool names
-    var tools = new[]
-    {
-        "getWeatherForecast",
-        "getCurrentWeather",
-        "convertTemperature",
-        "getCurrentDateTime",
-        "getSystemInfo",
-        "generateRandomNumber",
-        "encodeToBase64",
-        "decodeFromBase64",
-        "calculate",
-        "squareRoot",
-        "power",
-        "generateFibonacci",
-        "isPrime"
-    };
+    var tools = registeredTools
+        .Select(t => new
+        {
+            name = t.ProtocolTool.Name,
+            title = t.ProtocolTool.Title,
+            description = t.ProtocolTool.Description,
+            annotations = t.ProtocolTool.Annotations is { } a
+                ? new
+                {
+                    readOnly = a.ReadOnlyHint,
+                    idempotent = a.IdempotentHint,
+                    destructive = a.DestructiveHint,
+                    openWorld = a.OpenWorldHint
+                }
+                : null
+        })
+        .OrderBy(t => t.name, StringComparer.Ordinal)
+        .ToArray();
+
     return Results.Ok(new {
         message = "MCP tools registered with camelCase names (following official SDK conventions)",
+        count = tools.Length,
         tools = tools,
         usage = new
         {
@@ -134,8 +138,7 @@ app.MapGet("/debug/tools", () =>
         }
     });
 })
-.WithName("DebugTools")
-.WithOpenApi();
+.WithName("DebugTools");
 
 // Add OpenAPI for development
 if (app.Environment.IsDevelopment())
@@ -157,7 +160,7 @@ app.Logger.LogInformation("Endpoints:");
 app.Logger.LogInformation("  - POST /   : JSON-RPC requests (auto-creates session on first request)");
 app.Logger.LogInformation("  - GET /    : SSE notifications stream");
 app.Logger.LogInformation("  - DELETE / : Session cleanup");
-app.Logger.LogInformation("Tools: Weather, System, Math");
+app.Logger.LogInformation("Tools: Weather, System, Math, Text");
 app.Logger.LogInformation("Session Timeout: 2 hours idle");
 
 // Run the MCP-compliant server

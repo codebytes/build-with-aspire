@@ -51,7 +51,7 @@ Chat Agent                  WeatherTools
 
 ### Prerequisites
 
-- .NET 9.0 SDK or later
+- .NET 10.0 SDK or later
 - Docker Desktop (for Aspire)
 - Visual Studio Code or Visual Studio 2022
 

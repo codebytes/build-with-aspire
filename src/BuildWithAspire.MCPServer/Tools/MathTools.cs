@@ -18,7 +18,7 @@ public sealed class MathTools
         _logger = logger;
     }
 
-    [McpServerTool(Name = "calculate")]
+    [McpServerTool(Name = "calculate", Title = "Basic Calculator", ReadOnly = true, Idempotent = true, OpenWorld = false)]
     [Description("Performs basic arithmetic operations (add, subtract, multiply, divide).")]
     public CalculationResult Calculate(
         [Description("First number")] double a,
@@ -56,7 +56,7 @@ public sealed class MathTools
         }
     }
 
-    [McpServerTool(Name = "squareRoot")]
+    [McpServerTool(Name = "squareRoot", Title = "Square Root", ReadOnly = true, Idempotent = true, OpenWorld = false)]
     [Description("Calculates the square root of a number.")]
     public CalculationResult SquareRoot(
         [Description("Number to find square root of")] double number)
@@ -81,7 +81,7 @@ public sealed class MathTools
         );
     }
 
-    [McpServerTool(Name = "power")]
+    [McpServerTool(Name = "power", Title = "Exponentiation", ReadOnly = true, Idempotent = true, OpenWorld = false)]
     [Description("Raises a number to a specified power.")]
     public CalculationResult Power(
         [Description("Base number")] double baseNumber,
@@ -109,7 +109,7 @@ public sealed class MathTools
         }
     }
 
-    [McpServerTool(Name = "generateFibonacci")]
+    [McpServerTool(Name = "generateFibonacci", Title = "Fibonacci Sequence", ReadOnly = true, Idempotent = true, OpenWorld = false)]
     [Description("Generates the Fibonacci sequence up to n terms.")]
     public FibonacciResult GenerateFibonacci(
         [Description("Number of terms to generate (1-50)")] int terms)
@@ -153,7 +153,7 @@ public sealed class MathTools
         );
     }
 
-    [McpServerTool(Name = "isPrime")]
+    [McpServerTool(Name = "isPrime", Title = "Primality Test", ReadOnly = true, Idempotent = true, OpenWorld = false)]
     [Description("Checks if a number is prime.")]
     public PrimeCheckResult IsPrime(
         [Description("Number to check for primality")] long number)

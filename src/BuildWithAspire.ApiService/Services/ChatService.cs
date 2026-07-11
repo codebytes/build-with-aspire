@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using BuildWithAspire.Abstractions;
 using BuildWithAspire.ApiService.Models;
 using Microsoft.Extensions.AI;
@@ -5,7 +6,7 @@ using Microsoft.Agents.AI;
 
 namespace BuildWithAspire.ApiService.Services;
 
-public class ChatService
+public partial class ChatService
 {
     private AIAgent? _agent;
     private readonly IChatClient _chatClient;
@@ -42,46 +43,32 @@ public class ChatService
 
         _logger.LogInformation("Initializing AI Agent with dynamic MCP tools...");
 
-        // Dynamically load tools from MCP server
+        // Dynamically load tools from the MCP server. McpClientTool instances derive from
+        // AIFunction (and therefore AITool), so they can be handed straight to the agent.
         _tools = await _toolConverter.GetAllToolsAsync(cancellationToken).ConfigureAwait(false);
-        _logger.LogInformation("Loaded {ToolCount} tools from MCP server", _tools.Count());
+        var tools = _tools.Cast<AITool>().ToList();
+        _logger.LogInformation("Loaded {ToolCount} tools from MCP server", tools.Count);
 
-        // Create a chat client with function invocation enabled and tools configured via middleware
-        var toolEnabledClient = _chatClient.AsBuilder()
-            .Use((chatMessages, options, next, cancellationToken) =>
-            {
-                // Inject tools into ChatOptions for every request
-                if (options.Tools?.Count is null or 0)
-                {
-                    options.Tools = _tools?.Select(t => (AITool)t).ToList();
-                    _logger.LogInformation("Middleware: Injected {ToolCount} tools into ChatOptions", options.Tools?.Count ?? 0);
-                }
-
-                var toolCount = options.Tools?.Count ?? 0;
-                _logger.LogInformation("Middleware: Sending request to model with {ToolCount} tools available", toolCount);
-                var result = next(chatMessages, options, cancellationToken);
-                _logger.LogInformation("Middleware: Received response from model");
-                return result;
-            })
-            .UseFunctionInvocation()
-            .Build();
-
-        // Create an AI Agent using the Microsoft Agent Framework with dynamic tools
+        // Create the agent using the Microsoft Agent Framework, supplying the MCP tools at
+        // construction time. ChatClientAgent automatically decorates the IChatClient with the
+        // function-invocation middleware (UseProvidedChatClientAsIs defaults to false), so we do
+        // not wire UseFunctionInvocation() or a custom tool-injection pipeline ourselves. This
+        // mirrors the official MAF agent pattern (see the aspire FoundryAgents playground).
         _agent = new ChatClientAgent(
-            toolEnabledClient,
-            new ChatClientAgentOptions
-            {
-                Name = "ChatAssistant",
-                Instructions = @"You are an AI demonstration application.
-                    You are a helpful chatbot with access to various tools dynamically discovered from the MCP server.
-                    Use the available tools when appropriate to provide accurate information.
-                    When a user asks for something that a tool can provide (like a random number, weather, calculations, etc.), USE THE TOOL instead of making up an answer.
-                    Respond to the user's input responsibly.
-                    All responses should be safe for work."
-            });
+            _chatClient,
+            instructions: """
+                You are an AI demonstration application.
+                You are a helpful chatbot with access to various tools dynamically discovered from the MCP server.
+                Use the available tools when appropriate to provide accurate information.
+                When a user asks for something that a tool can provide (like a random number, weather, calculations, etc.), USE THE TOOL instead of making up an answer.
+                Respond to the user's input responsibly.
+                All responses should be safe for work.
+                """,
+            name: "ChatAssistant",
+            tools: tools);
 
         _isInitialized = true;
-        _logger.LogInformation("AI Agent initialized with {ToolCount} MCP tools available", _tools.Count());
+        _logger.LogInformation("AI Agent initialized with {ToolCount} MCP tools available", tools.Count);
     }
 
     public async Task<string> ProcessMessage(string message)
@@ -104,7 +91,7 @@ public class ChatService
             var response = await _agent.RunAsync(message ?? string.Empty).ConfigureAwait(false);
             var duration = DateTime.UtcNow - startTime;
 
-            var combinedResponse = response.Text ?? string.Empty;
+            var combinedResponse = SanitizeResponse(response.Text);
 
             _logger.LogInformation("AI response generated successfully. ResponseLength: {ResponseLength}, Duration: {Duration}ms",
                 combinedResponse.Length, duration.TotalMilliseconds);
@@ -168,7 +155,7 @@ public class ChatService
             var response = await _agent.RunAsync(chatMessages, cancellationToken: cts.Token).ConfigureAwait(false);
             var duration = DateTime.UtcNow - startTime;
 
-            var combinedResponse = response.Text ?? string.Empty;
+            var combinedResponse = SanitizeResponse(response.Text);
 
             _logger.LogInformation("AI conversation response generated successfully. InputMessages: {InputMessages}, ResponseLength: {ResponseLength}, Duration: {Duration}ms",
                 messageCount, combinedResponse.Length, duration.TotalMilliseconds);
@@ -190,4 +177,34 @@ public class ChatService
             throw new InvalidOperationException($"Failed to process messages: {ex.Message}", ex);
         }
     }
+
+    /// <summary>
+    /// Removes tool-call template noise that some local models (e.g. the qwen2.5 / Hermes family
+    /// served through Foundry Local) echo into the text channel in addition to the structured
+    /// tool_calls the serving layer already parses. The tools still fire correctly; this only
+    /// cleans the visible answer. Model-agnostic and a no-op for models that emit clean text.
+    /// </summary>
+    public static string SanitizeResponse(string? text)    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return string.Empty;
+        }
+
+        var cleaned = ToolCallTemplateRegex().Replace(text, string.Empty);
+        cleaned = OrphanToolCallTagRegex().Replace(cleaned, string.Empty);
+        cleaned = ExcessBlankLinesRegex().Replace(cleaned, "\n\n");
+        return cleaned.Trim();
+    }
+
+    // Matches a complete <tool_call>...</tool_call> block (Singleline so '.' spans newlines).
+    [GeneratedRegex(@"<tool_call>.*?</tool_call>", RegexOptions.Singleline | RegexOptions.IgnoreCase)]
+    private static partial Regex ToolCallTemplateRegex();
+
+    // Defensively removes any orphaned opening/closing tool_call tags left by a truncated block.
+    [GeneratedRegex(@"</?tool_call>", RegexOptions.IgnoreCase)]
+    private static partial Regex OrphanToolCallTagRegex();
+
+    // Collapses the blank lines left behind after stripping a block.
+    [GeneratedRegex(@"\n{3,}")]
+    private static partial Regex ExcessBlankLinesRegex();
 }

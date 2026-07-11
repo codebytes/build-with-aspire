@@ -89,9 +89,9 @@ public class AIModelExtensionsSimpleTests
 
         // Act & Assert - Test each provider's default model
     Assert.Equal("llama3.2", GetAIModelFromConfiguration(configuration, AIProvider.Ollama));
-    Assert.Equal("gpt-4o", GetAIModelFromConfiguration(configuration, AIProvider.AzureOpenAI));
-    Assert.Equal("openai/gpt-4o-mini", GetAIModelFromConfiguration(configuration, AIProvider.GitHubModels));
-    Assert.Equal("phi-3.5-mini", GetAIModelFromConfiguration(configuration, AIProvider.AzureAIFoundry));
+    Assert.Equal("gpt-5", GetAIModelFromConfiguration(configuration, AIProvider.AzureOpenAI));
+    Assert.Equal("openai/gpt-5-mini", GetAIModelFromConfiguration(configuration, AIProvider.GitHubModels));
+    Assert.Equal("gpt-5-mini", GetAIModelFromConfiguration(configuration, AIProvider.AzureAIFoundry));
     }
 
     [Fact]
@@ -119,22 +119,9 @@ public class AIModelExtensionsSimpleTests
 
     private static string GetAIModelFromConfiguration(IConfiguration configuration, AIProvider provider)
     {
-        // Simulate what AIConfiguration.GetSettings does but forcing a provider for test determinism
-        var model = configuration["AI:Model"]; // If user overrides model we honor it
-        if (!string.IsNullOrWhiteSpace(model))
-        {
-            return provider == AIProvider.GitHubModels && !model.Contains('/')
-                ? $"openai/{model}" // normalization mirrors central logic
-                : model;
-        }
-
-        return provider switch
-        {
-            AIProvider.Ollama => "llama3.2",
-            AIProvider.AzureOpenAI => "gpt-4o",
-            AIProvider.GitHubModels => "openai/gpt-4o-mini",
-            AIProvider.AzureAIFoundry => "phi-3.5-mini",
-            _ => throw new InvalidOperationException($"No default model available for provider: {provider}")
-        };
+        // Delegate to the central resolution logic so this test stays in sync with
+        // AIConfiguration.GetModel (override handling, GitHub normalization, and the
+        // Foundry Local vs cloud default all live there).
+        return AIConfiguration.GetModel(configuration, provider);
     }
 }

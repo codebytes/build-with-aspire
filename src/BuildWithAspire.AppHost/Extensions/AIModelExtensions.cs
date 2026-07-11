@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Aspire.Hosting;
+using Aspire.Hosting.Foundry;
+using Aspire.Hosting.GitHub;
 using BuildWithAspire.Abstractions;
 using AIProvider = BuildWithAspire.Abstractions.AIConfiguration.AIProvider;
 
@@ -61,7 +63,7 @@ public static class AIModelExtensions
         AIConfiguration.AISettings settings)
     {
         var config = builder.Configuration;
-        var modelVersion = config["AI:ModelVersion"] ?? "2024-11-20";
+        var modelVersion = config["AI:ModelVersion"] ?? "2025-08-07";
         var skuName = config["AI:SkuName"] ?? "GlobalStandard";
         var skuCapacity = config.GetValue<int?>("AI:SkuCapacity") ?? 150;
 
@@ -101,8 +103,13 @@ public static class AIModelExtensions
         IDistributedApplicationBuilder builder,
         AIConfiguration.AISettings settings)
     {
-        return builder.AddGitHubModel(settings.DeploymentName, settings.Model)
-                      .WithHealthCheck();
+        // Default to the strongly-typed model catalog; fall back to the string overload
+        // only when a model is explicitly configured via AI:Model.
+        var github = settings.ModelExplicitlyConfigured
+            ? builder.AddGitHubModel(settings.DeploymentName, settings.Model)
+            : builder.AddGitHubModel(settings.DeploymentName, GitHubModel.OpenAI.OpenAIGpt5Mini);
+
+        return github.WithHealthCheck();
     }
 
     private static IResourceBuilder<IResourceWithConnectionString> ConfigureAzureAIFoundry(
@@ -120,15 +127,25 @@ public static class AIModelExtensions
             $"Azure AI Foundry: {(isLocal ? "Local" : "Cloud")}, " +
             $"Model: {settings.Model}, Version: {version}");
 
-        var foundry = builder.AddAzureAIFoundry(name);
+        var foundry = builder.AddFoundry(name);
         if (isLocal)
         {
             foundry = foundry.RunAsFoundryLocal();
         }
 
-        return foundry
-            .AddDeployment(settings.DeploymentName, settings.Model, version, format)
-            .WithProperties(p => p.SkuCapacity = skuCapacity);
+        // Default to the strongly-typed model catalog (which encodes the correct model
+        // version/format per environment); fall back to the string overload only when a
+        // model is explicitly configured via AI:Model.
+        // Local default is qwen2.5-1.5b: unlike the Foundry-optimized phi-4-mini build (which
+        // does not emit tool calls), the qwen2.5 builds reliably invoke MCP tools. Swap to the
+        // larger FoundryModel.Local.Qwen257b (qwen2.5-7b) for higher tool-calling reliability.
+        var deployment = settings.ModelExplicitlyConfigured
+            ? foundry.AddDeployment(settings.DeploymentName, settings.Model, version, format)
+            : foundry.AddDeployment(
+                settings.DeploymentName,
+                isLocal ? FoundryModel.Local.Qwen2515b : FoundryModel.OpenAI.Gpt5Mini);
+
+        return deployment.WithProperties(p => p.SkuCapacity = skuCapacity);
     }
 
     private static IResourceBuilder<ProjectResource> ConnectToAIService(
