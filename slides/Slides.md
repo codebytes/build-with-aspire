@@ -1,7 +1,7 @@
 ---
 marp: true
 theme: custom-default
-footer: '@Chris_L_Ayers - https://chris-ayers.com'
+footer: '[@chris-ayers.com](https://bsky.app/profile/chris-ayers.com) - [chris-ayers.com](https://chris-ayers.com/)'
 ---
 
 ![bg](./img/aspire_title.png)
