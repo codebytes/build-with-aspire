@@ -13,11 +13,10 @@ A talk on building AI-powered, cloud-native applications with .NET Aspire, OpenA
 - [API test examples](api-tests/)
 - [MCP server documentation](src/BuildWithAspire.MCPServer/README.md)
 - [.NET Aspire](https://learn.microsoft.com/en-us/dotnet/aspire/get-started/aspire-overview)
+- [Aspire Samples](https://github.com/dotnet/aspire-samples)
 - [MCP Specification](https://modelcontextprotocol.io/)
 - [MCP C# SDK](https://github.com/modelcontextprotocol/csharp-sdk)
 - [Microsoft Agent Framework](https://github.com/microsoft/agent-framework)
-- [Aspirify](https://aspireify.net/)
-- [Aspire Samples](https://github.com/dotnet/aspire-samples)
 
 ## Contact
 

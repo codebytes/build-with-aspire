@@ -86,3 +86,7 @@ curl http://localhost:5020/health
 ```
 
 Use the [api-tests/](../api-tests/) directory for more HTTP test examples.
+
+## Legacy resource
+
+The original [Aspirify](https://aspireify.net/) link is preserved for reference. The domain failed DNS lookup on 2026-09-21 and is currently unavailable. For official Aspire documentation and samples, see the [talk README](../README.md).
