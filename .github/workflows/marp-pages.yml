@@ -35,6 +35,12 @@ jobs:
           args: --theme-set slides/themes -o build/index.html --html -- slides/Slides.md
         env:
           MARP_USER: root:root
+      - name: Marp Build (PDF)
+        uses: docker://marpteam/marp-cli:latest
+        with:
+          args: --theme-set slides/themes -o build/Slides.pdf --html --pdf --allow-local-files -- slides/Slides.md
+        env:
+          MARP_USER: root:root
       - name: Setup Pages
         uses: actions/configure-pages@v6
       - name: Upload artifact
