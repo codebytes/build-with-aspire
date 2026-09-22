@@ -13,6 +13,14 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
 } 
+.columns > div > :first-child,
+.columns3 > div > :first-child {
+  margin-top: 0;
+}
+.columns > div > :last-child,
+.columns3 > div > :last-child {
+  margin-bottom: 0;
+}
 img[alt~="center"] {
   display: block;
   margin: 0 auto;

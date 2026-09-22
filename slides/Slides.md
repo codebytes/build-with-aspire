@@ -24,7 +24,7 @@ footer: '[@chris-ayers.com](https://bsky.app/profile/chris-ayers.com) - [chris-a
 
 ## Chris Ayers
 
-### Principal Software Engineer<br>Azure CXP AzRel<br>Microsoft
+### Principal Software Engineer<br>Azure EngOps AzRel<br>Microsoft
 
 <i class="fa-brands fa-bluesky"></i> BlueSky: [@chris-ayers.com](https://bsky.app/profile/chris-ayers.com)
 <i class="fa-brands fa-linkedin"></i> LinkedIn: - [chris\-l\-ayers](https://linkedin.com/in/chris-l-ayers/)
@@ -245,12 +245,22 @@ footer: '[@chris-ayers.com](https://bsky.app/profile/chris-ayers.com) - [chris-a
 - **aspire update** - Auto-update packages
 - **SSH Remote port forwarding** in VS Code
 
+</div>
+<div>
+
 ## 🎨 Dashboard Enhancements
 
 - **GenAI Visualizer** - Explore AI interactions
 - **Multi-resource console** logs view
 
 </div>
+</div>
+
+---
+
+# What's New in .NET Aspire 9.5 (continued)
+
+<div class="columns">
 <div>
 
 ## 🤖 New Integrations
@@ -258,6 +268,9 @@ footer: '[@chris-ayers.com](https://bsky.app/profile/chris-ayers.com) - [chris-a
 - **OpenAI hosting** integration
 - **GitHub Models** & **Azure AI Foundry** catalogs
 - **Dev Tunnels** hosting support
+
+</div>
+<div>
 
 ## 🚀 Deployment
 
@@ -270,9 +283,6 @@ footer: '[@chris-ayers.com](https://bsky.app/profile/chris-ayers.com) - [chris-a
 ---
 
 # Compute Environments & Aspire CLI
-
-<div class="columns">
-<div>
 
 ## Multiple Environments
 
@@ -287,10 +297,9 @@ builder.AddProject<Projects.Frontend>("frontend")
     .WithComputeEnvironment(k8s);
 ```
 
-</div>
-<div>
+---
 
-## Aspire CLI
+# Aspire CLI
 
 ```bash
 # Install
@@ -302,9 +311,6 @@ aspire new | run | add | update
 aspire config | publish | deploy
 aspire exec
 ```
-
-</div>
-</div>
 
 ---
 
@@ -347,9 +353,6 @@ azd init       # Initialize
 
 # Interactive Parameter Prompting
 
-<div class="columns">
-<div>
-
 ```csharp
 // Parameters without defaults trigger dashboard prompts
 var apiKey = builder.AddParameter("api-key", secret: true);
@@ -360,8 +363,9 @@ var api = builder.AddProject<Projects.Api>("api")
     .WithEnvironment("DATABASE_URL", dbUrl);
 ```
 
-</div>
-<div>
+---
+
+# Interactive Parameter Prompting (continued)
 
 ## Features
 
@@ -372,9 +376,6 @@ var api = builder.AddProject<Projects.Api>("api")
 - **Save to user secrets** for persistence
 
 **Input Types**: Text, Password, Choice, Boolean, Number
-
-</div>
-</div>
 
 ---
 
@@ -417,7 +418,8 @@ builder.AddOllamaApiClient()
 ```
 
 ```csharp
-public class ExampleService(IChatClient chatClient)
+public class ExampleService(
+    IChatClient chatClient)
 {
     // Use chat client...
 }
@@ -452,7 +454,8 @@ builder.AddAzureOpenAIClient()
 ```
 
 ```csharp
-public class ExampleService(IChatClient chatClient)
+public class ExampleService(
+    IChatClient chatClient)
 {
     // Use chat client...
 }
@@ -500,9 +503,6 @@ public class ExampleService(IChatClient chatClient)
 
 # Microsoft Agent Framework
 
-<div class="columns">
-<div>
-
 ## Unified Multi-Agent Platform
 
 - **Consolidation**: Replaces Semantic Kernel & AutoGen
@@ -510,8 +510,9 @@ public class ExampleService(IChatClient chatClient)
 - **Multi-Agent Orchestration**: Coordinate multiple AI agents
 - **Event-Driven Architecture**: Flexible agent communication
 
-</div>
-<div>
+---
+
+# Microsoft Agent Framework (continued)
 
 ## Key Features
 
@@ -521,9 +522,6 @@ public class ExampleService(IChatClient chatClient)
 - **Provider Agnostic**: Works with any AI backend
 
 **Learn more**: [Microsoft Agent Framework](https://github.com/microsoft/agent-framework)
-
-</div>
-</div>
 
 ---
 
@@ -550,7 +548,7 @@ public class ExampleService(IChatClient chatClient)
 - [What's new in .NET Aspire 9.5](https://learn.microsoft.com/en-us/dotnet/aspire/whats-new/dotnet-aspire-9.5)
 - [Microsoft.Extensions.AI](https://learn.microsoft.com/en-us/dotnet/ai/microsoft-extensions-ai)
 - [Microsoft Agent Framework](https://github.com/microsoft/agent-framework)
-- [Aspirify](https://aspireify.net/)
+- [Aspirify](https://aspireify.net/) (legacy; unavailable)
 - [Aspire Samples](https://github.com/dotnet/aspire-samples)
 - [eShopLite](https://github.com/Azure-Samples/eShopLite)
 
@@ -559,7 +557,7 @@ public class ExampleService(IChatClient chatClient)
 
 ## Follow Chris Ayers
 
-![w:400px](./img/chris_ayers.svg)
+![w:360px](./img/chris_ayers.svg)
 
 <!--
 <i class="fa-brands fa-bluesky"></i> BlueSky: [@chris-ayers.com](https://bsky.app/profile/chris-ayers.com)
