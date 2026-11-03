@@ -6,6 +6,10 @@ A talk on building AI-powered, cloud-native applications with .NET Aspire, OpenA
 
 [View HTML slides](https://chris-ayers.com/build-with-aspire/) | [Download PDF](https://chris-ayers.com/build-with-aspire/Slides.pdf)
 
+## Recordings
+
+- [HelloStavanger 2025 — Building Smarter .NET Apps with Aspire, Azure OpenAI, and Ollama](https://www.youtube.com/watch?v=9BFad2xfs-8)
+
 ## Resources
 
 - [Slide source](slides/Slides.md)
